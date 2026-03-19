@@ -18,7 +18,7 @@ import (
 //go:embed references/*.md
 var referencesFS embed.FS
 
-const version = "0.2.0"
+var version = "0.3.0"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 

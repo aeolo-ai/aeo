@@ -5,7 +5,7 @@ set -e
 # Usage: curl -fsSL https://get.tryaeolo.com | sh
 
 REPO="kithlabs/aeo"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${AEO_INSTALL_DIR:-/usr/local/bin}"
 BINARY="aeo"
 
 # ── Detect OS & Arch ─────────────────────────────────────────────────────────
