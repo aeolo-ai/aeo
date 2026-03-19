@@ -5,13 +5,13 @@ CLI for [Aeolo](https://tryaeolo.com) — optimize your brand visibility in AI s
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kithlabs/aeo/main/install.sh | sh
+curl -fsSL https://skills.tryaeolo.com | sh
 ```
 
-Or with Homebrew (macOS):
+Or with Homebrew:
 
 ```bash
-brew install Jhvictor4/aeo/aeo
+brew install kithlabs/aeo/aeo
 ```
 
 No runtime dependencies required — `aeo` is a single static binary.
