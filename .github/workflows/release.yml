@@ -43,7 +43,7 @@ jobs:
           VERSION="${TAG_NAME#v}"
           SHA256=$(grep "aeo_darwin_arm64.tar.gz" dist/checksums.txt | awk '{print $1}')
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/Jhvictor4/homebrew-aeo.git" tap
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/kithlabs/homebrew-aeo.git" tap
           RELEASE_URL="https://github.com/kithlabs/aeo/releases/download/v${VERSION}/aeo_darwin_arm64.tar.gz"
           sed -i "s|url \".*\"|url \"${RELEASE_URL}\"|" tap/Formula/aeo.rb
           sed -i "s|sha256 \".*\"|sha256 \"${SHA256}\"|" tap/Formula/aeo.rb
