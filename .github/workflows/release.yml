@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload install script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release upload "$TAG_NAME" install.sh --clobber
+
+      - name: Update Homebrew Formula
+        if: "!contains(github.ref, '-')"
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG_NAME#v}"
+          SHA256=$(grep "aeo_darwin_arm64.tar.gz" dist/checksums.txt | awk '{print $1}')
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/Jhvictor4/homebrew-aeo.git" tap
+          RELEASE_URL="https://github.com/kithlabs/aeo/releases/download/v${VERSION}/aeo_darwin_arm64.tar.gz"
+          sed -i "s|url \".*\"|url \"${RELEASE_URL}\"|" tap/Formula/aeo.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${SHA256}\"|" tap/Formula/aeo.rb
+          cd tap
+          git config user.email "bot@tryaeolo.com"
+          git config user.name "aeo-release-bot"
+          git add Formula/aeo.rb
+          git commit -m "aeo ${VERSION}"
+          git push

@@ -1,0 +1,71 @@
+# aeo
+
+CLI for [Aeolo](https://tryaeolo.com) — optimize your brand visibility in AI search engines (ChatGPT, Perplexity, Gemini, Grok).
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kithlabs/aeo/main/install.sh | sh
+```
+
+Or with Homebrew (macOS):
+
+```bash
+brew install Jhvictor4/aeo/aeo
+```
+
+No runtime dependencies required — `aeo` is a single static binary.
+
+## Quick Start
+
+```bash
+# Authenticate
+aeo auth login
+
+# View your brand profile
+aeo domain brand
+
+# Check visibility across AI engines
+aeo visibility check run
+
+# List content
+aeo content
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `aeo domain list` | List accessible domains |
+| `aeo domain brand` | Show brand profile |
+| `aeo domain audit` | Show latest audit report |
+| `aeo visibility` | Show last visibility snapshot |
+| `aeo visibility check run` | Trigger a new visibility check |
+| `aeo strategy` | Show content strategy |
+| `aeo content` | List content items |
+| `aeo content propose` | Generate content proposals |
+| `aeo metrics` | Article performance overview |
+| `aeo prompts` | List tracked prompts |
+| `aeo auth login` | Authenticate via browser |
+
+Run `aeo --help` for full command reference.
+
+## Development (submodule)
+
+This repo is consumed as a git submodule in the [Aeolo monorepo](https://github.com/kithlabs/aeolo).
+
+```bash
+# After cloning the monorepo, init submodules
+git submodule update --init --recursive
+
+# Auto-update submodules on pull/checkout (recommended, one-time)
+git config submodule.recurse true
+```
+
+## For AI Agents
+
+`aeo` is designed to be used by AI coding agents (Claude Code, Cursor, etc.) as a tool for GEO workflows. The CLI outputs structured JSON, making it easy for agents to parse and act on the data.
+
+## License
+
+[Apache License 2.0](LICENSE) — see [NOTICE](NOTICE) for attribution.

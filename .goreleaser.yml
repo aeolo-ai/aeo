@@ -1,0 +1,43 @@
+project_name: aeo
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: .
+    binary: aeo
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - format: tar.gz
+    name_template: "aeo_{{ .Os }}_{{ .Arch }}"
+    files:
+      - none*  # binary only, no extra files in archive
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: kithlabs
+    name: aeo
+  draft: false
+  prerelease: auto
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^ci:"
+      - "^chore:"
