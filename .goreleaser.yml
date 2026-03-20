@@ -34,6 +34,16 @@ release:
   draft: false
   prerelease: auto
 
+brews:
+  - repository:
+      owner: kithlabs
+      name: homebrew-aeo
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/kithlabs/aeo"
+    description: "GEO CLI for AI search engine visibility"
+    license: "Apache-2.0"
+
 changelog:
   sort: asc
   filters:
