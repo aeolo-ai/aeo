@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,10 +14,7 @@ import (
 	"time"
 )
 
-//go:embed references/*.md
-var referencesFS embed.FS
-
-var version = "0.4.0"
+var version = "0.4.1"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -128,8 +124,8 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 		return "", err
 	}
 
-	// Check for version update hint from server
-	if latest := resp.Header.Get("X-Latest-Version"); latest != "" && latest != version {
+	// Check for version update hint from server (only show if latest > current)
+	if latest := resp.Header.Get("X-Latest-Version"); latest != "" && semverGreater(latest, version) {
 		fmt.Fprintf(os.Stderr, "\n  Update available: %s → %s\n  Run: aeo update\n\n", version, latest)
 	}
 
@@ -197,6 +193,33 @@ func buildJSON(fields map[string]string) []byte {
 	}
 	data, _ := json.Marshal(m)
 	return data
+}
+
+// ── Semver ──────────────────────────────────────────────────────────────────
+
+// semverGreater returns true if a > b (both like "0.4.1" or "v0.4.1").
+func semverGreater(a, b string) bool {
+	parse := func(s string) [3]int {
+		s = strings.TrimPrefix(s, "v")
+		parts := strings.SplitN(s, ".", 3)
+		var v [3]int
+		for i, p := range parts {
+			if i < 3 {
+				fmt.Sscanf(p, "%d", &v[i])
+			}
+		}
+		return v
+	}
+	va, vb := parse(a), parse(b)
+	for i := 0; i < 3; i++ {
+		if va[i] > vb[i] {
+			return true
+		}
+		if va[i] < vb[i] {
+			return false
+		}
+	}
+	return false
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
