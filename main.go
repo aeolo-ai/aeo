@@ -115,6 +115,7 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 	}
 	req.Header.Set("Authorization", "Bearer "+creds.APIKey)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Client-Version", version)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -125,6 +126,11 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
+	}
+
+	// Check for version update hint from server
+	if latest := resp.Header.Get("X-Latest-Version"); latest != "" && latest != version {
+		fmt.Fprintf(os.Stderr, "\n  Update available: %s → %s\n  Run: aeo update\n\n", version, latest)
 	}
 
 	if resp.StatusCode >= 400 {
@@ -224,6 +230,8 @@ COMMANDS:
   prompts delete <id>      Delete a prompt
   metrics                  Article performance overview
   metrics article <id>     Detailed article stats
+  drive                    List Google Drive files
+  drive read <file_id>     Read a file from Google Drive
   auth login               Authenticate via browser
   auth status              Show credentials
   auth logout              Clear credentials
@@ -555,6 +563,35 @@ func main() {
 		reportJSON, _ := json.Marshal(reportBody)
 		runSilent("/report", "POST", reportJSON, domainID)
 
+	// ── drive ──
+	case "drive":
+		if len(args) < 2 {
+			run("/drive", "GET", nil, domainID)
+			return
+		}
+		switch args[1] {
+		case "list":
+			run("/drive", "GET", nil, domainID)
+		case "read":
+			fileID := ""
+			if len(args) >= 3 {
+				fileID = args[2]
+			}
+			fileID = strOr(fileID, findFlag(args, "--id"))
+			if fileID == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo drive read <file_id>")
+				os.Exit(1)
+			}
+			run("/drive/"+fileID, "GET", nil, domainID)
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown drive command: %s\n", args[1])
+			os.Exit(1)
+		}
+
+	// ── update ──
+	case "update":
+		selfUpdate()
+
 	// ── aliases ──
 	case "brand-profile":
 		run("/brand-profile", "GET", nil, domainID)
@@ -695,4 +732,21 @@ func requireArg(args []string, idx int, usage string) {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", usage)
 		os.Exit(1)
 	}
+}
+
+// ── Self Update ────────────────────────────────────────────────────────────
+
+func selfUpdate() {
+	fmt.Printf("Current version: %s\n", version)
+	fmt.Println("Downloading latest version...")
+
+	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/kithlabs/aeo/main/install.sh | sh")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("✓ Updated successfully")
 }
