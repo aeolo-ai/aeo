@@ -231,6 +231,7 @@ USAGE:
 
 COMMANDS:
   domain list              List accessible domains
+  domain switch <id>       Switch active domain
   domain brand             Show brand profile
   domain brand update      Update brand profile
   domain audit             Show latest audit report
