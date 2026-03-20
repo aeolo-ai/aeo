@@ -94,11 +94,11 @@ Response includes `patch_result: { applied: [0], failed: [] }`. If a patch index
 aeo content preview <id>
 ```
 
-Preview link를 생성하고 브라우저에서 자동으로 연다. `--no-open` 플래그로 링크만 출력 가능.
+Generates a preview link and automatically opens it in the browser. Use the `--no-open` flag to output the link only.
 
 Response: `{ "success": true, "data": { "content_id": "...", "title": "...", "preview_url": "https://tryaeolo.com/preview/...", "share_token": "..." } }`
 
-Idempotent — calling multiple times returns the same link. 브라우저가 열리지 않는 환경이면 URL을 출력하고 유저에게 안내한다.
+Idempotent — calling multiple times returns the same link. If the browser cannot be opened in the current environment, output the URL and inform the user.
 
 ---
 

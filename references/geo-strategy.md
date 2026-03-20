@@ -1,212 +1,212 @@
 # GEO Strategy — Domain Knowledge
 
-이 파일은 에이전트가 GEO 데이터를 읽고 콘텐츠 전략을 판단하기 위한 도메인 지식이다.
-`/aeo` 로드 후, 데이터 해석과 콘텐츠 방향 결정 전에 반드시 참고한다.
+This file contains domain knowledge for the agent to read GEO data and make content strategy decisions.
+After loading `/aeo`, always refer to this before interpreting data or deciding content direction.
 
 ---
 
-## GEO란 무엇인가
+## What is GEO
 
-SEO가 검색 결과 "순위"에 집중했다면, GEO는 ChatGPT, Claude, Perplexity, Gemini 같은 AI 엔진에 **인용되고, 추천받고, 신뢰받는 것**이 목표. 근본적으로 다른 패러다임.
+While SEO focused on search result "rankings," GEO aims to be **cited, recommended, and trusted** by AI engines like ChatGPT, Claude, Perplexity, and Gemini. It's a fundamentally different paradigm.
 
-| 기존 SEO | GEO |
-|----------|-----|
-| 페이지 순위 최적화 | 인용·추천 최적화 |
-| 볼륨 우선 | 일관성 우선 |
-| 한번 만들고 방치 | 30-60일 주기 지속 업데이트 |
-| DA(도메인 권위) 중심 | 서드파티 멘션 빈도 + 구조화된 콘텐츠 |
-| 하나의 검색엔진 | 4+ AI 엔진 동시 최적화 |
+| Traditional SEO | GEO |
+|-----------------|-----|
+| Page ranking optimization | Citation & recommendation optimization |
+| Volume-first | Consistency-first |
+| Create once and leave | Continuous updates on 30–60 day cycles |
+| DA (Domain Authority) focused | Third-party mention frequency + structured content |
+| Single search engine | 4+ AI engines simultaneously |
 
-**GEO는 속도와 구조적 명확성에 보상한다. 둘 다 브랜드가 통제할 수 있는 변수다.**
+**GEO rewards speed and structural clarity. Both are variables the brand can control.**
 
 ---
 
-## Aeolo 4단계 파이프라인
+## Aeolo 4-Step Pipeline
 
 ```
-Step 1: Brand    → "이 도메인이 뭐 하는 곳이야?"
-Step 2: Prompts  → "AI 엔진에 뭘 물어봐야 해?"
-Step 3: Visibility → "AI가 이 브랜드를 언급하고 있어?"
-Step 4: Content  → "빠진 게 뭐고, 뭘 써야 해?"
+Step 1: Brand    → "What does this domain do?"
+Step 2: Prompts  → "What should we ask the AI engines?"
+Step 3: Visibility → "Is the AI mentioning this brand?"
+Step 4: Content  → "What's missing, and what should we write?"
 ```
 
-에이전트는 Step 4 — 갭을 콘텐츠로 메우는 실행자다. 먼저 Step 1~3 데이터를 읽고 판단한다.
+The agent is the executor of Step 4 — filling gaps with content. First, read and analyze the data from Steps 1–3.
 
 ---
 
-## Visibility 데이터 읽는 법
+## How to Read Visibility Data
 
-### 갭 = "이 프롬프트에서 이 엔진이 우리 브랜드를 인용하지 않았다"
+### Gap = "This engine did not cite our brand for this prompt"
 
-visibility report에서 확인할 것:
-1. **어느 엔진**에서 빠졌나? → 엔진별 전략이 달라짐
-2. **어느 stage** 프롬프트에서 빠졌나? → 콘텐츠 타입과 앵글 결정
-3. **경쟁사는 나오나?** → 나오면 비교 콘텐츠 기회; 아무도 없으면 foundational 콘텐츠 기회
-4. **몇 개 엔진이 동시에 빠졌나?** → 많을수록 높은 우선순위
+What to check in the visibility report:
+1. **Which engine** was the brand missing from? → Strategy differs by engine
+2. **Which stage** prompt was it missing from? → Determines content type and angle
+3. **Are competitors appearing?** → If yes, comparison content opportunity; if nobody appears, foundational content opportunity
+4. **How many engines simultaneously missed it?** → More engines = higher priority
 
-### Stage별 의미와 우선순위
+### Meaning and Priority by Stage
 
-| Stage | 의미 | 쿼리 예시 | GEO 우선순위 | 이유 |
-|-------|------|----------|-------------|------|
-| `comparison` | 선택지 비교 — 구매 직전 | "best CRM for startups", "HubSpot vs Salesforce" | **1순위** | 브랜드명 없는 고의향 쿼리. AI 추천이 구매에 직접 영향 |
-| `use-case` | 구체적 상황 기반 | "CRM for 10-person B2B team" | **2순위** | long-tail, 경쟁 낮고 conversion 높음 |
-| `foundational` | 개념/필요성 탐색 | "what is CRM", "why use CRM" | **3순위** | 브랜드 인지 구축. 장기적 효과 |
-| `implementation` | 구매 후/직전 검증 | "HubSpot pricing", "how to use [BrandName]" | **패스** | 쿼리에 브랜드명이 이미 포함 → GEO 대상 아님 |
+| Stage | Meaning | Query Example | GEO Priority | Reason |
+|-------|---------|---------------|--------------|--------|
+| `comparison` | Comparing options — right before purchase | "best CRM for startups", "HubSpot vs Salesforce" | **1st priority** | High-intent queries without brand names. AI recommendations directly influence purchase |
+| `use-case` | Specific situation-based | "CRM for 10-person B2B team" | **2nd priority** | Long-tail, low competition, high conversion |
+| `foundational` | Concept/need exploration | "what is CRM", "why use CRM" | **3rd priority** | Brand awareness building. Long-term effect |
+| `implementation` | Post-purchase / pre-purchase verification | "HubSpot pricing", "how to use [BrandName]" | **Skip** | Brand name already in the query → not a GEO target |
 
-### 엔진 우선순위
+### Engine Priority
 
-특별한 지시가 없으면: **ChatGPT > Gemini > Perplexity > Grok**
+Unless otherwise specified: **ChatGPT > Gemini > Perplexity > Grok**
 
-단, 두 가지 예외:
-- 유저가 특정 엔진을 지정하면 그것을 따른다
-- visibility check를 일부 엔진만 했다면 체크된 엔진 중에서만 판단한다
+However, two exceptions:
+- If the user specifies a particular engine, follow their preference
+- If visibility checks were only run on some engines, evaluate only among the checked engines
 
 ---
 
-## 갭 → 콘텐츠 결정 프레임워크
+## Gap → Content Decision Framework
 
-> **Gap은 콘텐츠 트리거 중 하나일 뿐이다.** 고객 브리프, 특정 프롬프트 타겟, 기존 콘텐츠 리프레시(같은 주제로 새 글 뽑기) 등 다양한 경로가 있으며, 어떤 경로든 `content-create.md`의 Pre-flight → Outline 흐름으로 합류한다.
+> **Gaps are just one of many content triggers.** Client briefs, specific prompt targets, existing content refreshes (rewriting on the same topic), and other paths exist. Regardless of the path, all converge into the Pre-flight → Outline flow in `content-create.md`.
 
-### 1단계: 갭 클러스터링
+### Phase 1: Gap Clustering
 
-여러 갭을 하나의 글로 커버할 수 있는지 의미적으로 묶는다. 판단 기준:
-- **같은 의도를 다른 방식으로 묻는가?** → 같은 클러스터
-  - "best sunscreen stick for runners" + "top SPF sticks for outdoor sports" → 하나의 listicle
-- **같은 지식 영역인가?** → 허브 아티클 기회
-  - "what is GEO" + "how does AI citation work" + "why AI search matters" → foundational 허브
-- **엔진별로 같은 프롬프트에서 빠졌나?** → 하나의 글로 멀티 엔진 커버 가능
+Semantically group multiple gaps that can be covered by a single article. Criteria:
+- **Is the same intent being asked in different ways?** → Same cluster
+  - "best sunscreen stick for runners" + "top SPF sticks for outdoor sports" → one listicle
+- **Same knowledge domain?** → Hub article opportunity
+  - "what is GEO" + "how does AI citation work" + "why AI search matters" → foundational hub
+- **Missing from the same prompt across engines?** → Can cover multiple engines with a single article
 
-### 2단계: articleType 결정
+### Phase 2: Determine articleType
 
-갭의 stage + 쿼리 패턴으로 결정:
+Decide based on the gap's stage + query pattern:
 
-| 갭 패턴 | 추천 articleType |
-|---------|-----------------|
-| comparison stage + "best X", "top X" | `ranked_list` ← **항상 첫 번째로 고려** |
+| Gap Pattern | Recommended articleType |
+|-------------|------------------------|
+| comparison stage + "best X", "top X" | `ranked_list` — **always consider first** |
 | comparison stage + "X vs Y" | `comparison` |
-| use-case stage + "best X for [situation]" | `ranked_list` 또는 `how_to` |
+| use-case stage + "best X for [situation]" | `ranked_list` or `how_to` |
 | foundational stage + "what is X" | `guide` |
 | foundational stage + "how to X" | `how_to` |
-| 여러 stage 동시 | `faq` (허브 역할) |
+| Multiple stages simultaneously | `faq` (serves as a hub) |
 
-**Listicle(ranked_list)이 기본값**: AI 인용의 53%가 리스티클에서 발생. 포맷이 확실하지 않으면 ranked_list로.
+**Listicle (ranked_list) is the default**: 53% of AI citations come from listicles. When the format isn't clear, go with ranked_list.
 
-### 3단계: 엔진별 전략 반영
+### Phase 3: Apply Engine-Specific Strategy
 
-콘텐츠를 쓸 때 갭이 있는 엔진의 특성에 맞춘다:
+When writing content, tailor it to the characteristics of the engine where the gap exists:
 
-| 엔진 | 주요 인용 소스 | 톤 & 전략 |
-|------|-------------|----------|
-| **ChatGPT** | Wikipedia, Global news sites, Blogs | 실용적, conversational, how-to. 백과사전식 어조 선호. 평균 인용 페이지 **2,800 words** |
-| **Gemini** | **YouTube (대부분 카테고리 1위)**, Blogs, News sites | Schema 강화, 구조화 데이터. YouTube 콘텐츠 병행 고려 |
-| **Perplexity** | Blog/editorial, News, Expert reviews | 니치 전문성 + **90일 이내** 최신 콘텐츠 우선 선호 |
-| **Grok** | X(Twitter), 실시간 뉴스 | 실시간 트렌드, 커뮤니티 반응 반영 |
+| Engine | Primary Citation Sources | Tone & Strategy |
+|--------|--------------------------|-----------------|
+| **ChatGPT** | Wikipedia, Global news sites, Blogs | Practical, conversational, how-to. Prefers encyclopedic tone. Average cited page is **2,800 words** |
+| **Gemini** | **YouTube (category leader in most categories)**, Blogs, News sites | Schema-enriched, structured data. Consider YouTube content in parallel |
+| **Perplexity** | Blog/editorial, News, Expert reviews | Niche expertise + preference for content from **within the last 90 days** |
+| **Grok** | X (Twitter), real-time news | Real-time trends, community reaction incorporation |
 
-여러 엔진에 동시 갭이 있으면 ChatGPT + Gemini 조합("실용적 + 구조화")을 기본으로.
-
----
-
-## Audit 데이터 읽는 법
-
-Audit score는 "AI 엔진이 이 사이트를 얼마나 잘 읽고 신뢰할 수 있나"의 척도.
-
-### 항목별 의미와 액션
-
-| Audit 항목 | 빠졌을 때 의미 | 즉각 액션 |
-|-----------|-------------|---------|
-| **Schema (FAQ, HowTo, Article)** | AI가 콘텐츠 타입을 구분 못함 | FAQ/HowTo JSON-LD 추가 |
-| **H1 비어있음** | AI가 페이지 핵심 주제 파악 불가 | H1에 키워드 포함 텍스트 추가 |
-| **TL;DR/BLUF 없음** | AI가 "특정 답변"을 인용할 수 없음 | 모든 글 상단에 2~3문장 요약 추가 |
-| **datePublished/Modified 없음** | AI가 신선도 판단 불가 → citation 급감 | `<time datetime="">` + OG meta 추가 |
-| **내부 링크 부족** | AI가 관련 콘텐츠 연결 못함 | hub-and-spoke 구조 + 글 간 크로스 링크 |
-| **리스티클/비교 콘텐츠 없음** | AI 인용 53%를 놓치고 있음 | ranked_list + comparison 글 우선 제작 |
-| **저자 바이라인 없음** | AI 신뢰도 판단 어려움 | 이름 + 직함 + 자격 추가 |
-
-### Audit 우선순위 판단
-
-- **HIGH (즉시)**: Schema 없음, H1 비어있음, TL;DR 없음, 날짜 구조화 안됨
-- **HIGH (콘텐츠)**: 리스티클 없음, Hub-and-Spoke 없음, 내부 링크 부족
-- **MED**: 저자 바이라인 없음, 외부 링크 부족
-
-Audit 문제 = 글을 아무리 잘 써도 AI가 읽지 못하는 상태. **글 쓰기 전에 HIGH 항목부터 짚어준다.**
-
-### 기술 크롤러 접근성 (AI 크롤러는 Googlebot과 다르다)
-
-Schema/콘텐츠 이전에 AI가 사이트를 읽을 수 있는지 확인한다:
-
-| 항목 | 문제 시 의미 | 확인 방법 |
-|------|-----------|---------|
-| **SSR(서버 사이드 렌더링)** | AI 크롤러는 JS 실행 못하는 경우 많음 → 콘텐츠 미인식 | HTML 소스에 본문 텍스트 있는지 확인 |
-| **robots.txt AI 크롤러 허용** | GPTBot, anthropic-ai, PerplexityBot 등이 차단되면 invisible | robots.txt에 `Allow: /` 명시 |
-| **페이지 로드 2초 이내** | AI 크롤러는 Google만큼 기다리지 않음 | Core Web Vitals 확인 |
-
-이 3가지 중 하나라도 막혀있으면 다른 모든 최적화가 무의미하다. 기술 이슈가 의심되면 유저에게 먼저 짚어준다.
+If gaps exist across multiple engines simultaneously, default to the ChatGPT + Gemini combination ("practical + structured").
 
 ---
 
-## 브랜드 컨텍스트 활용
+## How to Read Audit Data
 
-`/aeo domain brand`로 로드한 데이터에서:
+Audit score measures "how well AI engines can read and trust this site."
 
-- **optimization_type** 확인:
-  - `brand` → 브랜드명이 AI에 인용되는 것이 목표. 서드파티 listicle에서 자연스럽게 포함
-  - `product` → 특정 제품이 추천/비교에 포함. 제품 비교 콘텐츠 우선
-  - `campaign` → 시즌/메시지 노출. 트렌드 연계 콘텐츠
+### Item Meaning and Actions
 
-- **competitors** 활용: 비교 콘텐츠에서 경쟁사와 함께 등장시켜 자연스러움 확보
-- **key_features + value_proposition**: 브랜드 멘션 시 사실 기반 설명의 소스
-- **brand_context**: 시장 포지셔닝, 타겟 오디언스, 핵심 내러티브 — 글의 앵글 결정에 사용
+| Audit Item | What It Means When Missing | Immediate Action |
+|------------|----------------------------|------------------|
+| **Schema (FAQ, HowTo, Article)** | AI cannot distinguish content type | Add FAQ/HowTo JSON-LD |
+| **H1 empty** | AI cannot identify the page's core topic | Add text with keywords to H1 |
+| **No TL;DR/BLUF** | AI cannot cite a "specific answer" | Add a 2–3 sentence summary at the top of every article |
+| **No datePublished/Modified** | AI cannot assess freshness → citation plummets | Add `<time datetime="">` + OG meta |
+| **Insufficient internal links** | AI cannot connect related content | Hub-and-spoke structure + cross-links between articles |
+| **No listicle/comparison content** | Missing 53% of AI citations | Prioritize ranked_list + comparison articles |
+| **No author byline** | AI has difficulty assessing credibility | Add name + title + credentials |
+
+### Audit Priority Assessment
+
+- **HIGH (immediate)**: No schema, H1 empty, no TL;DR, dates not structured
+- **HIGH (content)**: No listicles, no Hub-and-Spoke, insufficient internal links
+- **MED**: No author byline, insufficient external links
+
+Audit issues = even well-written articles can't be read by AI. **Address HIGH items before writing articles.**
+
+### Technical Crawler Accessibility (AI crawlers differ from Googlebot)
+
+Before schema/content, verify that AI can actually read the site:
+
+| Item | What It Means When Failing | How to Verify |
+|------|----------------------------|---------------|
+| **SSR (Server-Side Rendering)** | AI crawlers often can't execute JS → content not recognized | Check if body text exists in the HTML source |
+| **robots.txt AI crawler access** | If GPTBot, anthropic-ai, PerplexityBot, etc. are blocked → invisible | Ensure `Allow: /` is specified in robots.txt |
+| **Page load under 2 seconds** | AI crawlers don't wait as long as Google | Check Core Web Vitals |
+
+If any of these 3 are blocked, all other optimizations are meaningless. If technical issues are suspected, flag them to the user first.
 
 ---
 
-## 유저에게 수집해야 할 추가 맥락
+## Using Brand Context
 
-`/aeo` 데이터만으로 모자랄 수 있는 것들. 글 쓰기 전에 확인한다:
+From data loaded via `/aeo domain brand`:
 
-**제품/서비스 관련:**
-- 최신 스펙, 가격, 출시일 (API 데이터에 없을 수 있음)
-- 실제 고객 사용 후기 또는 케이스 스터디
-- 경쟁사 대비 우위 포인트 (사실 기반)
+- **optimization_type** check:
+  - `brand` → Goal is for the brand name to be cited by AI. Natural inclusion in third-party listicles
+  - `product` → Specific product included in recommendations/comparisons. Prioritize product comparison content
+  - `campaign` → Season/message exposure. Trend-linked content
 
-**콘텐츠 전략 관련:**
-- 타겟 엔진 지정이 있는가? (없으면 ChatGPT+Gemini 기본)
-- 타겟 언어/시장 지정이 있는가?
-- 기존에 발행한 관련 글이 있는가? (내부 링크 연결용)
-- 퍼블리시 채널: 자사 블로그인가, Shopify인가, 외부 미디어인가?
-
-**리서치 관련:**
-- 외부 문서(PDF, Google Drive, 웹 리서치)를 이미 가져왔는가? → `externalResearch`로 활용
-- 특정 통계나 데이터 소스를 써야 하는가?
-
-→ 이것들이 명확하면 research step을 빠르게 진행할 수 있고 글의 신뢰도가 높아진다.
+- **competitors** usage: Include alongside competitors in comparison content for naturalness
+- **key_features + value_proposition**: Source for fact-based descriptions when mentioning the brand
+- **brand_context**: Market positioning, target audience, core narrative — used for determining article angle
 
 ---
 
-## 고급 GEO 개념 (판단 시 참고)
+## Additional Context to Gather from the User
 
-- **Semantic Neighbourhood**: AI가 브랜드를 어떤 개념·브랜드와 함께 연결짓는지. 원하는 키워드와 함께 자주 등장하면 연상 강화
-- **Hub-and-Spoke**: 허브(장문 가이드) 1개 + 스포크(특화 글) N개. AI가 사이트 구조를 이해하고 관련 콘텐츠를 연결
-- **Citation drift**: AI 인용은 월 40-60% 변동. 단일 스냅샷보다 추이가 중요. 30-60일 주기 콘텐츠 리프레시 권장
-- **Trust Spine**: AI가 인용할 때 참조하는 5~10개 핵심 고권위 소스. 이게 쌓여야 visibility가 안정됨
+Things that may be insufficient from `/aeo` data alone. Check before writing:
 
-### GEO 추천 전략 유형 (참고)
+**Product/service related:**
+- Latest specs, pricing, launch dates (may not be in API data)
+- Actual customer testimonials or case studies
+- Competitive advantages over competitors (fact-based)
 
-브랜드의 현재 상황에 따라 어떤 갭을 먼저 메울지 앵글이 달라질 수 있다:
+**Content strategy related:**
+- Is there a target engine specification? (If not, default to ChatGPT + Gemini)
+- Is there a target language/market specification?
+- Are there previously published related articles? (for internal linking)
+- Publishing channel: own blog, Shopify, or external media?
 
-| 전략 | 핵심 질문 | 적합한 상황 |
-|------|----------|-----------|
-| `product-discovery` | "What's the best X?" / "X vs Y?" | 비교·추천 쿼리에서 빠진 경우. 가장 일반적 |
-| `thought-leadership` | "How do I do X?" | 전문가·권위 소스로 인용받고 싶을 때 |
-| `trust-reviews` | "Should I trust X?" | 신뢰 장벽이 높거나 리뷰가 부족할 때 |
-| `local-authority` | "Best X in [location]?" | 지역 기반 쿼리에서 visibility 확보 필요 시 |
-| `brand-awareness` | "What is X?" | AI가 브랜드 존재 자체를 모를 때 — 다른 전략의 전제 |
+**Research related:**
+- Have external documents (PDF, Google Drive, web research) already been retrieved? → Use as `externalResearch`
+- Are there specific statistics or data sources that must be used?
 
-`optimization_type`(brand/product/campaign)과 함께 참고해서 콘텐츠 앵글 결정에 활용한다.
+→ When these are clear, the research step can proceed quickly and the article's credibility increases.
 
-### 크로스 포스팅 흐름 (참고)
+---
 
-글 발행 후 AI 모델의 신뢰도와 멘션 빈도를 높이는 배포 순서:
+## Advanced GEO Concepts (Reference for decision-making)
 
-**블로그 (canonical)** → LinkedIn 아티클 → Medium (canonical tag 포함) → Substack → Reddit (관련 서브레딧, 진정성 있는 참여)
+- **Semantic Neighbourhood**: What concepts and brands AI associates with the brand. Frequent co-occurrence with desired keywords strengthens the association
+- **Hub-and-Spoke**: 1 hub (long-form guide) + N spokes (specialized articles). Helps AI understand site structure and connect related content
+- **Citation drift**: AI citations fluctuate 40–60% monthly. Trends matter more than a single snapshot. 30–60 day content refresh cycles recommended
+- **Trust Spine**: The 5–10 core high-authority sources AI references when citing. Building these stabilizes visibility
 
-모든 채널 간 상호 링크 필수. AI는 링크 그래프를 적극 추적한다.
+### GEO Recommended Strategy Types (Reference)
+
+The angle for which gaps to fill first may vary depending on the brand's current situation:
+
+| Strategy | Core Question | Suitable When |
+|----------|---------------|---------------|
+| `product-discovery` | "What's the best X?" / "X vs Y?" | Missing from comparison/recommendation queries. Most common |
+| `thought-leadership` | "How do I do X?" | When seeking citations as an expert/authority source |
+| `trust-reviews` | "Should I trust X?" | When trust barriers are high or reviews are lacking |
+| `local-authority` | "Best X in [location]?" | When visibility is needed for location-based queries |
+| `brand-awareness` | "What is X?" | When AI doesn't even know the brand exists — prerequisite for other strategies |
+
+Use alongside `optimization_type` (brand/product/campaign) to determine content angle.
+
+### Cross-Posting Flow (Reference)
+
+Distribution sequence to increase AI model trust and mention frequency after article publication:
+
+**Blog (canonical)** → LinkedIn article → Medium (with canonical tag) → Substack → Reddit (relevant subreddits, authentic engagement)
+
+Cross-linking between all channels is mandatory. AI actively crawls link graphs.
