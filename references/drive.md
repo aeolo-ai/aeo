@@ -38,14 +38,22 @@ aeo drive
 aeo drive read 1abc2def3ghi
 ```
 
-지원 포맷:
-- Google Docs → 텍스트로 변환
-- Google Sheets → CSV로 변환
-- 텍스트 파일 (txt, json, md) → 직접 읽기
-- 바이너리 파일 (PDF 등) → 메타 정보만 표시
+### 파일 타입별 처리
+
+| 타입 | 처리 | 비용 |
+|------|------|------|
+| Google Docs | 텍스트로 변환 | 거의 0 |
+| Google Sheets | CSV로 변환 | 거의 0 |
+| 텍스트 파일 (txt, json, md) | 직접 읽기 | 거의 0 |
+| **PDF** | **서버에서 텍스트 추출** (pdf-parse) | 낮음 |
+| **이미지** (png, jpg 등) | **base64 반환** (5MB 이하) | 중간 |
+| 기타 바이너리 | 메타 정보만 (파일명, 타입, 크기) | 0 |
+
+**5MB 제한**: PDF/이미지 등 바이너리 파일은 5MB 초과 시 메타 정보만 반환됩니다.
 
 ## 보안
 
-- **읽기 전용**: 파일 수정/삭제 불가
+- **읽기 전용**: 파일 수정/삭제 불가 (SA = viewer, CLI에 write 커맨드 없음)
 - **폴더 범위**: SA가 초대된 폴더만 접근 가능
 - **SA 키 위치**: API 서버에만 보관 (에이전트 컨테이너에 없음)
+- **프록시 구조**: CLI → Connector API → API Server (SA key) → Google Drive
