@@ -255,6 +255,7 @@ COMMANDS:
   metrics                  Article performance overview
   metrics article <id>     Detailed article stats
   drive                    List Google Drive files
+  drive list --folder <id> Browse a subfolder
   drive read <file_id>     Read a file from Google Drive
   auth login               Authenticate via browser
   auth status              Show credentials
@@ -590,12 +591,22 @@ func main() {
 	// ── drive ──
 	case "drive":
 		if len(args) < 2 {
-			run("/drive", "GET", nil, domainID)
+			folder := findFlag(args, "--folder")
+			if folder != "" {
+				run("/drive?folder="+folder, "GET", nil, domainID)
+			} else {
+				run("/drive", "GET", nil, domainID)
+			}
 			return
 		}
 		switch args[1] {
 		case "list":
-			run("/drive", "GET", nil, domainID)
+			folder := findFlag(args, "--folder")
+			if folder != "" {
+				run("/drive?folder="+folder, "GET", nil, domainID)
+			} else {
+				run("/drive", "GET", nil, domainID)
+			}
 		case "read":
 			fileID := ""
 			if len(args) >= 3 {
