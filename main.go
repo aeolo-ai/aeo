@@ -492,11 +492,50 @@ func main() {
 			run("/content/"+args[2], "GET", nil, domainID)
 		case "update":
 			requireArg(args, 2, "aeo content update <id>")
-			run("/content/"+args[2], "PATCH", buildJSON(map[string]string{
-				"status":        findFlag(args, "--status"),
-				"deploy_status": findFlag(args, "--deploy-status"),
-				"title":         findFlag(args, "--title"),
-			}), domainID)
+			body := map[string]any{}
+			if v := findFlag(args, "--status"); v != "" {
+				body["status"] = v
+			}
+			if v := findFlag(args, "--deploy-status"); v != "" {
+				body["deploy_status"] = v
+			}
+			if v := findFlag(args, "--title"); v != "" {
+				body["title"] = v
+			}
+			if v := findFlag(args, "--meta-description"); v != "" {
+				body["meta_description"] = v
+			}
+			if v := findFlag(args, "--keywords"); v != "" {
+				var kw []string
+				for _, k := range strings.Split(v, ",") {
+					if t := strings.TrimSpace(k); t != "" {
+						kw = append(kw, t)
+					}
+				}
+				body["target_keywords"] = kw
+			}
+			if v := findFlag(args, "--body-file"); v != "" {
+				raw, err := os.ReadFile(v)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error reading body file: %s\n", err)
+					os.Exit(1)
+				}
+				body["content"] = string(raw)
+			}
+			if v := findFlag(args, "--body"); v != "" {
+				body["content"] = v
+			}
+			if v := findFlag(args, "--patch"); v != "" {
+				// format: "search>>>replace"
+				parts := strings.SplitN(v, ">>>", 2)
+				if len(parts) != 2 {
+					fmt.Fprintf(os.Stderr, "Error: --patch format must be \"search>>>replace\"\n")
+					os.Exit(1)
+				}
+				body["patches"] = []map[string]string{{"search": parts[0], "replace": parts[1]}}
+			}
+			data, _ := json.Marshal(body)
+			run("/content/"+args[2], "PATCH", data, domainID)
 		case "preview":
 			requireArg(args, 2, "aeo content preview <id>")
 			run("/content/"+args[2]+"/preview-link", "POST", nil, domainID)
