@@ -14,6 +14,7 @@ cat > "$OUTPUT" <<FORMULA
 class Aeo < Formula
   desc "GEO CLI for AI search engine visibility"
   homepage "https://github.com/kithlabs/aeo"
+  version "${VERSION}"
   license "Apache-2.0"
 
   on_macos do
