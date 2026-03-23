@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var version = "0.5.0"
+var version = "0.5.1"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -235,7 +235,7 @@ COMMANDS:
   strategy      show | update
   content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id> | propose
   prompts       list | add | update <id> | delete <id>
-  metrics       overview | article <id>
+  metrics       overview | article <id> | traffic [--days]
   post          list | get <id> | import (--platform, --body)
   drive         list [--folder <id>] | read <file_id>
   auth          login | status | logout
@@ -291,6 +291,7 @@ var subUsage = map[string]string{
 
   overview          Article performance overview
   article <id>      Detailed article stats
+  traffic           Site-level GSC traffic (--days=7|14|30|90)
 `,
 	"drive": `aeo drive <verb>
 
@@ -617,6 +618,13 @@ func main() {
 		case "article":
 			requireArg(args, 2, "aeo metrics article <id>")
 			run("/metrics/article/"+args[2], "GET", nil, domainID)
+		case "traffic":
+			days := findFlag(args[2:], "--days")
+			path := "/metrics/traffic"
+			if days != "" {
+				path += "?days=" + days
+			}
+			run(path, "GET", nil, domainID)
 		default:
 			printSubUsage("metrics")
 		}
