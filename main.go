@@ -126,7 +126,7 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 
 	// Check for version update hint from server (only show if latest > current)
 	if latest := resp.Header.Get("X-Latest-Version"); latest != "" && semverGreater(latest, version) {
-		fmt.Fprintf(os.Stderr, "\n  Update available: %s → %s\n  Run: aeo update\n\n", version, latest)
+		fmt.Fprintf(os.Stderr, "\n  Update available: %s → %s\n  Run: brew update && brew upgrade aeo\n\n", version, latest)
 	}
 
 	if resp.StatusCode >= 400 {
@@ -990,7 +990,7 @@ func selfUpdate() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Update failed. Try:\n  brew update && brew upgrade aeo\n")
 		os.Exit(1)
 	}
 
