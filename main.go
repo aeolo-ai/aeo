@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var version = "0.4.3"
+var version = "0.4.4"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -227,46 +227,90 @@ func semverGreater(a, b string) bool {
 const usage = `aeo — manage your brand visibility from the terminal
 
 USAGE:
-  aeo <command> [options]
+  aeo <command> <verb> [options]
 
 COMMANDS:
-  domain list              List accessible domains
-  domain switch <id>       Switch active domain
-  domain brand             Show brand profile
-  domain brand update      Update brand profile
-  domain audit             Show latest audit report
-  domain channels          List connected channels
-  visibility               Show last visibility snapshot
-  visibility check run     Trigger a new visibility check
-  visibility check poll    Poll check status
-  strategy                 Show content strategy
-  strategy update          Update content strategy
-  content [list]           List content items (--status, --limit, --offset)
-  content get <id>         Get content item
-  content update <id>      Update content item
-  content preview <id>     Generate preview link
-  content deploy <id>      Deploy to Shopify
-  content redeploy <id>    Redeploy to Shopify
-  content propose          Generate proposals
-  prompts                  List prompts
-  prompts add              Add a prompt
-  prompts update <id>      Update a prompt
-  prompts delete <id>      Delete a prompt
-  metrics                  Article performance overview
-  metrics article <id>     Detailed article stats
-  drive                    List Google Drive files
-  drive list --folder <id> Browse a subfolder
-  drive read <file_id>     Read a file from Google Drive
-  auth login               Authenticate via browser
-  auth status              Show credentials
-  auth logout              Clear credentials
-  report                   Submit error report
+  domain        list | switch <id> | brand | brand update | audit | channels
+  visibility    show | check run | check poll <jobId>
+  strategy      show | update
+  content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id> | propose
+  prompts       list | add | update <id> | delete <id>
+  metrics       overview | article <id>
+  drive         list [--folder <id>] | read <file_id>
+  auth          login | status | logout
+  report        --command <cmd>
 
 OPTIONS:
   -d, --domain <id>        Override domain ID
   --version                Show version
   --help                   Show this help
+
+Run 'aeo <command>' without a verb for detailed help.
 `
+
+var subUsage = map[string]string{
+	"domain": `aeo domain <verb>
+
+  list              List accessible domains
+  switch <id>       Switch active domain
+  brand             Show brand profile
+  brand update      Update brand profile
+  audit             Show latest audit report
+  channels          List connected channels
+`,
+	"visibility": `aeo visibility <verb>
+
+  show              Show last visibility snapshot
+  check run         Trigger a new visibility check (--engines)
+  check poll <id>   Poll check status
+`,
+	"strategy": `aeo strategy <verb>
+
+  show              Show content strategy
+  update            Update content strategy (--manifest, --frequency)
+`,
+	"content": `aeo content <verb>
+
+  list              List content items (--status, --limit, --offset)
+  get <id>          Get full article content
+  update <id>       Update content item (--status, --title)
+  preview <id>      Generate preview link
+  deploy <id>       Deploy to Shopify
+  redeploy <id>     Redeploy to Shopify
+  propose           Generate content proposals (--language)
+`,
+	"prompts": `aeo prompts <verb>
+
+  list              List prompts grouped by stage
+  add               Add a prompt (--prompt, --stage, --language)
+  update <id>       Update a prompt (--prompt, --stage, --query-form)
+  delete <id>       Delete a prompt
+`,
+	"metrics": `aeo metrics <verb>
+
+  overview          Article performance overview
+  article <id>      Detailed article stats
+`,
+	"drive": `aeo drive <verb>
+
+  list              List Google Drive files (--folder <id>)
+  read <file_id>    Read a file from Google Drive
+`,
+	"auth": `aeo auth <verb>
+
+  login             Authenticate via browser (--api-base)
+  status            Show credentials
+  logout            Clear credentials
+`,
+}
+
+func printSubUsage(cmd string) {
+	if u, ok := subUsage[cmd]; ok {
+		fmt.Print(u)
+	} else {
+		fmt.Print(usage)
+	}
+}
 
 func main() {
 	args := os.Args[1:]
@@ -287,7 +331,7 @@ func main() {
 	// ── domain ──
 	case "domain", "domains":
 		if len(args) < 2 || cmd == "domains" {
-			run("/domains", "GET", nil, domainID)
+			printSubUsage("domain")
 			return
 		}
 		switch args[1] {
@@ -320,17 +364,19 @@ func main() {
 			writeConfig(cfg)
 			fmt.Printf("✓ Switched to domain %s\n", args[2])
 		default:
-			fmt.Fprintf(os.Stderr, "Unknown domain command: %s\n", args[1])
-			os.Exit(1)
+			printSubUsage("domain")
 		}
 
 	// ── visibility ──
 	case "visibility":
 		if len(args) < 2 {
-			run("/visibility", "GET", nil, domainID)
+			printSubUsage("visibility")
 			return
 		}
-		if args[1] == "check" {
+		switch args[1] {
+		case "show":
+			run("/visibility", "GET", nil, domainID)
+		case "check":
 			if len(args) < 3 {
 				fmt.Fprintln(os.Stderr, "Usage: aeo visibility check <run|poll>")
 				os.Exit(1)
@@ -357,13 +403,20 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Unknown visibility check command: %s\n", args[2])
 				os.Exit(1)
 			}
-		} else {
-			run("/visibility", "GET", nil, domainID)
+		default:
+			printSubUsage("visibility")
 		}
 
 	// ── strategy ──
 	case "strategy":
-		if len(args) >= 2 && args[1] == "update" {
+		if len(args) < 2 {
+			printSubUsage("strategy")
+			return
+		}
+		switch args[1] {
+		case "show":
+			run("/strategy", "GET", nil, domainID)
+		case "update":
 			manifest := findFlag(args, "--manifest")
 			freq := findFlag(args, "--frequency")
 			if manifest == "" && freq == "" {
@@ -389,8 +442,8 @@ func main() {
 			}
 			data, _ := json.Marshal(body)
 			run("/strategy", "PUT", data, domainID)
-		} else {
-			run("/strategy", "GET", nil, domainID)
+		default:
+			printSubUsage("strategy")
 		}
 
 	// ── content ──
@@ -421,7 +474,12 @@ func main() {
 			}
 			run(path, "GET", nil, domainID)
 		}
-		if len(args) < 2 || strings.HasPrefix(args[1], "--") {
+		if len(args) < 2 {
+			printSubUsage("content")
+			return
+		}
+		if strings.HasPrefix(args[1], "--") {
+			// Treat bare flags as implicit list: aeo content --limit 5
 			contentList()
 			return
 		}
@@ -464,10 +522,12 @@ func main() {
 	// ── prompts ──
 	case "prompts":
 		if len(args) < 2 {
-			run("/prompts", "GET", nil, domainID)
+			printSubUsage("prompts")
 			return
 		}
 		switch args[1] {
+		case "list":
+			run("/prompts", "GET", nil, domainID)
 		case "add":
 			prompt := findFlag(args, "--prompt")
 			if prompt == "" {
@@ -495,22 +555,29 @@ func main() {
 			requireArg(args, 2, "aeo prompts delete <id>")
 			run("/prompts/"+args[2], "DELETE", nil, domainID)
 		default:
-			run("/prompts", "GET", nil, domainID)
+			printSubUsage("prompts")
 		}
 
 	// ── metrics ──
 	case "metrics":
-		if len(args) >= 2 && args[1] == "article" {
+		if len(args) < 2 {
+			printSubUsage("metrics")
+			return
+		}
+		switch args[1] {
+		case "overview":
+			run("/metrics/overview", "GET", nil, domainID)
+		case "article":
 			requireArg(args, 2, "aeo metrics article <id>")
 			run("/metrics/article/"+args[2], "GET", nil, domainID)
-		} else {
-			run("/metrics/overview", "GET", nil, domainID)
+		default:
+			printSubUsage("metrics")
 		}
 
 	// ── auth ──
 	case "auth":
 		if len(args) < 2 {
-			fmt.Print(usage)
+			printSubUsage("auth")
 			return
 		}
 		switch args[1] {
@@ -603,12 +670,7 @@ func main() {
 	// ── drive ──
 	case "drive":
 		if len(args) < 2 {
-			folder := findFlag(args, "--folder")
-			if folder != "" {
-				run("/drive?folder="+folder, "GET", nil, domainID)
-			} else {
-				run("/drive", "GET", nil, domainID)
-			}
+			printSubUsage("drive")
 			return
 		}
 		switch args[1] {
@@ -631,8 +693,7 @@ func main() {
 			}
 			run("/drive/"+fileID, "GET", nil, domainID)
 		default:
-			fmt.Fprintf(os.Stderr, "Unknown drive command: %s\n", args[1])
-			os.Exit(1)
+			printSubUsage("drive")
 		}
 
 	// ── update ──
