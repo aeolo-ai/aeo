@@ -395,7 +395,8 @@ func main() {
 
 	// ── content ──
 	case "content":
-		if len(args) < 2 {
+		isContentList := len(args) < 2 || strings.HasPrefix(args[1], "--")
+		if isContentList {
 			status := findFlag(args, "--status")
 			limit := findFlag(args, "--limit")
 			offset := findFlag(args, "--offset")
