@@ -241,7 +241,7 @@ COMMANDS:
   visibility check poll    Poll check status
   strategy                 Show content strategy
   strategy update          Update content strategy
-  content                  List content items
+  content [list]           List content items (--status, --limit, --offset)
   content get <id>         Get content item
   content update <id>      Update content item
   content preview <id>     Generate preview link
@@ -395,8 +395,7 @@ func main() {
 
 	// ── content ──
 	case "content":
-		isContentList := len(args) < 2 || strings.HasPrefix(args[1], "--")
-		if isContentList {
+		contentList := func() {
 			status := findFlag(args, "--status")
 			limit := findFlag(args, "--limit")
 			offset := findFlag(args, "--offset")
@@ -421,10 +420,15 @@ func main() {
 				path += "?" + qs
 			}
 			run(path, "GET", nil, domainID)
+		}
+		if len(args) < 2 || strings.HasPrefix(args[1], "--") {
+			contentList()
 			return
 		}
 		sub := args[1]
 		switch sub {
+		case "list":
+			contentList()
 		case "get":
 			requireArg(args, 2, "aeo content get <id>")
 			run("/content/"+args[2], "GET", nil, domainID)
