@@ -846,6 +846,16 @@ func requireArg(args []string, idx int, usage string) {
 
 func selfUpdate() {
 	fmt.Printf("Current version: %s\n", version)
+
+	// Detect if installed via Homebrew
+	exe, _ := os.Executable()
+	resolved, _ := filepath.EvalSymlinks(exe)
+	if strings.Contains(resolved, "Cellar") || strings.Contains(resolved, "homebrew") {
+		fmt.Println("Installed via Homebrew. Run:")
+		fmt.Println("  brew upgrade aeo")
+		return
+	}
+
 	fmt.Println("Downloading latest version...")
 
 	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/kithlabs/aeo/main/install.sh | sh")
