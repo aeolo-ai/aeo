@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var version = "0.4.2"
+var version = "0.4.3"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -398,6 +398,7 @@ func main() {
 		if len(args) < 2 {
 			status := findFlag(args, "--status")
 			limit := findFlag(args, "--limit")
+			offset := findFlag(args, "--offset")
 			path := "/content"
 			qs := ""
 			if status != "" {
@@ -408,6 +409,12 @@ func main() {
 					qs += "&"
 				}
 				qs += "limit=" + limit
+			}
+			if offset != "" {
+				if qs != "" {
+					qs += "&"
+				}
+				qs += "offset=" + offset
 			}
 			if qs != "" {
 				path += "?" + qs
