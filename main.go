@@ -236,6 +236,7 @@ COMMANDS:
   content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id> | propose
   prompts       list | add | update <id> | delete <id>
   metrics       overview | article <id>
+  post          list | get <id> | import (--platform, --body)
   drive         list [--folder <id>] | read <file_id>
   auth          login | status | logout
   report        --command <cmd>
@@ -295,6 +296,13 @@ var subUsage = map[string]string{
 
   list              List Google Drive files (--folder <id>)
   read <file_id>    Read a file from Google Drive
+`,
+	"post": `aeo post <verb>
+
+  list              List channel posts (--platform, --status, --limit, --offset)
+  get <id>          Get a channel post by ID
+  import            Import a channel post draft (--platform, --body required)
+                    Optional: --title, --post-type, --target, --content-id, --channel-id
 `,
 	"auth": `aeo auth <verb>
 
@@ -705,6 +713,87 @@ func main() {
 		}
 		reportJSON, _ := json.Marshal(reportBody)
 		runSilent("/report", "POST", reportJSON, domainID)
+
+	// ── post (channel posts) ──
+	case "post":
+		postList := func() {
+			platform := findFlag(args, "--platform")
+			status := findFlag(args, "--status")
+			limit := findFlag(args, "--limit")
+			offset := findFlag(args, "--offset")
+			path := "/channel-posts"
+			qs := ""
+			if platform != "" {
+				qs += "platform=" + platform
+			}
+			if status != "" {
+				if qs != "" {
+					qs += "&"
+				}
+				qs += "status=" + status
+			}
+			if limit != "" {
+				if qs != "" {
+					qs += "&"
+				}
+				qs += "limit=" + limit
+			}
+			if offset != "" {
+				if qs != "" {
+					qs += "&"
+				}
+				qs += "offset=" + offset
+			}
+			if qs != "" {
+				path += "?" + qs
+			}
+			run(path, "GET", nil, domainID)
+		}
+		if len(args) < 2 {
+			printSubUsage("post")
+			return
+		}
+		if strings.HasPrefix(args[1], "--") {
+			postList()
+			return
+		}
+		switch args[1] {
+		case "list":
+			postList()
+		case "get":
+			requireArg(args, 2, "aeo post get <id>")
+			run("/channel-posts/"+args[2], "GET", nil, domainID)
+		case "import":
+			platform := findFlag(args, "--platform")
+			body := findFlag(args, "--body")
+			if platform == "" || body == "" {
+				fmt.Fprintf(os.Stderr, "Error: --platform and --body are required. Usage: aeo post import --platform reddit --body \"...\"\n")
+			os.Exit(1)
+			}
+			importBody := map[string]any{
+				"platform": platform,
+				"body":     body,
+			}
+			if v := findFlag(args, "--title"); v != "" {
+				importBody["title"] = v
+			}
+			if v := findFlag(args, "--post-type"); v != "" {
+				importBody["postType"] = v
+			}
+			if v := findFlag(args, "--target"); v != "" {
+				importBody["target"] = v
+			}
+			if v := findFlag(args, "--content-id"); v != "" {
+				importBody["contentHistoryId"] = v
+			}
+			if v := findFlag(args, "--channel-id"); v != "" {
+				importBody["channelId"] = v
+			}
+			importJSON, _ := json.Marshal(importBody)
+			run("/channel-posts", "POST", importJSON, domainID)
+		default:
+			printSubUsage("post")
+		}
 
 	// ── drive ──
 	case "drive":
