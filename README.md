@@ -16,6 +16,17 @@ brew install kithlabs/aeo/aeo
 
 No runtime dependencies required — `aeo` is a single static binary.
 
+## Update
+
+```bash
+# Auto-detects install method:
+aeo update          # install.sh users → downloads latest
+                    # Homebrew users → prints "brew upgrade aeo"
+
+# Or explicitly:
+brew upgrade aeo    # Homebrew
+```
+
 ## Quick Start
 
 ```bash
@@ -61,6 +72,21 @@ git submodule update --init --recursive
 # Auto-update submodules on pull/checkout (recommended, one-time)
 git config submodule.recurse true
 ```
+
+### Releasing
+
+Tags must be created **inside the submodule** (not the monorepo root):
+
+```bash
+cd packages/cli
+git tag -a v0.X.Y -m "description"
+git push origin v0.X.Y
+```
+
+This triggers GitHub Actions which:
+1. GoReleaser → builds linux/darwin × amd64/arm64
+2. Creates GitHub Release + uploads install.sh
+3. Auto-updates Homebrew Formula (`kithlabs/homebrew-aeo`)
 
 ## For AI Agents
 
