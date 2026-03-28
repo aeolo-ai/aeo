@@ -801,6 +801,9 @@ func main() {
 			}
 			importJSON, _ := json.Marshal(importBody)
 			run("/channel-posts", "POST", importJSON, domainID)
+		case "preview":
+			requireArg(args, 2, "aeo post preview <id>")
+			run("/channel-posts/"+args[2]+"/preview-link", "POST", nil, domainID)
 		case "approve":
 			requireArg(args, 2, "aeo post approve <id>")
 			run("/channel-posts/"+args[2]+"/approve", "POST", nil, domainID)
