@@ -804,6 +804,40 @@ func main() {
 		case "preview":
 			requireArg(args, 2, "aeo post preview <id>")
 			run("/channel-posts/"+args[2]+"/preview-link", "POST", nil, domainID)
+		case "examples":
+			if len(args) > 2 && args[2] == "add" {
+				platform := findFlag(args, "--platform")
+				exType := findFlag(args, "--type")
+				body := findFlag(args, "--body")
+				if platform == "" || exType == "" || body == "" {
+					fmt.Fprintf(os.Stderr, "Error: --platform, --type, and --body are required.\nUsage: aeo post examples add --platform threads --type good --body \"...\"\n")
+					os.Exit(1)
+				}
+				exBody := map[string]any{
+					"platform":    platform,
+					"exampleType": exType,
+					"body":        body,
+				}
+				if v := findFlag(args, "--source-url"); v != "" {
+					exBody["sourceUrl"] = v
+				}
+				if v := findFlag(args, "--note"); v != "" {
+					exBody["note"] = v
+				}
+				exJSON, _ := json.Marshal(exBody)
+				run("/voice-examples", "POST", exJSON, domainID)
+			} else if len(args) > 2 && args[2] == "delete" {
+				requireArg(args, 3, "aeo post examples delete <id>")
+				run("/voice-examples/"+args[3], "DELETE", nil, domainID)
+			} else {
+				// list
+				platform := findFlag(args, "--platform")
+				path := "/voice-examples"
+				if platform != "" {
+					path += "?platform=" + platform
+				}
+				run(path, "GET", nil, domainID)
+			}
 		case "approve":
 			requireArg(args, 2, "aeo post approve <id>")
 			run("/channel-posts/"+args[2]+"/approve", "POST", nil, domainID)
