@@ -236,7 +236,7 @@ COMMANDS:
   content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id> | propose
   prompts       list | add | update <id> | delete <id>
   metrics       overview | article <id> | traffic [--days]
-  post          list | get <id> | import (--platform, --body)
+  post          list | get <id> | import | approve <id> | publish <id>
   drive         list [--folder <id>] | read <file_id>
   auth          login | status | logout
   report        --command <cmd>
@@ -304,6 +304,8 @@ var subUsage = map[string]string{
   get <id>          Get a channel post by ID
   import            Import a channel post draft (--platform, --body required)
                     Optional: --title, --post-type, --target, --content-id, --channel-id
+  approve <id>      Approve a draft post for publishing
+  publish <id>      Publish an approved post to its platform
 `,
 	"auth": `aeo auth <verb>
 
@@ -799,6 +801,12 @@ func main() {
 			}
 			importJSON, _ := json.Marshal(importBody)
 			run("/channel-posts", "POST", importJSON, domainID)
+		case "approve":
+			requireArg(args, 2, "aeo post approve <id>")
+			run("/channel-posts/"+args[2]+"/approve", "POST", nil, domainID)
+		case "publish":
+			requireArg(args, 2, "aeo post publish <id>")
+			run("/channel-posts/"+args[2]+"/publish", "POST", nil, domainID)
 		default:
 			printSubUsage("post")
 		}
