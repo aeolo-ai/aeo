@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var version = "0.5.1"
+var version = "0.6.0"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -231,6 +231,7 @@ USAGE:
 
 COMMANDS:
   domain        list | switch <id> | brand | brand update | audit | channels
+  channel       list | add | update <id> | delete <id> | connect <id> | disconnect <id>
   visibility    show | check run | check poll <jobId>
   strategy      show | update
   content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id> | propose
@@ -258,6 +259,17 @@ var subUsage = map[string]string{
   brand update      Update brand profile
   audit             Show latest audit report
   channels          List connected channels
+`,
+	"channel": `aeo channel <verb>
+
+  list              List connected channels
+  add               Add a channel (--url required, --type, --label)
+  update <id>       Update a channel (--url, --type, --label)
+  delete <id>       Delete a non-primary channel
+  connect <id>      Generate OAuth URL to connect a social channel
+  disconnect <id>   Disconnect OAuth integration from a channel
+
+Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 `,
 	"visibility": `aeo visibility <verb>
 
@@ -377,6 +389,47 @@ func main() {
 		default:
 			printSubUsage("domain")
 		}
+
+	// ── channel ──
+	case "channel":
+		if len(args) < 2 {
+			run("/channels", "GET", nil, domainID)
+			return
+		}
+		switch args[1] {
+		case "list":
+			run("/channels", "GET", nil, domainID)
+		case "add":
+			url := findFlag(args, "--url")
+			if url == "" {
+				fmt.Fprintln(os.Stderr, "Error: --url is required.\nUsage: aeo channel add --url https://... [--type threads] [--label \"My Channel\"]")
+				os.Exit(1)
+			}
+			run("/channels", "POST", buildJSON(map[string]string{
+				"url":   url,
+				"type":  findFlag(args, "--type"),
+				"label": findFlag(args, "--label"),
+			}), domainID)
+		case "update":
+			requireArg(args, 2, "aeo channel update <id> [--url ...] [--type ...] [--label ...]")
+			run("/channels/"+args[2], "PATCH", buildJSON(map[string]string{
+				"url":   findFlag(args, "--url"),
+				"type":  findFlag(args, "--type"),
+				"label": findFlag(args, "--label"),
+			}), domainID)
+		case "delete":
+			requireArg(args, 2, "aeo channel delete <id>")
+			run("/channels/"+args[2], "DELETE", nil, domainID)
+		case "disconnect":
+			requireArg(args, 2, "aeo channel disconnect <id>")
+			run("/channels/"+args[2]+"/disconnect", "POST", nil, domainID)
+		case "connect":
+			requireArg(args, 2, "aeo channel connect <id>")
+			connectChannel(args[2], domainID)
+		default:
+			printSubUsage("channel")
+		}
+
 
 	// ── visibility ──
 	case "visibility":
@@ -905,6 +958,12 @@ func main() {
 		run("/audit-report", "GET", nil, domainID)
 	case "channels":
 		run("/channels", "GET", nil, domainID)
+	case "channel-connect":
+		if len(args) < 2 {
+			fmt.Fprintln(os.Stderr, "Usage: aeo channel connect <id>")
+			os.Exit(1)
+		}
+		connectChannel(args[1], domainID)
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", cmd)
@@ -1038,6 +1097,75 @@ func requireArg(args []string, idx int, usage string) {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", usage)
 		os.Exit(1)
 	}
+}
+
+// ── Channel Connect (OAuth) ────────────────────────────────────────────────
+
+func connectChannel(channelID, domainOverride string) {
+	creds := resolveCredentials()
+	if creds.APIKey == "" {
+		fmt.Fprintln(os.Stderr, "Not logged in. Run: aeo auth login")
+		os.Exit(1)
+	}
+
+	did := domainOverride
+	if did == "" {
+		did = creds.DomainID
+	}
+	if did == "" {
+		fmt.Fprintln(os.Stderr, "No domain set. Use --domain or run: aeo domain switch <id>")
+		os.Exit(1)
+	}
+
+	// Get OAuth URL via connector API
+	authURL := fmt.Sprintf("%s/v1/connector/domains/%s/social/auth-url?channelId=%s&platform=auto", creds.APIBase, did, channelID)
+	authResp, err := doAPIRequest(authURL, "GET", nil, creds.APIKey)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting OAuth URL: %s\n", err)
+		os.Exit(1)
+	}
+
+	var authResult struct {
+		AuthUrl string `json:"authUrl"`
+	}
+	json.Unmarshal(authResp, &authResult)
+
+	if authResult.AuthUrl == "" {
+		fmt.Fprintf(os.Stderr, "Error: No auth URL returned. Response: %s\n", truncate(string(authResp), 200))
+		os.Exit(1)
+	}
+
+	fmt.Printf("\n  Opening browser to authorize...\n")
+	fmt.Printf("  If it didn't open, visit this URL:\n\n")
+	fmt.Printf("  %s\n\n", authResult.AuthUrl)
+	openBrowser(authResult.AuthUrl)
+	fmt.Println("  Complete the authorization in your browser.")
+	fmt.Println("  You'll be redirected to the dashboard when done.")
+}
+
+func doAPIRequest(url, method string, body []byte, apiKey string) ([]byte, error) {
+	var reqBody io.Reader
+	if body != nil {
+		reqBody = bytes.NewReader(body)
+	}
+	req, err := http.NewRequest(method, url, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, truncate(string(respBody), 200))
+	}
+	return respBody, nil
 }
 
 // ── Self Update ────────────────────────────────────────────────────────────
