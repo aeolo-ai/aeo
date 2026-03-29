@@ -234,7 +234,7 @@ COMMANDS:
   channel       list | add | update <id> | delete <id> | connect <id> | disconnect <id>
   visibility    show | check run | check poll <jobId>
   strategy      show | update
-  content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id> | propose
+  content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
   metrics       overview | article <id> | traffic [--days]
   post          list | get <id> | import | approve <id> | publish <id>
@@ -290,7 +290,6 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   preview <id>      Generate preview link
   deploy <id>       Deploy to Shopify
   redeploy <id>     Redeploy to Shopify
-  propose           Generate content proposals (--language)
 `,
 	"prompts": `aeo prompts <verb>
 
@@ -611,12 +610,6 @@ func main() {
 		case "redeploy":
 			requireArg(args, 2, "aeo content redeploy <id>")
 			run("/content/"+args[2]+"/redeploy", "PUT", nil, domainID)
-		case "propose":
-			lang := findFlag(args, "--language")
-			if lang == "" {
-				lang = "en"
-			}
-			run("/content-queue", "POST", buildJSON(map[string]string{"language": lang}), domainID)
 		default:
 			// Might be a content ID: aeo content <uuid>
 			run("/content/"+sub, "GET", nil, domainID)
