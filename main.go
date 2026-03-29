@@ -775,17 +775,31 @@ func main() {
 			run("/channel-posts/"+args[2], "GET", nil, domainID)
 		case "import":
 			platform := findFlag(args, "--platform")
+			if platform == "" {
+				fmt.Fprintf(os.Stderr, "Error: --platform is required.\nUsage: aeo post import --platform threads --body \"...\"\n       aeo post import --platform threads --posts '[{\"body\":\"...\"}]'\n")
+				os.Exit(1)
+			}
+			postsJSON := findFlag(args, "--posts")
 			body := findFlag(args, "--body")
-			if platform == "" || body == "" {
-				fmt.Fprintf(os.Stderr, "Error: --platform and --body are required. Usage: aeo post import --platform reddit --body \"...\"\n")
-			os.Exit(1)
+			if postsJSON == "" && body == "" {
+				fmt.Fprintf(os.Stderr, "Error: --body or --posts is required.\n")
+				os.Exit(1)
 			}
 			importBody := map[string]any{
 				"platform": platform,
-				"body":     body,
 			}
-			if v := findFlag(args, "--title"); v != "" {
-				importBody["title"] = v
+			if postsJSON != "" {
+				var posts []map[string]any
+				if err := json.Unmarshal([]byte(postsJSON), &posts); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: --posts must be valid JSON array: %s\n", err)
+					os.Exit(1)
+				}
+				importBody["posts"] = posts
+			} else {
+				importBody["body"] = body
+				if v := findFlag(args, "--title"); v != "" {
+					importBody["title"] = v
+				}
 			}
 			if v := findFlag(args, "--post-type"); v != "" {
 				importBody["postType"] = v
