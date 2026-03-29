@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var version = "0.6.1"
+var version = "0.7.0"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -253,6 +253,7 @@ Run 'aeo <command>' without a verb for detailed help.
 var subUsage = map[string]string{
 	"domain": `aeo domain <verb>
 
+  setup             Show setup checklist (integrations status)
   list              List accessible domains
   switch <id>       Switch active domain
   brand             Show brand profile
@@ -357,6 +358,8 @@ func main() {
 			return
 		}
 		switch args[1] {
+		case "setup":
+			run("/setup-status", "GET", nil, domainID)
 		case "list":
 			run("/domains", "GET", nil, domainID)
 		case "brand":
