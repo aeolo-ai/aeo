@@ -818,6 +818,9 @@ func main() {
 		case "preview":
 			requireArg(args, 2, "aeo post preview <id>")
 			run("/channel-posts/"+args[2]+"/preview-link", "POST", nil, domainID)
+		case "delete":
+			requireArg(args, 2, "aeo post delete <id>")
+			run("/channel-posts/"+args[2], "DELETE", nil, domainID)
 		case "examples":
 			if len(args) > 2 && args[2] == "add" {
 				platform := findFlag(args, "--platform")
