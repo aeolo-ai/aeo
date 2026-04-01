@@ -193,6 +193,32 @@ func wantsHelp(args []string) bool {
 	return false
 }
 
+// checkLatestVersion queries GitHub for the latest release and prints an
+// upgrade notice if the current binary is outdated. Fails silently.
+func checkLatestVersion() {
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("https://api.github.com/repos/kithlabs/aeo/releases/latest")
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return
+	}
+	var release struct {
+		TagName string `json:"tag_name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return
+	}
+	latest := strings.TrimPrefix(release.TagName, "v")
+	if latest != "" && latest != version {
+		fmt.Fprintf(os.Stderr, "\nUpdate available: %s → %s\n", version, latest)
+		fmt.Fprintf(os.Stderr, "  brew upgrade aeo\n")
+		fmt.Fprintf(os.Stderr, "  curl -fsSL https://skills.tryaeolo.com/aeo | sh\n")
+	}
+}
+
 func buildJSON(fields map[string]string) []byte {
 	m := make(map[string]string)
 	for k, v := range fields {
@@ -382,6 +408,7 @@ func main() {
 	switch cmd {
 	case "--version", "-V":
 		fmt.Printf("aeo %s (native)\n", version)
+		checkLatestVersion()
 	case "--help", "help":
 		fmt.Print(usage)
 
