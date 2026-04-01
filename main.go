@@ -184,6 +184,15 @@ func findFlag(args []string, names ...string) string {
 	return ""
 }
 
+func wantsHelp(args []string) bool {
+	for _, a := range args {
+		if a == "--help" || a == "-h" {
+			return true
+		}
+	}
+	return false
+}
+
 func buildJSON(fields map[string]string) []byte {
 	m := make(map[string]string)
 	for k, v := range fields {
@@ -258,6 +267,7 @@ var subUsage = map[string]string{
   switch <id>       Switch active domain
   brand             Show brand profile
   brand update      Update brand profile
+                    Flags: --name, --industry, --category, --value-proposition, --brand-context
   audit             Show latest audit report
   channels          List connected channels
 `,
@@ -275,21 +285,26 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 	"visibility": `aeo visibility <verb>
 
   show              Show last visibility snapshot
-  check run         Trigger a new visibility check (--engines)
+  check run         Trigger a new visibility check
+                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity,grok)
   check poll <id>   Poll check status
 `,
 	"strategy": `aeo strategy <verb>
 
   show              Show content strategy
-  update            Update content strategy (--manifest, --frequency)
+  update            Update content strategy
+                    Flags: --manifest, --frequency, --articles-per-cycle, --preferred-days, --auto-propose
 `,
 	"content": `aeo content <verb>
 
-  list              List content items (--status, --limit, --offset)
+  list              List content items
+                    Flags: --status, --limit, --offset
   get <id>          Get full article content
-  update <id>       Update content item (--status, --title)
+  update <id>       Update content item
+                    Flags: --status, --deploy-status, --title, --meta-description,
+                           --keywords (comma-separated), --body, --body-file, --patch ("search>>>replace")
   preview <id>      Generate preview link
-  deploy <id>       Deploy to Shopify
+  deploy <id>       Deploy to Shopify (--channel)
   redeploy <id>     Redeploy to Shopify
 `,
 	"prompts": `aeo prompts <verb>
@@ -312,10 +327,19 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 `,
 	"post": `aeo post <verb>
 
-  list              List channel posts (--platform, --status, --limit, --offset)
+  list              List channel posts
+                    Flags: --platform, --status, --limit, --offset
   get <id>          Get a channel post by ID
-  import            Import a channel post draft (--platform, --body required)
+  import            Import a channel post draft
+                    Required: --platform, --body (or --posts JSON array)
                     Optional: --title, --post-type, --target, --content-id, --channel-id
+  preview <id>      Generate preview link
+  delete <id>       Delete a channel post
+  examples          List voice examples (--platform)
+  examples add      Add a voice example
+                    Required: --platform, --type (good|bad), --body
+                    Optional: --source-url, --note
+  examples delete <id>  Delete a voice example
   approve <id>      Approve a draft post for publishing
   publish <id>      Publish an approved post to its platform
 `,
@@ -324,6 +348,16 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   login             Authenticate via browser (--api-base)
   status            Show credentials
   logout            Clear credentials
+`,
+	"config": `aeo config <subcommand>
+
+  data-sources         Show configured data sources
+  data-sources update  Update data sources (--data-sources)
+`,
+	"report": `aeo report
+
+  Report command execution to the server.
+  Flags: --command (required), --status-code, --response-body, --context
 `,
 }
 
@@ -353,7 +387,7 @@ func main() {
 
 	// ── domain ──
 	case "domain", "domains":
-		if len(args) < 2 || cmd == "domains" {
+		if len(args) < 2 || cmd == "domains" || wantsHelp(args) {
 			printSubUsage("domain")
 			return
 		}
@@ -398,6 +432,10 @@ func main() {
 			run("/channels", "GET", nil, domainID)
 			return
 		}
+		if wantsHelp(args) {
+			printSubUsage("channel")
+			return
+		}
 		switch args[1] {
 		case "list":
 			run("/channels", "GET", nil, domainID)
@@ -435,7 +473,7 @@ func main() {
 
 	// ── visibility ──
 	case "visibility":
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("visibility")
 			return
 		}
@@ -475,9 +513,9 @@ func main() {
 
 	// ── config ──
 	case "config":
-		if len(args) < 2 {
-			fmt.Fprintln(os.Stderr, "Usage: aeo config <subcommand>\n\nSubcommands:\n  data-sources        Show configured data sources\n  data-sources update  Update data sources (--data-sources)")
-			os.Exit(1)
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("config")
+			return
 		}
 		switch args[1] {
 		case "data-sources":
@@ -499,7 +537,7 @@ func main() {
 
 	// ── strategy ──
 	case "strategy":
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("strategy")
 			return
 		}
@@ -564,7 +602,7 @@ func main() {
 			}
 			run(path, "GET", nil, domainID)
 		}
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("content")
 			return
 		}
@@ -644,7 +682,7 @@ func main() {
 
 	// ── prompts ──
 	case "prompts":
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("prompts")
 			return
 		}
@@ -683,7 +721,7 @@ func main() {
 
 	// ── metrics ──
 	case "metrics":
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("metrics")
 			return
 		}
@@ -706,7 +744,7 @@ func main() {
 
 	// ── auth ──
 	case "auth":
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("auth")
 			return
 		}
@@ -777,6 +815,10 @@ func main() {
 
 	// ── report ──
 	case "report":
+		if wantsHelp(args) {
+			printSubUsage("report")
+			return
+		}
 		reportCmd := findFlag(args, "--command")
 		if reportCmd == "" {
 			fmt.Fprintln(os.Stderr, "Error: --command required")
@@ -832,7 +874,7 @@ func main() {
 			}
 			run(path, "GET", nil, domainID)
 		}
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("post")
 			return
 		}
@@ -940,7 +982,7 @@ func main() {
 
 	// ── drive ──
 	case "drive":
-		if len(args) < 2 {
+		if len(args) < 2 || wantsHelp(args) {
 			printSubUsage("drive")
 			return
 		}
