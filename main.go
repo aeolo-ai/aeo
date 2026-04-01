@@ -473,6 +473,30 @@ func main() {
 			printSubUsage("visibility")
 		}
 
+	// ── config ──
+	case "config":
+		if len(args) < 2 {
+			fmt.Fprintln(os.Stderr, "Usage: aeo config <subcommand>\n\nSubcommands:\n  data-sources        Show configured data sources\n  data-sources update  Update data sources (--data-sources)")
+			os.Exit(1)
+		}
+		switch args[1] {
+		case "data-sources":
+			if len(args) >= 3 && args[2] == "update" {
+				ds := findFlag(args, "--data-sources")
+				if ds == "" {
+					fmt.Fprintln(os.Stderr, "Error: --data-sources is required")
+					os.Exit(1)
+				}
+				data, _ := json.Marshal(map[string]any{"data-sources": ds})
+				run("/data-sources", "PUT", data, domainID)
+			} else {
+				run("/data-sources", "GET", nil, domainID)
+			}
+		default:
+			fmt.Fprintln(os.Stderr, "Unknown config subcommand:", args[1])
+			os.Exit(1)
+		}
+
 	// ── strategy ──
 	case "strategy":
 		if len(args) < 2 {
