@@ -759,7 +759,7 @@ func main() {
 				importBody["sources"] = sources
 			}
 			importJSON, _ := json.Marshal(importBody)
-			run("/content-queue/import", "POST", importJSON, domainID)
+			run("/content/import", "POST", importJSON, domainID)
 		default:
 			// Might be a content ID: aeo content <uuid>
 			run("/content/"+sub, "GET", nil, domainID)
