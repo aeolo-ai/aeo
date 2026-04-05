@@ -332,6 +332,10 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   preview <id>      Generate preview link
   deploy <id>       Deploy to Shopify (--channel)
   redeploy <id>     Redeploy to Shopify
+  import            Import a draft article
+                    Required: --title, --body (or --body-file)
+                    Optional: --type, --keywords (comma-separated), --language, --rationale,
+                              --meta-description, --sources (JSON array)
 `,
 	"prompts": `aeo prompts <verb>
 
@@ -702,6 +706,60 @@ func main() {
 		case "redeploy":
 			requireArg(args, 2, "aeo content redeploy <id>")
 			run("/content/"+args[2]+"/redeploy", "PUT", nil, domainID)
+		case "import":
+			title := findFlag(args, "--title")
+			if title == "" {
+				fmt.Fprintf(os.Stderr, "Error: --title is required.\nUsage: aeo content import --title \"...\" --body \"...\" [--type blog] [--keywords \"k1,k2\"]\n")
+				os.Exit(1)
+			}
+			bodyContent := findFlag(args, "--body")
+			if v := findFlag(args, "--body-file"); v != "" {
+				raw, err := os.ReadFile(v)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error reading body file: %s\n", err)
+					os.Exit(1)
+				}
+				bodyContent = string(raw)
+			}
+			if bodyContent == "" {
+				fmt.Fprintf(os.Stderr, "Error: --body or --body-file is required.\n")
+				os.Exit(1)
+			}
+			importBody := map[string]any{
+				"title":   title,
+				"content": bodyContent,
+			}
+			if v := findFlag(args, "--type"); v != "" {
+				importBody["articleType"] = v
+			}
+			if v := findFlag(args, "--keywords"); v != "" {
+				var kw []string
+				for _, k := range strings.Split(v, ",") {
+					if t := strings.TrimSpace(k); t != "" {
+						kw = append(kw, t)
+					}
+				}
+				importBody["targetKeywords"] = kw
+			}
+			if v := findFlag(args, "--language"); v != "" {
+				importBody["language"] = v
+			}
+			if v := findFlag(args, "--rationale"); v != "" {
+				importBody["rationale"] = v
+			}
+			if v := findFlag(args, "--meta-description"); v != "" {
+				importBody["metaDescription"] = v
+			}
+			if v := findFlag(args, "--sources"); v != "" {
+				var sources []map[string]any
+				if err := json.Unmarshal([]byte(v), &sources); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: --sources must be valid JSON array: %s\n", err)
+					os.Exit(1)
+				}
+				importBody["sources"] = sources
+			}
+			importJSON, _ := json.Marshal(importBody)
+			run("/content-queue/import", "POST", importJSON, domainID)
 		default:
 			// Might be a content ID: aeo content <uuid>
 			run("/content/"+sub, "GET", nil, domainID)
