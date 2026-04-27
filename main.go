@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var version = "0.8.2"
+var version = "0.9.0"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -93,6 +93,8 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 	var url string
 	if path == "/domains" {
 		url = creds.APIBase + "/v1/connector/domains"
+	} else if path == "/whoami" {
+		url = creds.APIBase + "/v1/connector/whoami"
 	} else {
 		if did == "" {
 			return "", fmt.Errorf("domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
@@ -130,11 +132,50 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 	}
 
 	if resp.StatusCode >= 400 {
-		var errObj struct{ Message string `json:"message"` }
+		// Parse generic error envelope (message + optional code/details/upgrade_url)
+		var errObj struct {
+			Message    string          `json:"message"`
+			Code       string          `json:"code"`
+			UpgradeURL string          `json:"upgrade_url"`
+			Details    json.RawMessage `json:"details"`
+		}
 		if json.Unmarshal(respBody, &errObj) == nil && errObj.Message != "" {
-			return "", fmt.Errorf("%s", errObj.Message)
+			msg := errObj.Message
+
+			// G22: include zod validation details when present
+			if len(errObj.Details) > 0 && string(errObj.Details) != "null" {
+				var pretty bytes.Buffer
+				if json.Indent(&pretty, errObj.Details, "", "  ") == nil {
+					msg = fmt.Sprintf("Message: %s\nDetails: %s", errObj.Message, pretty.String())
+				} else {
+					msg = fmt.Sprintf("Message: %s\nDetails: %s", errObj.Message, string(errObj.Details))
+				}
+			}
+
+			// G23: append upgrade URL on TRIAL_EXPIRED
+			if errObj.Code == "TRIAL_EXPIRED" && errObj.UpgradeURL != "" {
+				msg = fmt.Sprintf("%s\n\n  → Subscribe at: %s", msg, errObj.UpgradeURL)
+			}
+
+			return "", fmt.Errorf("%s", msg)
 		}
 		return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, truncate(string(respBody), 200))
+	}
+
+	// G21: surface markdown payloads from `{success: true, data: "<markdown>"}` envelopes
+	if strings.Contains(resp.Header.Get("Content-Type"), "application/json") {
+		var envelope struct {
+			Success *bool           `json:"success"`
+			Data    json.RawMessage `json:"data"`
+		}
+		if json.Unmarshal(respBody, &envelope) == nil && envelope.Success != nil && *envelope.Success && len(envelope.Data) > 0 {
+			var dataStr string
+			if json.Unmarshal(envelope.Data, &dataStr) == nil {
+				if strings.HasPrefix(dataStr, "#") || strings.HasPrefix(dataStr, "**") || strings.Contains(dataStr, "\n") {
+					return dataStr, nil
+				}
+			}
+		}
 	}
 
 	// Pretty-print JSON responses
@@ -275,6 +316,7 @@ COMMANDS:
   post          list | get <id> | import | approve <id> | publish <id>
   drive         list [--folder <id>] | read <file_id>
   auth          login | status | logout
+  whoami        Show current user (email, tier, trial days)
   report        --command <cmd>
 
 OPTIONS:
@@ -827,6 +869,10 @@ func main() {
 			printSubUsage("metrics")
 		}
 
+	// ── whoami ──
+	case "whoami":
+		run("/whoami", "GET", nil, "")
+
 	// ── auth ──
 	case "auth":
 		if len(args) < 2 || wantsHelp(args) {
@@ -865,6 +911,39 @@ func main() {
 			}
 
 			fmt.Println("Logged in")
+
+			// Best-effort: enrich with email / tier / trial from /whoami.
+			// Failure is non-fatal (e.g. offline, server down, expired token).
+			if whoamiRaw, err := callConnector("/whoami", "GET", nil, ""); err == nil && whoamiRaw != "" {
+				var whoami struct {
+					Email             string `json:"email"`
+					Tier              string `json:"tier"`
+					TrialDaysRemaining *int   `json:"trial_days_remaining"`
+					Data              struct {
+						Email             string `json:"email"`
+						Tier              string `json:"tier"`
+						TrialDaysRemaining *int   `json:"trial_days_remaining"`
+					} `json:"data"`
+				}
+				if json.Unmarshal([]byte(whoamiRaw), &whoami) == nil {
+					email := strOr(whoami.Email, whoami.Data.Email)
+					tier := strOr(whoami.Tier, whoami.Data.Tier)
+					trial := whoami.TrialDaysRemaining
+					if trial == nil {
+						trial = whoami.Data.TrialDaysRemaining
+					}
+					if email != "" {
+						fmt.Printf("  Email:    %s\n", email)
+					}
+					if tier != "" {
+						fmt.Printf("  Tier:     %s\n", tier)
+					}
+					if trial != nil {
+						fmt.Printf("  Trial:    %d day(s) remaining\n", *trial)
+					}
+				}
+			}
+
 			fmt.Printf("  API key:  %s...  (%s)\n", hint, src(envKey, cfg.APIKey))
 			if activeDomain == "" {
 				fmt.Printf("  Domain:   (not set)  (%s)\n", src(envDomain, cfg.DomainID))
