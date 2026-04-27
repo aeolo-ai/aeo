@@ -95,6 +95,8 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 		url = creds.APIBase + "/v1/connector/domains"
 	} else if path == "/whoami" {
 		url = creds.APIBase + "/v1/connector/whoami"
+	} else if path == "/feedback" {
+		url = creds.APIBase + "/v1/connector/feedback"
 	} else {
 		if did == "" {
 			return "", fmt.Errorf("domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
@@ -234,6 +236,60 @@ func wantsHelp(args []string) bool {
 	return false
 }
 
+// editorPrompt opens $VISUAL or $EDITOR with a temp file pre-populated with
+// `seed` (typically a comment header). Returns the file contents minus comment
+// lines (lines starting with `#`).
+func editorPrompt(seed string) (string, error) {
+	editor := os.Getenv("VISUAL")
+	if editor == "" {
+		editor = os.Getenv("EDITOR")
+	}
+	if editor == "" {
+		// Reasonable defaults per platform.
+		if runtime.GOOS == "windows" {
+			editor = "notepad"
+		} else {
+			editor = "vi"
+		}
+	}
+
+	tmp, err := os.CreateTemp("", "aeo-feedback-*.md")
+	if err != nil {
+		return "", err
+	}
+	tmpName := tmp.Name()
+	defer os.Remove(tmpName)
+
+	if _, err := tmp.WriteString(seed); err != nil {
+		tmp.Close()
+		return "", err
+	}
+	tmp.Close()
+
+	cmd := exec.Command(editor, tmpName)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("editor exited with error: %w", err)
+	}
+
+	raw, err := os.ReadFile(tmpName)
+	if err != nil {
+		return "", err
+	}
+
+	// Strip comment lines (#) and leading/trailing whitespace.
+	var out []string
+	for _, line := range strings.Split(string(raw), "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			continue
+		}
+		out = append(out, line)
+	}
+	return strings.TrimSpace(strings.Join(out, "\n")), nil
+}
+
 // checkLatestVersion queries GitHub for the latest release and prints an
 // upgrade notice if the current binary is outdated. Fails silently.
 func checkLatestVersion() {
@@ -317,6 +373,7 @@ COMMANDS:
   drive         list [--folder <id>] | read <file_id>
   auth          login | status | logout
   whoami        Show current user (email, tier, trial days)
+  feedback      Send feedback to the Aeolo team (bug report, idea, anything)
   report        --command <cmd>
 
 OPTIONS:
@@ -430,6 +487,15 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 
   Report command execution to the server.
   Flags: --command (required), --status-code, --response-body, --context
+`,
+	"feedback": `aeo feedback [<message>]
+
+  Send feedback (bug, idea, anything) to the Aeolo team. Message is delivered
+  to the team's #feedback channel and stored in the database.
+
+  Usage:
+    aeo feedback "your message here"   # one-shot
+    aeo feedback                       # opens $EDITOR for longer messages
 `,
 }
 
@@ -1002,6 +1068,35 @@ func main() {
 		}
 		reportJSON, _ := json.Marshal(reportBody)
 		runSilent("/report", "POST", reportJSON, domainID)
+
+	// ── feedback (account-scoped, free-form customer feedback) ──
+	case "feedback":
+		if wantsHelp(args) {
+			printSubUsage("feedback")
+			return
+		}
+		message := strings.Join(args[1:], " ")
+		message = strings.TrimSpace(message)
+		// If no message arg, open $EDITOR (or $VISUAL) for longer composition.
+		if message == "" {
+			edited, err := editorPrompt("# Aeolo feedback — write your message above this line.\n# Lines starting with # are ignored. Save and quit to send.\n")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+				os.Exit(1)
+			}
+			message = strings.TrimSpace(edited)
+			if message == "" {
+				fmt.Fprintln(os.Stderr, "No feedback entered. Aborted.")
+				os.Exit(1)
+			}
+		}
+		body := map[string]any{
+			"message":    message,
+			"cliVersion": version,
+			"os":         runtime.GOOS + "/" + runtime.GOARCH,
+		}
+		jsonBody, _ := json.Marshal(body)
+		run("/feedback", "POST", jsonBody, domainID)
 
 	// ── post (channel posts) ──
 	case "post":
