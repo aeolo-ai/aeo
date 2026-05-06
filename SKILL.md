@@ -114,6 +114,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo drive list` | List files in connected Google Drive folder (--folder) | [drive.md](references/drive.md) |
 | `/aeo drive read <file_id>` | Read a file from Google Drive | [drive.md](references/drive.md) |
 
+> **Supported types**: Google Docs/Sheets, txt/json/md/csv, **PDF**, **XLSX/XLS** (all sheets, 200-row cap each), **DOCX**, images (≤5MB base64). Not supported: `.doc`, `.pptx`, `.pages`, `.numbers`, `.key` — see [drive.md](references/drive.md).
+
 ### aeo gsc — Google Search Console (browser automation)
 
 | Command | What it does | Reference |

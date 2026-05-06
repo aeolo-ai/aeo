@@ -52,12 +52,18 @@ aeo drive read 1abc2def3ghi
 |------|----------|------|
 | Google Docs | Converted to text | Near 0 |
 | Google Sheets | Converted to CSV | Near 0 |
-| Text files (txt, json, md) | Read directly | Near 0 |
-| **PDF** | **Server-side text extraction** (pdf-parse) | Low |
-| **Images** (png, jpg, etc.) | **base64 returned** (under 5MB) | Medium |
-| Other binary | Metadata only (file name, type, size) | 0 |
+| Text files (txt, json, md, csv) | Read directly | Near 0 |
+| **PDF** | Server-side text extraction (pdf-parse) | Low |
+| **XLSX / XLS / XLSM** | All sheets → CSV, capped at 200 rows per sheet | Low |
+| **DOCX** | Raw text extraction (mammoth) | Low |
+| **Images** (png, jpg, etc.) | base64 returned (under 5MB) | Medium |
+| Other binary (.doc, .pptx, .key, zip, etc.) | Metadata only (name, type, size) | 0 |
 
-**5MB limit**: Binary files such as PDFs and images return metadata only when exceeding 5MB.
+**5MB transfer limit**: Binary files (PDF, XLSX, DOCX, images) exceeding 5MB return metadata only. To work around, split or export to a smaller format before uploading.
+
+**XLSX row cap**: Each sheet is truncated at 200 rows with a `[… truncated, N more row(s)]` marker. For larger datasets, export the relevant range as a separate sheet/file.
+
+**Not supported**: Legacy `.doc` (use `.docx`), `.pptx` (export slides as PDF), Apple iWork (`.pages`, `.numbers`, `.key`).
 
 ## Security
 
