@@ -205,6 +205,25 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
   - Do not use the same text for Title and H1
   - Do not repeat the H1 text in the intro
   - Example: `# Do You Need Sunscreen for Padel?` → `Glass walls on a padel court block wind, not UV. Here's what dermatologists say...`
+- **Title length ≤ 60 chars (HARD RULE — deploy gate enforces this)**:
+  - Mobile SERP truncates around 55 chars; desktop ~70. A 60-char ceiling lands every device cleanly.
+  - Anything longer = "…" in the SERP listing, search-intent signals get cut, CTR collapses.
+  - The Shopify deploy step rejects with HTTP 422 / `INVALID_TITLE_LENGTH` if `title.length > 60` — agent must shorten and retry.
+  - Good: `"Best No-White-Cast SPF Sticks for Sports (2026)"` (47 chars)
+  - Bad: `"What's the Best Sunscreen for NYC Half Marathon Runners in 2026? Race-Morning Picks That Won't Sting, Slip, or Leave a White Cast"` (133 chars — drop everything after the question mark)
+- **Meta description is REQUIRED, 50–160 chars (HARD RULE — deploy gate enforces this)**:
+  - The deploy step rejects with HTTP 422 / `INVALID_META_DESCRIPTION` if missing or out of range. Always pass `--meta-description` in `/aeo content import` and `/aeo content update`.
+  - **Why it matters**:
+    1. *SERP hook*: when missing, Shopify auto-fills from the body's first sentence — usually a generic intro that doesn't motivate clicks. A purposeful meta gives 2–5× CTR over fallback.
+    2. *CTR feedback loop*: low CTR signals to Google "users don't find this useful" → article drops further in rank → impressions vanish. After honeymoon ends, recovery requires good CTR.
+    3. *GEO citations*: ChatGPT / Perplexity sometimes lift the meta as the source summary when citing your URL — empty meta forces them to extract from the body, reducing citation accuracy.
+  - **What to write (target 120–155 chars)**:
+    - Sentence 1 — lead with the answer/result (BLUF style, mirrors the title intent)
+    - Sentence 2 — one differentiator: founder credentials, first-party test, scope, or comparative angle
+    - Optional close — specific value or invitation ("compared", "tested by…", "with…")
+    - Never copy the body's opening sentence verbatim (LLMs default to this; resist)
+  - Good: `"Sunscreen breaks down faster than you think. AAD says 2 hours — but sweat, water, and friction reset the clock. Here's the science, plus how stick formats fix mid-day reapplication."` (192 chars — too long, trim) → `"Sunscreen breaks down faster than 2 hours when sweat or water hits. Here's the AAD-backed science and why stick formats fix the mid-day reapplication gap."` (155 chars ✓)
+  - Bad: `"Sunscreen is essential for athletes who spend time outdoors..."` (generic intro fallback — no CTR hook)
 - BLUF in first 2–3 sentences
 - Inline citations as `[Source Name](URL)` throughout
 - Brand mentions at 15–25% density, always as part of a list (never solo promo)
@@ -277,14 +296,16 @@ Flags:
 
 | Flag | Type | Required | Default |
 |------|------|----------|---------|
-| `--title` | string | Yes | — |
+| `--title` | string ≤60 chars | Yes | — |
 | `--body` or `--body-file` | string / file path | Yes (one of) | — |
 | `--type` | enum (blog, ranked_list, comparison, how_to, guide, faq, thought_leadership, case_study) | — | `blog` |
 | `--keywords` | comma-separated | — | — |
 | `--language` | enum | — | `en` |
 | `--rationale` | string | — | — |
-| `--meta-description` | string | — | — |
+| `--meta-description` | string 50–160 chars | **Required for deploy** | — |
 | `--sources` | JSON array `[{"name":"...","url":"..."}]` | — | — |
+
+> **Deploy gate**: `/aeo content import` itself accepts a missing or oversized meta (drafts iterate freely), but `/aeo content deploy` will return HTTP 422 with `INVALID_TITLE_LENGTH` or `INVALID_META_DESCRIPTION` if the article fails the SERP-friendly limits at deploy time. Always supply both at import so the article is deploy-ready.
 
 5. On success: "Imported → View in Aeolo dashboard → Content Queue"
 
