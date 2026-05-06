@@ -327,6 +327,41 @@ func buildJSON(fields map[string]string) []byte {
 	return data
 }
 
+// buildPromptJSON merges plain string fields with an optional segment_tags
+// array. Empty tag slice is omitted; a non-nil slice replaces tags on update.
+func buildPromptJSON(fields map[string]string, tags []string) []byte {
+	out := make(map[string]any)
+	for k, v := range fields {
+		if v != "" {
+			out[k] = v
+		}
+	}
+	if tags != nil {
+		out["segment_tags"] = tags
+	}
+	data, _ := json.Marshal(out)
+	return data
+}
+
+// splitCSV trims and dedupes a comma-separated string; empty input → nil so
+// callers can distinguish "no flag passed" from "explicit empty list".
+func splitCSV(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	seen := make(map[string]bool)
+	var out []string
+	for _, p := range strings.Split(raw, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" || seen[p] {
+			continue
+		}
+		seen[p] = true
+		out = append(out, p)
+	}
+	return out
+}
+
 // ── Semver ──────────────────────────────────────────────────────────────────
 
 // semverGreater returns true if a > b (both like "0.4.1" or "v0.4.1").
@@ -368,6 +403,7 @@ COMMANDS:
   strategy      show | update
   content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
+  segments      list | pause <tags> | resume <tags>
   metrics       overview | article <id> | traffic [--days]
   post          list | get <id> | import | approve <id> | publish <id>
   drive         list [--folder <id>] | read <file_id>
@@ -439,9 +475,19 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 	"prompts": `aeo prompts <verb>
 
   list              List prompts grouped by stage
-  add               Add a prompt (--prompt, --stage, --language)
-  update <id>       Update a prompt (--prompt, --stage, --query-form)
+  add               Add a prompt (--prompt, --stage, --language, --segment foo,bar)
+  update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar)
   delete <id>       Delete a prompt
+`,
+	"segments": `aeo segments <verb>
+
+  list              List segment tags with prompt counts and pause status
+  pause <tags>      Pause one or more segments (comma-separated). Cron skips matching prompts.
+  resume <tags>     Resume tracking for one or more segments.
+
+Notes:
+  - Untagged prompts are always tracked.
+  - Tags are case-insensitive and lowercased on save.
 `,
 	"metrics": `aeo metrics <verb>
 
@@ -892,24 +938,47 @@ func main() {
 			if lang == "" {
 				lang = "en"
 			}
-			run("/prompts", "POST", buildJSON(map[string]string{
+			body := buildPromptJSON(map[string]string{
 				"canonical":  prompt,
 				"language":   lang,
 				"stage":      findFlag(args, "--stage"),
 				"query_form": findFlag(args, "--query-form"),
-			}), domainID)
+			}, splitCSV(findFlag(args, "--segment")))
+			run("/prompts", "POST", body, domainID)
 		case "update":
 			requireArg(args, 2, "aeo prompts update <id>")
-			run("/prompts/"+args[2], "PATCH", buildJSON(map[string]string{
+			body := buildPromptJSON(map[string]string{
 				"canonical":  findFlag(args, "--prompt"),
 				"stage":      findFlag(args, "--stage"),
 				"query_form": findFlag(args, "--query-form"),
-			}), domainID)
+			}, splitCSV(findFlag(args, "--segment")))
+			run("/prompts/"+args[2], "PATCH", body, domainID)
 		case "delete":
 			requireArg(args, 2, "aeo prompts delete <id>")
 			run("/prompts/"+args[2], "DELETE", nil, domainID)
 		default:
 			printSubUsage("prompts")
+		}
+
+	// ── segments ──
+	case "segments":
+		if len(args) < 2 {
+			run("/segments", "GET", nil, domainID)
+			return
+		}
+		switch args[1] {
+		case "list":
+			run("/segments", "GET", nil, domainID)
+		case "pause", "resume":
+			tags := splitCSV(strings.Join(args[2:], ","))
+			if len(tags) == 0 {
+				fmt.Fprintln(os.Stderr, "Error: at least one segment tag required")
+				os.Exit(1)
+			}
+			body, _ := json.Marshal(map[string][]string{"tags": tags})
+			run("/segments/"+args[1], "POST", body, domainID)
+		default:
+			printSubUsage("segments")
 		}
 
 	// ── metrics ──
