@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -197,6 +198,102 @@ func truncate(s string, n int) string {
 	return s[:n]
 }
 
+// downloadFile streams an authenticated GET response straight to disk.
+// Used by `aeo drive download` so a 23MB pptx never lives in CLI memory.
+func downloadFile(path, outputPath, domainOverride string) {
+	creds := resolveCredentials()
+	if creds.APIKey == "" {
+		fmt.Fprintln(os.Stderr, "Error: not authenticated. Run: aeo auth login")
+		os.Exit(1)
+	}
+
+	did := domainOverride
+	if did == "" {
+		did = creds.DomainID
+	}
+	if did == "" {
+		fmt.Fprintln(os.Stderr, "Error: domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
+		os.Exit(1)
+	}
+
+	reqURL := creds.APIBase + "/v1/connector/domains/" + did + path
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
+	req.Header.Set("Authorization", "Bearer "+creds.APIKey)
+	req.Header.Set("X-Client-Version", version)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		var errObj struct {
+			Message string `json:"message"`
+			Code    string `json:"code"`
+		}
+		if json.Unmarshal(body, &errObj) == nil && errObj.Message != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", errObj.Message)
+		} else {
+			fmt.Fprintf(os.Stderr, "HTTP %d: %s\n", resp.StatusCode, truncate(string(body), 200))
+		}
+		os.Exit(1)
+	}
+
+	outPath := outputPath
+	if outPath == "" {
+		outPath = filenameFromContentDisposition(resp.Header.Get("Content-Disposition"))
+		if outPath == "" {
+			outPath = "drive-download"
+		}
+	}
+
+	out, err := os.Create(outPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: cannot write to %s: %s\n", outPath, err)
+		os.Exit(1)
+	}
+	defer out.Close()
+
+	n, err := io.Copy(out, resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: download interrupted at %s: %s\n", humanBytes(n), err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("✓ Downloaded %s → %s\n", humanBytes(n), outPath)
+}
+
+func filenameFromContentDisposition(cd string) string {
+	if cd == "" {
+		return ""
+	}
+	_, params, err := mime.ParseMediaType(cd)
+	if err != nil {
+		return ""
+	}
+	return params["filename"]
+}
+
+func humanBytes(n int64) string {
+	const unit = 1024
+	if n < unit {
+		return fmt.Sprintf("%d B", n)
+	}
+	div, exp := int64(unit), 0
+	for x := n / unit; x >= unit; x /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(n)/float64(div), "KMGTPE"[exp])
+}
+
 // ── CLI Helpers ─────────────────────────────────────────────────────────────
 
 func run(path, method string, body []byte, domainID string) {
@@ -378,7 +475,7 @@ COMMANDS:
   segments      list | pause <tags> | resume <tags>
   metrics       overview | article <id> | traffic [--days]
   post          list | get <id> | import | approve <id> | publish <id>
-  drive         list [--folder <id>] | read <file_id>
+  drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
   products      List products in the catalog
   product       list | add (--pdp <url>)
   image         search <query> | swap (--content <id> --product <id> --reference <url>)
@@ -474,8 +571,9 @@ Notes:
 `,
 	"drive": `aeo drive <verb>
 
-  list              List Google Drive files (--folder <id>)
-  read <file_id>    Read a file from Google Drive
+  list                          List Google Drive files (--folder <id>)
+  read <file_id>                Read a file (text export; Docs/Sheets/PDF/DOCX/XLSX)
+  download <file_id> [-o path]  Stream raw bytes to disk (pptx, large files, anything binary)
 `,
 	"products": `aeo products
 
@@ -1342,6 +1440,18 @@ func main() {
 				os.Exit(1)
 			}
 			run("/drive/"+fileID, "GET", nil, domainID)
+		case "download":
+			fileID := ""
+			if len(args) >= 3 && !strings.HasPrefix(args[2], "-") {
+				fileID = args[2]
+			}
+			fileID = strOr(fileID, findFlag(args, "--id"))
+			if fileID == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo drive download <file_id> [-o <path>]")
+				os.Exit(1)
+			}
+			outputPath := findFlag(args, "-o", "--output")
+			downloadFile("/drive/"+fileID+"/download", outputPath, domainID)
 		default:
 			printSubUsage("drive")
 		}
