@@ -46,6 +46,25 @@ Reads the contents of a specific file. Returns an error if the target is a folde
 aeo drive read 1abc2def3ghi
 ```
 
+### `aeo drive download <file_id> [-o path]`
+
+Streams the raw bytes of a Drive file straight to disk — bypasses server-side parsing entirely. Use this when:
+
+- `drive read` can't extract what you need (pptx, .key, .pages, .indd, complex binaries)
+- The file is too large for the 5MB transfer cap on `drive read` (download cap is 100MB)
+- You want the file as-is to process locally with a different tool (LibreOffice, python-pptx, etc.)
+
+```
+aeo drive download 1abc2def3ghi                    # saves to ./<original-filename>
+aeo drive download 1abc2def3ghi -o ~/Downloads/    # custom path
+```
+
+**Not available via the dashboard chat agent** — the agent runs in a managed container with no local filesystem to write to. You'll get a "local CLI only" error if you try it there. Run it from a terminal where the aeo CLI is installed (Claude Code, local shell, etc.).
+
+**Caps and exclusions**:
+- 100MB cap. Files larger than that are rejected — access the file directly via the Drive web UI instead.
+- Google Workspace formats (Docs, Sheets, Slides) are rejected — there are no raw bytes to download for those. Use `aeo drive read` instead, which uses Drive's export endpoint.
+
 ### File Type Handling
 
 | Type | Handling | Cost |
