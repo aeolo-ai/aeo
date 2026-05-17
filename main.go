@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -90,18 +91,21 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 		did = creds.DomainID
 	}
 
-	var url string
+	var reqURL string
 	if path == "/domains" {
-		url = creds.APIBase + "/v1/connector/domains"
+		reqURL = creds.APIBase + "/v1/connector/domains"
 	} else if path == "/whoami" {
-		url = creds.APIBase + "/v1/connector/whoami"
+		reqURL = creds.APIBase + "/v1/connector/whoami"
 	} else if path == "/feedback" {
-		url = creds.APIBase + "/v1/connector/feedback"
+		reqURL = creds.APIBase + "/v1/connector/feedback"
+	} else if path == "/image/search" || strings.HasPrefix(path, "/image/search?") {
+		// Pexels search is account-scoped, not domain-scoped.
+		reqURL = creds.APIBase + "/v1/connector" + path
 	} else {
 		if did == "" {
 			return "", fmt.Errorf("domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
 		}
-		url = creds.APIBase + "/v1/connector/domains/" + did + path
+		reqURL = creds.APIBase + "/v1/connector/domains/" + did + path
 	}
 
 	var bodyReader io.Reader
@@ -109,7 +113,7 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 		bodyReader = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequest(method, url, bodyReader)
+	req, err := http.NewRequest(method, reqURL, bodyReader)
 	if err != nil {
 		return "", err
 	}
@@ -375,6 +379,9 @@ COMMANDS:
   metrics       overview | article <id> | traffic [--days]
   post          list | get <id> | import | approve <id> | publish <id>
   drive         list [--folder <id>] | read <file_id>
+  products      List products in the catalog
+  product       list | add (--pdp <url>)
+  image         search <query> | swap (--content <id> --product <id> --reference <url>)
   auth          login | status | logout
   whoami        Show current user (email, tier, trial days)
   feedback      Send feedback to the Aeolo team (bug report, idea, anything)
@@ -467,6 +474,24 @@ Notes:
 
   list              List Google Drive files (--folder <id>)
   read <file_id>    Read a file from Google Drive
+`,
+	"products": `aeo products
+
+  List domain products with IDs (catalog source for 'aeo image swap').
+`,
+	"product": `aeo product <verb>
+
+  list              Same as 'aeo products'
+  add               Add a product by PDP URL (scrapes title/image/price)
+                    Required: --pdp <url>
+`,
+	"image": `aeo image <verb>
+
+  search <query>    Search Pexels for reference scenes
+                    Flags: --per-page (default 12), --page (default 1)
+  swap              Generate a 16:9 thumbnail by swapping a product into a reference scene
+                    Required: --content <id>, --product <id>, --reference <url>
+                    Optional: --no-persist (don't save to content_history)
 `,
 	"post": `aeo post <verb>
 
@@ -1303,6 +1328,87 @@ func main() {
 			run("/drive/"+fileID, "GET", nil, domainID)
 		default:
 			printSubUsage("drive")
+		}
+
+	// ── products / product (catalog used by image swap) ──
+	case "products":
+		run("/products", "GET", nil, domainID)
+
+	case "product":
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("product")
+			return
+		}
+		switch args[1] {
+		case "list":
+			run("/products", "GET", nil, domainID)
+		case "add":
+			pdp := findFlag(args, "--pdp", "--url", "--pdp-url")
+			if pdp == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo product add --pdp <url>")
+				os.Exit(1)
+			}
+			body, _ := json.Marshal(map[string]string{"pdpUrl": pdp})
+			run("/products", "POST", body, domainID)
+		default:
+			printSubUsage("product")
+		}
+
+	// ── image (Pexels reference search + product-swap thumbnail) ──
+	case "image":
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("image")
+			return
+		}
+		switch args[1] {
+		case "search":
+			// Collect positional query terms up to the first flag.
+			var qParts []string
+			for i := 2; i < len(args); i++ {
+				if strings.HasPrefix(args[i], "--") {
+					break
+				}
+				qParts = append(qParts, args[i])
+			}
+			query := strings.Join(qParts, " ")
+			if query == "" {
+				query = findFlag(args, "--q", "--query")
+			}
+			if query == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo image search <query> [--per-page N] [--page N]")
+				os.Exit(1)
+			}
+			qs := "q=" + url.QueryEscape(query)
+			if v := findFlag(args, "--per-page"); v != "" {
+				qs += "&perPage=" + v
+			}
+			if v := findFlag(args, "--page"); v != "" {
+				qs += "&page=" + v
+			}
+			run("/image/search?"+qs, "GET", nil, "")
+		case "swap":
+			contentID := findFlag(args, "--content", "--content-id")
+			productID := findFlag(args, "--product", "--product-id")
+			ref := findFlag(args, "--reference", "--reference-url")
+			if contentID == "" || productID == "" || ref == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo image swap --content <id> --product <id> --reference <url> [--no-persist]")
+				os.Exit(1)
+			}
+			body := map[string]any{
+				"contentId":    contentID,
+				"productId":    productID,
+				"referenceUrl": ref,
+			}
+			for _, a := range args {
+				if a == "--no-persist" {
+					body["persist"] = false
+					break
+				}
+			}
+			b, _ := json.Marshal(body)
+			run("/image/swap", "POST", b, domainID)
+		default:
+			printSubUsage("image")
 		}
 
 	// ── update ──
