@@ -438,7 +438,9 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   get <id>          Get full article content
   update <id>       Update content item
                     Flags: --status, --deploy-status, --title, --meta-description,
-                           --keywords (comma-separated), --body, --body-file, --patch ("search>>>replace")
+                           --keywords (comma-separated), --body, --body-file, --patch ("search>>>replace"),
+                           --thumbnail-url <url> (pin image directly, skip swap),
+                           --clear-thumbnail (drop existing thumbnail)
   preview <id>      Generate preview link
   deploy <id>       Deploy to Shopify (--channel)
   redeploy <id>     Redeploy to Shopify
@@ -839,6 +841,20 @@ func main() {
 					os.Exit(1)
 				}
 				body["patches"] = []map[string]string{{"search": parts[0], "replace": parts[1]}}
+			}
+			// --thumbnail-url <url> pins a direct image (bypasses image swap).
+			// --clear-thumbnail explicitly drops the existing thumbnail to NULL.
+			clearThumb := false
+			for _, a := range args {
+				if a == "--clear-thumbnail" {
+					clearThumb = true
+					break
+				}
+			}
+			if clearThumb {
+				body["thumbnail_url"] = nil
+			} else if v := findFlag(args, "--thumbnail-url"); v != "" {
+				body["thumbnail_url"] = v
 			}
 			data, _ := json.Marshal(body)
 			run("/content/"+args[2], "PATCH", data, domainID)
