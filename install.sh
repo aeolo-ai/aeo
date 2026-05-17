@@ -26,11 +26,16 @@ case "$ARCH" in
 esac
 
 # ── Resolve latest version ───────────────────────────────────────────────────
+# Follow the `/releases/latest` redirect instead of hitting the JSON API —
+# unauthenticated api.github.com is rate-limited to 60 req/hr/IP and shared
+# households / offices burn through that easily, producing a 403. The HTML
+# endpoint has no quota.
 
 if [ -z "$AEO_VERSION" ]; then
-  AEO_VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
-    | grep '"tag_name"' | head -1 | sed 's/.*"v\(.*\)".*/\1/')
-  if [ -z "$AEO_VERSION" ]; then
+  LATEST_URL=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
+    "https://github.com/${REPO}/releases/latest")
+  AEO_VERSION=$(printf '%s' "$LATEST_URL" | sed -E 's|.*/tag/v?([^/]+)$|\1|')
+  if [ -z "$AEO_VERSION" ] || [ "$AEO_VERSION" = "$LATEST_URL" ]; then
     echo "Error: could not determine latest version"
     exit 1
   fi
