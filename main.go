@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-var version = "1.3.0"
+var version = "1.4.0"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -592,6 +593,10 @@ Notes:
   swap              Generate a 16:9 thumbnail by swapping a product into a reference scene
                     Required: --content <id>, --product <id>, --reference <url>
                     Optional: --no-persist (don't save to content_history)
+  upload            Upload a local image to the thumbnail bucket
+                    Required: --file <path>
+                    Optional: --content <id> (pin as thumbnail), --mime-type (auto from extension)
+                    Limits: image must be ≤25 megapixels (Shopify article cap)
 `,
 	"post": `aeo post <verb>
 
@@ -1533,6 +1538,40 @@ func main() {
 			}
 			b, _ := json.Marshal(body)
 			run("/image/swap", "POST", b, domainID)
+		case "upload":
+			filePath := findFlag(args, "--file", "--path")
+			if filePath == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo image upload --file <path> [--content <id>]")
+				os.Exit(1)
+			}
+			data, err := os.ReadFile(filePath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Could not read file: %v\n", err)
+				os.Exit(1)
+			}
+			// Detect MIME — flag override wins; otherwise extension; otherwise sniff.
+			mime := findFlag(args, "--mime-type", "--mime")
+			if mime == "" {
+				switch strings.ToLower(filepath.Ext(filePath)) {
+				case ".jpg", ".jpeg":
+					mime = "image/jpeg"
+				case ".png":
+					mime = "image/png"
+				case ".webp":
+					mime = "image/webp"
+				default:
+					mime = http.DetectContentType(data)
+				}
+			}
+			body := map[string]any{
+				"base64":   base64.StdEncoding.EncodeToString(data),
+				"mimeType": mime,
+			}
+			if c := findFlag(args, "--content", "--content-id"); c != "" {
+				body["contentId"] = c
+			}
+			b, _ := json.Marshal(body)
+			run("/image/upload", "POST", b, domainID)
 		default:
 			printSubUsage("image")
 		}
