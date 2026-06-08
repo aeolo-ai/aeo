@@ -78,7 +78,7 @@ _Full report: https://tryaeolo.com/report/.../visibility_
 | Area | Commands |
 |------|----------|
 | **Brand & domain** | `aeo domain list / brand / brand update / audit / setup` |
-| **Visibility** | `aeo visibility` · `aeo visibility check poll <id>` |
+| **Visibility** | `aeo visibility` · `aeo visibility check run / poll` |
 | **Site audit** | `aeo audit run / poll` |
 | **Content lifecycle** | `aeo content list / get / write / jobs / update / preview / deploy / redeploy / import` |
 | **Strategy** | `aeo strategy` · `aeo strategy update` |
@@ -91,7 +91,7 @@ _Full report: https://tryaeolo.com/report/.../visibility_
 | **Account & billing** | `aeo whoami` · `aeo billing subscription / credits / ledger` · `aeo auth login / status / logout` |
 | **Send feedback** | `aeo feedback "msg"` or `aeo feedback` (opens `$EDITOR`) |
 
-Production actions reserve and capture Aeolo credits server-side. Failed background jobs are refunded by the worker finalizers. Current costs: site audit starts at 3 credits per 5 pages; writing, reference analysis, video analysis, channel voice analysis, and image swap cost 5 credits each.
+Production actions reserve and capture Aeolo credits server-side. Failed background jobs are refunded by the worker finalizers. Current costs: visibility checks cost 1 credit per prompt × engine; site audit starts at 3 credits per 5 pages; writing, reference analysis, video analysis, channel voice analysis, and image swap cost 5 credits each.
 
 Run `aeo --help` for the complete reference, or `aeo <command> --help` for detail on any verb.
 

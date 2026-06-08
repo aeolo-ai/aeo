@@ -97,7 +97,7 @@ Accepted fields:
 | `language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `"zh"` |
 | `query_form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `"long-tail"` |
 
-Confirm the details with the user before submitting. After success, explain that the prompt will be included in scheduled visibility checks.
+Confirm the details with the user before submitting. After success, ask whether to run `/aeo visibility check run` to measure the new prompt set; it reserves credits based on prompt x engine count.
 
 ---
 

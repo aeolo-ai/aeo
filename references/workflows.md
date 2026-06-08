@@ -96,9 +96,10 @@ After onboarding is complete, check if a visibility snapshot exists:
 aeo visibility show
 ```
 
-If no data exists, explain that visibility checks are scheduled/admin-only and continue from strategy, brand context, audit data, and known channel performance.
+If no data exists, ask the user: "Would you like me to run an initial visibility check? This reserves credits based on prompt × engine count and gives me gap data to prioritize your first articles. Or I can start writing based on your strategy and brand context alone."
 
-- Proceed to Daily Content Loop using Priority B-D only (hub-spoke, refresh, seasonal). Priority A (gap-based) is unavailable without visibility data, but the other priorities are sufficient to start producing.
+- **User says yes** → `aeo visibility check run` → poll → proceed to Daily Content Loop with gap data
+- **User says no / skip** → proceed to Daily Content Loop using Priority B-D only (hub-spoke, refresh, seasonal). Priority A (gap-based) is unavailable without visibility data, but the other priorities are sufficient to start producing.
 
 ---
 
@@ -217,10 +218,10 @@ Run once per week. This is your feedback cycle — measure, analyze, adjust.
 ### Step 1: Fresh data
 
 ```bash
-aeo visibility show
+aeo visibility check run --engines=chatgpt,gemini,perplexity,grok
 ```
 
-Use the latest scheduled visibility snapshot. Then gather metrics:
+This reserves credits based on prompt x engine count. While waiting, gather metrics:
 
 ```bash
 aeo metrics overview              # All deployed articles with GA4 + GSC

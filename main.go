@@ -471,7 +471,7 @@ USAGE:
 COMMANDS:
   domain        list | switch <id> | brand | brand update | audit | channels
   channel       list | voice | add | update <id> | delete <id> | connect <id> | disconnect <id>
-  visibility    show | check poll <jobId>
+	visibility    show | check run | check poll <jobId>
   audit         run | poll <jobId>
   strategy      show | update
   content       list | get <id> | review <id> | write | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
@@ -527,9 +527,10 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 	"visibility": `aeo visibility <verb>
 
   show              Show last visibility snapshot
+  check run         Trigger a credit-metered visibility check
+                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity,grok),
+                           --limit, --prompt-ids
   check poll <id>   Poll check status
-
-Visibility checks run on Aeolo's schedule. Manual CLI runs are disabled.
 `,
 	"audit": `aeo audit <verb>
 
@@ -828,8 +829,27 @@ func main() {
 			}
 			switch args[2] {
 			case "run":
-				fmt.Fprintln(os.Stderr, "Error: visibility checks are scheduled/admin-only. Use: aeo visibility show")
-				os.Exit(1)
+				engines := findFlag(args, "--engines")
+				if engines == "" {
+					engines = "chatgpt,gemini,perplexity,grok"
+				}
+				engineParts := strings.Split(engines, ",")
+				for i, p := range engineParts {
+					engineParts[i] = strings.TrimSpace(p)
+				}
+				body := map[string]any{"engines": engineParts}
+				if v := findFlag(args, "--limit"); v != "" {
+					var limit int
+					fmt.Sscanf(v, "%d", &limit)
+					if limit > 0 {
+						body["limit"] = limit
+					}
+				}
+				if v := findFlag(args, "--prompt-ids", "--prompts"); v != "" {
+					body["promptIds"] = splitCSV(v)
+				}
+				enginesJSON, _ := json.Marshal(body)
+				run("/visibility-check", "POST", enginesJSON, domainID)
 			case "poll":
 				if len(args) < 4 {
 					fmt.Fprintln(os.Stderr, "Usage: aeo visibility check poll <jobId>")

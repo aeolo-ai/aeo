@@ -9,6 +9,7 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 
 | Command | CLI command | Typical duration |
 |---------|------------|-----------------|
+| Visibility check | `aeo visibility check run` | 3-8 min |
 | Site audit | `aeo audit run` | 3–8 min |
 | AI writing | `aeo content write` | 2–8 min |
 | Reference analysis | `aeo reference analyze` | 2–6 min |
@@ -20,13 +21,13 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 **Step 1 — Trigger, get jobId**
 
 ```
-aeo audit run --max-pages 5
+aeo visibility check run
 # → { "data": { "jobId": "abc-123", "status": "pending" } }
 ```
 
 **Step 2 — Poll in the background**
 
-Poll `aeo audit poll {jobId}`, `aeo reference poll {jobId}`, or `aeo content jobs` every 60 seconds using your runtime's timer or scheduling mechanism. Stop polling on completion or error.
+Poll `aeo visibility check poll {jobId}`, `aeo audit poll {jobId}`, `aeo reference poll {jobId}`, or `aeo content jobs` every 60 seconds using your runtime's timer or scheduling mechanism. Stop polling on completion or error.
 
 **Step 3 — Confirm to user**
 

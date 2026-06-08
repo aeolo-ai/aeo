@@ -55,9 +55,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo visibility show` | Show the last visibility snapshot | [visibility.md](references/visibility.md) |
+| `/aeo visibility check run` | Run a credit-metered visibility check | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 | `/aeo visibility check poll <jobId>` | Poll check status | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
-
-Manual visibility runs are scheduled/admin-only. Use the latest snapshot unless an existing job ID is provided.
 
 ### aeo audit — Site foundation checks
 
@@ -213,7 +212,7 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: content write, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
+Applies to: visibility check run, content write, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first.
 
