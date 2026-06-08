@@ -468,14 +468,14 @@ USAGE:
 
 COMMANDS:
   domain        list | switch <id> | brand | brand update | audit | channels
-  channel       list | add | update <id> | delete <id> | connect <id> | disconnect <id>
+  channel       list | voice | add | update <id> | delete <id> | connect <id> | disconnect <id>
   visibility    show | check run | check poll <jobId>
   strategy      show | update
-  content       list | get <id> | update <id> | preview <id> | deploy <id> | redeploy <id>
+  content       list | get <id> | review <id> | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
   segments      list | pause <tags> | resume <tags>
   metrics       overview | article <id> | traffic [--days]
-  post          list | get <id> | import | approve <id> | publish <id>
+  post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
   drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
   products      List products in the catalog
   product       list | add (--pdp <url>)
@@ -508,6 +508,8 @@ var subUsage = map[string]string{
 	"channel": `aeo channel <verb>
 
   list              List connected channels
+  voice             Show latest channel style analysis
+                    Optional: --provider blog|threads|tiktok|instagram, --url <source_url>
   add               Add a channel (--url required, --type, --label)
   update <id>       Update a channel (--url, --type, --label)
   delete <id>       Delete a non-primary channel
@@ -534,6 +536,7 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   list              List content items
                     Flags: --status, --limit, --offset
   get <id>          Get full article content
+  review <id>       Load review workspace (article + brand + audit context)
   update <id>       Update content item
                     Flags: --status, --deploy-status, --title, --meta-description,
                            --keywords (comma-separated), --body, --body-file, --patch ("search>>>replace"),
@@ -602,6 +605,9 @@ Notes:
 
   list              List channel posts
                     Flags: --platform, --status, --limit, --offset
+  analyze           Crawl a channel/reference URL and queue voice analysis
+                    Required: --url
+                    Optional: --provider blog|threads|tiktok|instagram, --mode owned|reference, --limit
   get <id>          Get a channel post by ID
   import            Import a channel post draft
                     Required: --platform, --body (or --posts JSON array)
@@ -722,6 +728,22 @@ func main() {
 		switch args[1] {
 		case "list":
 			run("/channels", "GET", nil, domainID)
+		case "voice":
+			qs := ""
+			if v := findFlag(args, "--provider"); v != "" {
+				qs += "provider=" + url.QueryEscape(v)
+			}
+			if v := findFlag(args, "--url", "--source-url"); v != "" {
+				if qs != "" {
+					qs += "&"
+				}
+				qs += "url=" + url.QueryEscape(v)
+			}
+			path := "/channel-voice"
+			if qs != "" {
+				path += "?" + qs
+			}
+			run(path, "GET", nil, domainID)
 		case "add":
 			url := findFlag(args, "--url")
 			if url == "" {
@@ -752,7 +774,6 @@ func main() {
 		default:
 			printSubUsage("channel")
 		}
-
 
 	// ── visibility ──
 	case "visibility":
@@ -901,6 +922,9 @@ func main() {
 		case "get":
 			requireArg(args, 2, "aeo content get <id>")
 			run("/content/"+args[2], "GET", nil, domainID)
+		case "review":
+			requireArg(args, 2, "aeo content review <id>")
+			run("/content/"+args[2]+"/review", "GET", nil, domainID)
 		case "update":
 			requireArg(args, 2, "aeo content update <id>")
 			body := map[string]any{}
@@ -1163,12 +1187,12 @@ func main() {
 			// Failure is non-fatal (e.g. offline, server down, expired token).
 			if whoamiRaw, err := callConnector("/whoami", "GET", nil, ""); err == nil && whoamiRaw != "" {
 				var whoami struct {
-					Email             string `json:"email"`
-					Tier              string `json:"tier"`
+					Email              string `json:"email"`
+					Tier               string `json:"tier"`
 					TrialDaysRemaining *int   `json:"trial_days_remaining"`
-					Data              struct {
-						Email             string `json:"email"`
-						Tier              string `json:"tier"`
+					Data               struct {
+						Email              string `json:"email"`
+						Tier               string `json:"tier"`
 						TrialDaysRemaining *int   `json:"trial_days_remaining"`
 					} `json:"data"`
 				}
@@ -1325,6 +1349,30 @@ func main() {
 		switch args[1] {
 		case "list":
 			postList()
+		case "analyze":
+			sourceURL := findFlag(args, "--url", "--source-url")
+			if sourceURL == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo post analyze --url <url> [--provider blog|threads|tiktok|instagram] [--mode owned|reference]")
+				os.Exit(1)
+			}
+			body := map[string]any{
+				"sourceUrl": sourceURL,
+			}
+			if v := findFlag(args, "--provider"); v != "" {
+				body["provider"] = v
+			}
+			if v := findFlag(args, "--mode"); v != "" {
+				body["mode"] = v
+			}
+			if v := findFlag(args, "--limit"); v != "" {
+				var limit int
+				fmt.Sscanf(v, "%d", &limit)
+				if limit > 0 {
+					body["limit"] = limit
+				}
+			}
+			b, _ := json.Marshal(body)
+			run("/channel-voice", "POST", b, domainID)
 		case "get":
 			requireArg(args, 2, "aeo post get <id>")
 			run("/channel-posts/"+args[2], "GET", nil, domainID)
