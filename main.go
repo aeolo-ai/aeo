@@ -100,6 +100,8 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 		reqURL = creds.APIBase + "/v1/connector/whoami"
 	} else if path == "/feedback" {
 		reqURL = creds.APIBase + "/v1/connector/feedback"
+	} else if strings.HasPrefix(path, "/account/") {
+		reqURL = creds.APIBase + "/v1/connector" + path
 	} else if path == "/image/search" || strings.HasPrefix(path, "/image/search?") {
 		// Pexels search is account-scoped, not domain-scoped.
 		reqURL = creds.APIBase + "/v1/connector" + path
@@ -469,17 +471,21 @@ USAGE:
 COMMANDS:
   domain        list | switch <id> | brand | brand update | audit | channels
   channel       list | voice | add | update <id> | delete <id> | connect <id> | disconnect <id>
-  visibility    show | check run | check poll <jobId>
+  visibility    show | check poll <jobId>
+  audit         run | poll <jobId>
   strategy      show | update
-  content       list | get <id> | review <id> | update <id> | preview <id> | deploy <id> | redeploy <id>
+  content       list | get <id> | review <id> | write | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
   segments      list | pause <tags> | resume <tags>
   metrics       overview | article <id> | traffic [--days]
   post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
+  reference     analyze --url <url> --media <type>
+  video         analyze --url <url> [--media instagram_reels|tiktok_reels]
   drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
   products      List products in the catalog
   product       list | add (--pdp <url>)
   image         search <query> | swap (--content <id> --product <id> --reference <url>)
+  billing       subscription | credits | ledger
   auth          login | status | logout
   whoami        Show current user (email, tier, trial days)
   feedback      Send feedback to the Aeolo team (bug report, idea, anything)
@@ -521,9 +527,15 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 	"visibility": `aeo visibility <verb>
 
   show              Show last visibility snapshot
-  check run         Trigger a new visibility check
-                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity,grok)
   check poll <id>   Poll check status
+
+Visibility checks run on Aeolo's schedule. Manual CLI runs are disabled.
+`,
+	"audit": `aeo audit <verb>
+
+  run               Start a site foundation audit
+                    Flags: --max-pages (default 5, costs 3 credits per 5 pages), --channel-id
+  poll <jobId>      Poll a background audit job
 `,
 	"strategy": `aeo strategy <verb>
 
@@ -537,6 +549,11 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
                     Flags: --status, --limit, --offset
   get <id>          Get full article content
   review <id>       Load review workspace (article + brand + audit context)
+  write             Start an AI writing job (costs 5 credits)
+                    Required: --prompt (or --prompt-file)
+                    Optional: --media, --language, --channel-voice-reference
+  jobs              List active writing jobs
+                    Optional: --all
   update <id>       Update content item
                     Flags: --status, --deploy-status, --title, --meta-description,
                            --keywords (comma-separated), --body, --body-file, --patch ("search>>>replace"),
@@ -573,11 +590,31 @@ Notes:
   article <id>      Detailed article stats
   traffic           Site-level GSC traffic (--days=7|14|30|90)
 `,
+	"billing": `aeo billing <verb>
+
+  subscription      Show current subscription, tier, and credit summary
+  credits           Show current credit balance
+  ledger            Show credit ledger entries
+                    Flags: --days (default 30), --limit (default 50)
+`,
 	"drive": `aeo drive <verb>
 
   list                          List Google Drive files (--folder <id>)
   read <file_id>                Read a file (text export; Docs/Sheets/PDF/DOCX/XLSX)
   download <file_id> [-o path]  Stream raw bytes to disk (pptx, large files, anything binary)
+`,
+	"reference": `aeo reference <verb>
+
+  analyze           Start a reference analysis job (costs 5 credits)
+                    Required: --url, --media
+                    Media: linkedin_post, threads_post, visual_asset, instagram_reels, tiktok_reels
+                    Optional: --language
+`,
+	"video": `aeo video <verb>
+
+  analyze           Analyze a short-form video URL synchronously (costs 5 credits)
+                    Required: --url
+                    Optional: --media instagram_reels|tiktok_reels, --mime-type
 `,
 	"products": `aeo products
 
@@ -791,16 +828,8 @@ func main() {
 			}
 			switch args[2] {
 			case "run":
-				engines := findFlag(args, "--engines")
-				if engines == "" {
-					engines = "chatgpt,gemini,perplexity,grok"
-				}
-				engineParts := strings.Split(engines, ",")
-				for i, p := range engineParts {
-					engineParts[i] = strings.TrimSpace(p)
-				}
-				enginesJSON, _ := json.Marshal(map[string][]string{"engines": engineParts})
-				run("/visibility-check", "POST", enginesJSON, domainID)
+				fmt.Fprintln(os.Stderr, "Error: visibility checks are scheduled/admin-only. Use: aeo visibility show")
+				os.Exit(1)
 			case "poll":
 				if len(args) < 4 {
 					fmt.Fprintln(os.Stderr, "Usage: aeo visibility check poll <jobId>")
@@ -813,6 +842,34 @@ func main() {
 			}
 		default:
 			printSubUsage("visibility")
+		}
+
+	// ── audit ──
+	case "audit":
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("audit")
+			return
+		}
+		switch args[1] {
+		case "run":
+			body := map[string]any{}
+			if v := findFlag(args, "--max-pages"); v != "" {
+				var pages int
+				fmt.Sscanf(v, "%d", &pages)
+				if pages > 0 {
+					body["maxPages"] = pages
+				}
+			}
+			if v := findFlag(args, "--channel-id", "--channel"); v != "" {
+				body["channelId"] = v
+			}
+			data, _ := json.Marshal(body)
+			run("/audit-run", "POST", data, domainID)
+		case "poll":
+			requireArg(args, 2, "aeo audit poll <jobId>")
+			run("/jobs/"+args[2], "GET", nil, domainID)
+		default:
+			printSubUsage("audit")
 		}
 
 	// ── config ──
@@ -919,6 +976,46 @@ func main() {
 		switch sub {
 		case "list":
 			contentList()
+		case "write":
+			prompt := findFlag(args, "--prompt")
+			if v := findFlag(args, "--prompt-file"); v != "" {
+				raw, err := os.ReadFile(v)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error reading prompt file: %s\n", err)
+					os.Exit(1)
+				}
+				prompt = string(raw)
+			}
+			prompt = strings.TrimSpace(prompt)
+			if prompt == "" {
+				fmt.Fprintln(os.Stderr, "Error: --prompt or --prompt-file is required")
+				os.Exit(1)
+			}
+			body := map[string]any{"prompt": prompt}
+			if v := findFlag(args, "--media"); v != "" {
+				body["media"] = v
+			}
+			if v := findFlag(args, "--language"); v != "" {
+				body["language"] = v
+			}
+			if v := findFlag(args, "--channel-voice-reference"); v != "" {
+				body["channelVoiceReference"] = v
+			}
+			b, _ := json.Marshal(body)
+			run("/content/writing-jobs", "POST", b, domainID)
+		case "jobs":
+			path := "/content/writing-jobs"
+			all := false
+			for _, a := range args {
+				if a == "--all" {
+					all = true
+					break
+				}
+			}
+			if all {
+				path += "?active=false"
+			}
+			run(path, "GET", nil, domainID)
 		case "get":
 			requireArg(args, 2, "aeo content get <id>")
 			run("/content/"+args[2], "GET", nil, domainID)
@@ -1138,6 +1235,96 @@ func main() {
 			run(path, "GET", nil, domainID)
 		default:
 			printSubUsage("metrics")
+		}
+
+	// ── billing / credits ──
+	case "billing", "credits":
+		if cmd == "credits" {
+			run("/account/credits/ledger?limit=10", "GET", nil, "")
+			return
+		}
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("billing")
+			return
+		}
+		switch args[1] {
+		case "subscription", "status":
+			run("/account/subscription", "GET", nil, "")
+		case "credits":
+			run("/account/credits/ledger?limit=1", "GET", nil, "")
+		case "ledger":
+			days := 30
+			if v := findFlag(args, "--days"); v != "" {
+				fmt.Sscanf(v, "%d", &days)
+				if days <= 0 {
+					days = 30
+				}
+			}
+			limit := findFlag(args, "--limit")
+			if limit == "" {
+				limit = "50"
+			}
+			end := time.Now().UTC()
+			start := end.AddDate(0, 0, -days)
+			qs := "start=" + url.QueryEscape(start.Format(time.RFC3339)) +
+				"&end=" + url.QueryEscape(end.Format(time.RFC3339)) +
+				"&limit=" + url.QueryEscape(limit)
+			run("/account/credits/ledger?"+qs, "GET", nil, "")
+		default:
+			printSubUsage("billing")
+		}
+
+	// ── reference analysis ──
+	case "reference":
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("reference")
+			return
+		}
+		switch args[1] {
+		case "analyze":
+			refURL := findFlag(args, "--url")
+			media := findFlag(args, "--media")
+			if refURL == "" || media == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo reference analyze --url <url> --media <type>")
+				os.Exit(1)
+			}
+			body := map[string]any{"url": refURL, "media": media}
+			if v := findFlag(args, "--language"); v != "" {
+				body["language"] = v
+			}
+			b, _ := json.Marshal(body)
+			run("/reference-analysis/jobs", "POST", b, domainID)
+		case "poll":
+			requireArg(args, 2, "aeo reference poll <jobId>")
+			run("/jobs/"+args[2], "GET", nil, domainID)
+		default:
+			printSubUsage("reference")
+		}
+
+	// ── video analysis ──
+	case "video":
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("video")
+			return
+		}
+		switch args[1] {
+		case "analyze":
+			videoURL := findFlag(args, "--url", "--video-url")
+			if videoURL == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo video analyze --url <url> [--media instagram_reels|tiktok_reels]")
+				os.Exit(1)
+			}
+			body := map[string]any{"videoUrl": videoURL}
+			if v := findFlag(args, "--media"); v != "" {
+				body["media"] = v
+			}
+			if v := findFlag(args, "--mime-type", "--mime"); v != "" {
+				body["mimeType"] = v
+			}
+			b, _ := json.Marshal(body)
+			run("/video-analysis", "POST", b, domainID)
+		default:
+			printSubUsage("video")
 		}
 
 	// ── whoami ──

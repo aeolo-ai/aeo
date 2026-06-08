@@ -55,8 +55,16 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo visibility show` | Show the last visibility snapshot | [visibility.md](references/visibility.md) |
-| `/aeo visibility check run` | Trigger a new visibility check | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 | `/aeo visibility check poll <jobId>` | Poll check status | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
+
+Manual visibility runs are scheduled/admin-only. Use the latest snapshot unless an existing job ID is provided.
+
+### aeo audit — Site foundation checks
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo audit run` | Start a site foundation audit (uses production credits) | [polling.md](references/polling.md) |
+| `/aeo audit poll <jobId>` | Poll an audit job | [polling.md](references/polling.md) |
 
 ### aeo strategy — Content strategy
 
@@ -71,6 +79,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo content list` | List content items (--status, --limit, --offset) | [content-manage.md](references/content-manage.md) |
 | `/aeo content get <id>` | Read full article content (markdown) | [content-manage.md](references/content-manage.md) |
+| `/aeo content write` | Start an AI writing job (uses production credits) | [content-create.md](references/content-create.md) |
+| `/aeo content jobs` | List active writing jobs | [polling.md](references/polling.md) |
 | `/aeo content update <id>` | Update a content item (status, title, meta, keywords, body via patches or full replace) | [content-manage.md](references/content-manage.md) |
 | `/aeo content preview <id>` | Generate preview link and open in browser | [content-manage.md](references/content-manage.md) |
 | `/aeo content deploy <id>` | Deploy an article to the connected Shopify channel | [content-manage.md](references/content-manage.md) |
@@ -89,6 +99,14 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo post list` | List channel posts (--platform, --status, --limit, --offset) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post get <id>` | Get a channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post import` | Import a channel post draft (--platform, --body required) | [channel-washing.md](references/channel-washing.md) |
+
+### aeo reference / video — Paid analysis
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (uses production credits) | [tov-extract.md](references/tov-extract.md) |
+| `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
+| `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits) | this file |
 
 ### aeo metrics — Article & site performance
 
@@ -140,6 +158,14 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo auth status` | Show current stored credentials | this file |
 | `/aeo auth logout` | Clear stored credentials | this file |
 
+### aeo billing — Subscription and credits
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo billing subscription` | Show current tier and credit summary | this file |
+| `/aeo billing credits` | Show current credit balance | this file |
+| `/aeo billing ledger` | Show recent credit ledger entries | this file |
+
 ### Utilities
 
 | Command | What it does | Reference |
@@ -187,14 +213,14 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: content import, content update, content deploy, content redeploy, brand update, strategy update, prompts add, prompts update, prompts delete, visibility check trigger, post import.
+Applies to: content write, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first.
 
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Skill commands** (`content write`, `content review`, `post write`): These require LLM reasoning — the agent reads the reference file and runs the workflow. The final action always lands on a CLI command (`aeo content import`, `aeo content update`, `aeo post import`, etc.).
+- **Skill commands** (`content write`, `content review`, `post write`): These require LLM reasoning. `aeo content write` now starts a server-side writing job and spends production credits; use `aeo content jobs` or `aeo audit/reference poll <jobId>` for background status.
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
 Before writing any content (`/aeo content write`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.

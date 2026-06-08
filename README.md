@@ -47,6 +47,7 @@ aeo domain switch <id>
 
 aeo visibility                   # last snapshot across 4 AI engines
 aeo content                      # what's drafted, scheduled, deployed
+aeo billing subscription         # subscription tier + production credit balance
 aeo metrics traffic --days 30    # GA4 + Search Console for the same domain
 ```
 
@@ -78,15 +79,19 @@ _Full report: https://tryaeolo.com/report/.../visibility_
 |------|----------|
 | **Brand & domain** | `aeo domain list / brand / brand update / audit / setup` |
 | **Visibility** | `aeo visibility` · `aeo visibility check poll <id>` |
-| **Content lifecycle** | `aeo content list / get / update / preview / deploy / redeploy / import` |
+| **Site audit** | `aeo audit run / poll` |
+| **Content lifecycle** | `aeo content list / get / write / jobs / update / preview / deploy / redeploy / import` |
 | **Strategy** | `aeo strategy` · `aeo strategy update` |
 | **Prompts** | `aeo prompts list / add / update / delete` |
 | **Channels** | `aeo channel add / connect / disconnect` (Shopify, LinkedIn, Threads, Reddit) |
 | **Channel posts** | `aeo post list / import / approve / publish` |
+| **Analysis** | `aeo reference analyze` · `aeo video analyze` |
 | **Metrics** | `aeo metrics overview / article <id> / traffic` |
 | **Drive integration** | `aeo drive list / read <fileId>` (read-only Google Drive) |
-| **Account** | `aeo whoami` · `aeo auth login / status / logout` |
+| **Account & billing** | `aeo whoami` · `aeo billing subscription / credits / ledger` · `aeo auth login / status / logout` |
 | **Send feedback** | `aeo feedback "msg"` or `aeo feedback` (opens `$EDITOR`) |
+
+Production actions reserve and capture Aeolo credits server-side. Failed background jobs are refunded by the worker finalizers. Current costs: site audit starts at 3 credits per 5 pages; writing, reference analysis, video analysis, channel voice analysis, and image swap cost 5 credits each.
 
 Run `aeo --help` for the complete reference, or `aeo <command> --help` for detail on any verb.
 

@@ -9,9 +9,9 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 
 | Command | CLI command | Typical duration |
 |---------|------------|-----------------|
-| `aeo visibility check run` | `aeo visibility check run` | 3–8 min |
-
-> Future jobs (server-side content generation, bulk audit) will follow the same pattern.
+| Site audit | `aeo audit run` | 3–8 min |
+| AI writing | `aeo content write` | 2–8 min |
+| Reference analysis | `aeo reference analyze` | 2–6 min |
 
 ---
 
@@ -20,18 +20,18 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 **Step 1 — Trigger, get jobId**
 
 ```
-aeo visibility check run
+aeo audit run --max-pages 5
 # → { "data": { "jobId": "abc-123", "status": "pending" } }
 ```
 
 **Step 2 — Poll in the background**
 
-Poll `aeo visibility check poll {jobId}` every 60 seconds using your runtime's timer or scheduling mechanism. Stop polling on completion or error.
+Poll `aeo audit poll {jobId}`, `aeo reference poll {jobId}`, or `aeo content jobs` every 60 seconds using your runtime's timer or scheduling mechanism. Stop polling on completion or error.
 
 **Step 3 — Confirm to user**
 
 ```
-Visibility check triggered (job: {jobId}). Polling every minute in the background.
+Job triggered (job: {jobId}). Polling every minute in the background.
 You can keep working — I'll report back when it's done.
 ```
 
@@ -42,6 +42,6 @@ You can keep working — I'll report back when it's done.
 | Response | Meaning | Action |
 |----------|---------|--------|
 | `{ "status": "pending"\|"running" }` | In progress | Wait |
-| `text/markdown` (starts with `#`) | Complete — full report | Stop polling, present report |
-| `{ "code": "CHECK_FAILED" }` | Job failed | Stop polling, report error |
+| result/status JSON | Complete — full report or result payload | Stop polling, present report |
+| `{ "code": "...FAILED" }` | Job failed | Stop polling, report error |
 | `{ "code": "NOT_FOUND" }` | jobId invalid or expired | Stop polling, re-trigger |
