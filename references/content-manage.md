@@ -9,7 +9,7 @@ When creating content (via `/aeo content write` or `/aeo content import`), alway
 - Which prompts/keywords is it targeting?
 - What stage of the customer journey does it serve?
 
-The rationale is stored in `content_history.rationale` and helps prioritize content in the pipeline. Discover gaps through conversation (`aeo visibility`, `aeo domain audit`) and let the rationale emerge naturally from the analysis.
+The rationale is stored in `content_history.rationale` and helps prioritize content in the pipeline. Discover gaps through conversation (`aeo visibility show`, `aeo domain audit`) and let the rationale emerge naturally from the analysis.
 
 ---
 

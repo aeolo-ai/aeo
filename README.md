@@ -45,7 +45,7 @@ aeo auth login                   # browser-based OAuth → API key in ~/.config/
 aeo domain list                  # pick a domain
 aeo domain switch <id>
 
-aeo visibility                   # last snapshot across 4 AI engines
+aeo visibility show              # last snapshot across 4 AI engines
 aeo content                      # what's drafted, scheduled, deployed
 aeo billing subscription         # subscription tier + production credit balance
 aeo metrics traffic --days 30    # GA4 + Search Console for the same domain
@@ -54,7 +54,7 @@ aeo metrics traffic --days 30    # GA4 + Search Console for the same domain
 Sample output:
 
 ```
-$ aeo visibility
+$ aeo visibility show
 
 # tryaeolo.com — Visibility Snapshot
 
@@ -78,7 +78,7 @@ _Full report: https://tryaeolo.com/report/.../visibility_
 | Area | Commands |
 |------|----------|
 | **Brand & domain** | `aeo domain list / brand / brand update / audit / setup` |
-| **Visibility** | `aeo visibility` · `aeo visibility check run / poll` |
+| **Visibility** | `aeo visibility show` · `aeo visibility check run / poll` |
 | **Site audit** | `aeo audit run / poll` |
 | **Content lifecycle** | `aeo content list / get / write / jobs / update / preview / deploy / redeploy / import` |
 | **Strategy** | `aeo strategy` · `aeo strategy update` |

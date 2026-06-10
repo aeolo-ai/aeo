@@ -326,6 +326,88 @@ func findFlag(args []string, names ...string) string {
 	return ""
 }
 
+// hasFlag reports whether any of the bare boolean flag names is present.
+func hasFlag(args []string, names ...string) bool {
+	for _, arg := range args {
+		for _, name := range names {
+			if arg == name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// videoGenerateWait kicks off a video generation sweep, then polls the
+// visual-generation status endpoint until every job reaches a terminal state
+// (or a 15-minute deadline), printing result URLs as they land.
+func videoGenerateWait(body []byte, domainID string) {
+	resp, err := callConnector("/video-generate", "POST", body, domainID)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
+	var created struct {
+		Jobs []struct {
+			ID string `json:"id"`
+		} `json:"jobs"`
+	}
+	if e := json.Unmarshal([]byte(resp), &created); e != nil || len(created.Jobs) == 0 {
+		fmt.Println(resp)
+		return
+	}
+	ids := make([]string, 0, len(created.Jobs))
+	for _, j := range created.Jobs {
+		ids = append(ids, j.ID)
+	}
+	fmt.Printf("Started %d job(s). Waiting for completion…\n", len(ids))
+	statusBody, _ := json.Marshal(map[string]any{"ids": ids})
+	deadline := time.Now().Add(15 * time.Minute)
+	for {
+		time.Sleep(10 * time.Second)
+		sresp, serr := callConnector("/video-generation/status", "POST", statusBody, domainID)
+		if serr != nil {
+			fmt.Fprintln(os.Stderr, "Poll error:", serr)
+			os.Exit(1)
+		}
+		var status struct {
+			Jobs []struct {
+				ID         string   `json:"id"`
+				Status     string   `json:"status"`
+				ResultURLs []string `json:"result_urls"`
+				Error      string   `json:"error"`
+			} `json:"jobs"`
+		}
+		if e := json.Unmarshal([]byte(sresp), &status); e != nil {
+			fmt.Println(sresp)
+			return
+		}
+		done := 0
+		for _, j := range status.Jobs {
+			if j.Status == "completed" || j.Status == "failed" {
+				done++
+			}
+		}
+		fmt.Printf("  %d/%d finished…\n", done, len(status.Jobs))
+		if done >= len(status.Jobs) || time.Now().After(deadline) {
+			for _, j := range status.Jobs {
+				switch j.Status {
+				case "completed":
+					fmt.Printf("✓ %s\n", j.ID)
+					for _, u := range j.ResultURLs {
+						fmt.Printf("   %s\n", u)
+					}
+				case "failed":
+					fmt.Printf("✗ %s — %s\n", j.ID, j.Error)
+				default:
+					fmt.Printf("… %s — %s (still processing; poll later: aeo video poll %s)\n", j.ID, j.Status, j.ID)
+				}
+			}
+			return
+		}
+	}
+}
+
 func wantsHelp(args []string) bool {
 	for _, a := range args {
 		if a == "--help" || a == "-h" {
@@ -411,7 +493,7 @@ func checkLatestVersion() {
 	if latest != "" && latest != version {
 		fmt.Fprintf(os.Stderr, "\nUpdate available: %s → %s\n", version, latest)
 		fmt.Fprintf(os.Stderr, "  brew upgrade aeo\n")
-		fmt.Fprintf(os.Stderr, "  curl -fsSL https://skills.tryaeolo.com/aeo | sh\n")
+		fmt.Fprintf(os.Stderr, "  curl -fsSL https://skills.tryaeolo.com | sh\n")
 	}
 }
 
@@ -616,6 +698,16 @@ Notes:
   analyze           Analyze a short-form video URL synchronously (costs 5 credits)
                     Required: --url
                     Optional: --media instagram_reels|tiktok_reels, --mime-type
+
+  generate          Generate short-form video(s) for Reels/TikTok from a prompt
+                    (uses production credits; async — returns job IDs)
+                    Required: --prompt
+                    Optional: --model seedance-2-fast|seedance-2|kling-3|grok-video,
+                              --sweep N (1-8 candidate variations), --aspect (default 9:16),
+                              --duration, --ref url1,url2, --audio, --wait (poll until done)
+
+  poll              Check status + result URLs of video generation jobs
+                    Usage: aeo video poll <jobId> [jobId...]
 `,
 	"products": `aeo products
 
@@ -1343,6 +1435,65 @@ func main() {
 			}
 			b, _ := json.Marshal(body)
 			run("/video-analysis", "POST", b, domainID)
+		case "generate":
+			prompt := findFlag(args, "--prompt", "-p")
+			if prompt == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo video generate --prompt <text> [--model seedance-2-fast|seedance-2|kling-3|grok-video] [--sweep N] [--aspect 9:16] [--duration 15] [--ref url1,url2] [--audio] [--wait]")
+				os.Exit(1)
+			}
+			body := map[string]any{"prompt": prompt}
+			if v := findFlag(args, "--model"); v != "" {
+				body["model"] = v
+			} else {
+				body["model"] = "seedance-2-fast"
+			}
+			if v := findFlag(args, "--sweep", "--count"); v != "" {
+				var n int
+				fmt.Sscanf(v, "%d", &n)
+				if n > 0 {
+					body["count"] = n
+				}
+			}
+			if v := findFlag(args, "--aspect", "--aspect-ratio"); v != "" {
+				body["aspectRatio"] = v
+			}
+			if v := findFlag(args, "--duration"); v != "" {
+				body["duration"] = v
+			}
+			if v := findFlag(args, "--resolution"); v != "" {
+				body["resolution"] = v
+			}
+			if hasFlag(args, "--audio", "--generate-audio") {
+				body["generateAudio"] = true
+			}
+			if v := findFlag(args, "--ref", "--references"); v != "" {
+				refs := []string{}
+				for _, r := range strings.Split(v, ",") {
+					if r = strings.TrimSpace(r); r != "" {
+						refs = append(refs, r)
+					}
+				}
+				body["referenceUrls"] = refs
+			}
+			b, _ := json.Marshal(body)
+			if hasFlag(args, "--wait") {
+				videoGenerateWait(b, domainID)
+			} else {
+				run("/video-generate", "POST", b, domainID)
+			}
+		case "poll":
+			ids := []string{}
+			for _, a := range args[2:] {
+				if !strings.HasPrefix(a, "-") {
+					ids = append(ids, a)
+				}
+			}
+			if len(ids) == 0 {
+				fmt.Fprintln(os.Stderr, "Usage: aeo video poll <jobId> [jobId...]")
+				os.Exit(1)
+			}
+			b, _ := json.Marshal(map[string]any{"ids": ids})
+			run("/video-generation/status", "POST", b, domainID)
 		default:
 			printSubUsage("video")
 		}

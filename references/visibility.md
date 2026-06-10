@@ -44,7 +44,7 @@ Display the visibility report. Then:
 Use the latest snapshot to understand current gap context.
 
 ```bash
-aeo visibility
+aeo visibility show
 ```
 
 Response: `text/markdown` — mention rate by engine, visibility gaps, top performing keywords.

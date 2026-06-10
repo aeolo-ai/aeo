@@ -1,23 +1,27 @@
 ---
 name: aeo
 description: |
-  Fetch, update, and act on Aeolo GEO (Generative Engine Optimization) data for the current session.
-  This skill should be used whenever the user mentions GEO, brand visibility, AI search, audit scores,
-  visibility gaps, content strategy, brand tone, article writing, article performance, or GEO automation.
-  Trigger phrases: /aeo, "load my GEO data", "what's my audit score", "check my visibility",
-  "show my brand profile", "update brand tone", "generate content ideas", "write an article",
-  "deploy to Shopify", "check my metrics", "review my content", "add a prompt",
-  "onboard my brand", "setup checklist", "domain setup", "run daily content",
-  "what should I write today", "weekly report", "start GEO automation",
+  Aeolo is an organic content engine: turn deep brand understanding into marketing content
+  that compounds without ad spend. It works in two channels — articles that get cited in AI
+  search (GEO: ChatGPT, Perplexity, Gemini) and short-form video (analyze Reels/TikToks to
+  brief content). Start from the brand, then write, deploy, and measure.
+  This skill should be used whenever the user mentions brand understanding, organic content,
+  content strategy, article writing, article performance, AI-search visibility, audit scores,
+  brand tone, short-form/Reel/TikTok analysis, or content deployment.
+  Trigger phrases: /aeo, "understand my brand", "show my brand profile", "update brand tone",
+  "what should I write today", "content ideas", "write an article", "review my content",
+  "check my AI search visibility", "what's my audit score", "analyze this Reel/TikTok",
+  "deploy to Shopify", "check my metrics", "add a prompt", "onboard my brand",
+  "setup checklist", "domain setup", "run daily content", "weekly report",
   "GSC 인덱싱", "색인 요청", "인덱싱 요청", "request indexing", "index my pages".
-  This skill makes real Aeolo data available and can write back changes (brand updates,
-  article generation, Shopify deployment) to run the full GEO execution cycle autonomously.
+  This skill makes real Aeolo brand data available and writes back changes (brand updates,
+  article generation, Shopify deployment) to run the full organic content cycle autonomously.
 ---
 
 > **Requires**: `aeo` CLI — [Install/update](https://github.com/kithlabs/aeo)
 > ```
 > brew install kithlabs/aeo/aeo                        # Homebrew
-> curl -fsSL https://skills.tryaeolo.com/aeo | sh      # Direct install
+> curl -fsSL https://skills.tryaeolo.com | sh          # Direct install
 > ```
 > Run `aeo --version` to check for updates.
 
@@ -99,13 +103,15 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo post get <id>` | Get a channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post import` | Import a channel post draft (--platform, --body required) | [channel-washing.md](references/channel-washing.md) |
 
-### aeo reference / video — Paid analysis
+### aeo reference / video — Analysis & generation
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (uses production credits) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
 | `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits) | this file |
+| `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (uses production credits). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
+| `/aeo video poll <jobId...>` | Check status + result URLs of video generation jobs | this file |
 
 ### aeo metrics — Article & site performance
 
@@ -212,7 +218,7 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content write, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
+Applies to: visibility check run, content write, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, video generate, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first.
 
