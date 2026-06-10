@@ -1,21 +1,19 @@
 ---
 name: aeo
 description: |
-  Aeolo is an organic content engine: turn deep brand understanding into marketing content
-  that compounds without ad spend. It works in two channels — articles that get cited in AI
-  search (GEO: ChatGPT, Perplexity, Gemini) and short-form video (analyze Reels/TikToks to
-  brief content). Start from the brand, then write, deploy, and measure.
-  This skill should be used whenever the user mentions brand understanding, organic content,
-  content strategy, article writing, article performance, AI-search visibility, audit scores,
-  brand tone, short-form/Reel/TikTok analysis, or content deployment.
-  Trigger phrases: /aeo, "understand my brand", "show my brand profile", "update brand tone",
-  "what should I write today", "content ideas", "write an article", "review my content",
-  "check my AI search visibility", "what's my audit score", "analyze this Reel/TikTok",
-  "deploy to Shopify", "check my metrics", "add a prompt", "onboard my brand",
-  "setup checklist", "domain setup", "run daily content", "weekly report",
-  "GSC 인덱싱", "색인 요청", "인덱싱 요청", "request indexing", "index my pages".
-  This skill makes real Aeolo brand data available and writes back changes (brand updates,
-  article generation, Shopify deployment) to run the full organic content cycle autonomously.
+  Aeolo is an organic content engine: turn deep brand understanding into marketing
+  content that compounds without ad spend. Two channels — articles cited in AI search
+  (GEO: ChatGPT, Perplexity, Gemini) and short-form video (analyze Reels/TikToks to
+  brief content). Start from the brand, then write, deploy, and measure. It loads real
+  Aeolo brand data and writes back changes (brand updates, article generation, Shopify
+  deployment) to run the full organic content cycle autonomously.
+  Use whenever the user mentions brand understanding, organic content, content strategy,
+  article writing or performance, AI-search visibility, audit scores, brand tone,
+  short-form/Reel/TikTok analysis, content deployment, or GSC indexing. Triggers: /aeo,
+  "understand my brand", "what should I write today", "write an article", "review my
+  content", "check my AI search visibility", "analyze this Reel/TikTok", "deploy to
+  Shopify", "onboard my brand", "domain setup", "weekly report", "GSC 인덱싱",
+  "색인 요청", "request indexing".
 ---
 
 > **Requires**: `aeo` CLI — [Install/update](https://github.com/kithlabs/aeo)
