@@ -38,8 +38,8 @@ This returns a 5-item checklist. Read it and determine what's already done.
 **Content Strategy** (if incomplete):
 - Consider: brand category, industry, competition density, available channels
 - Draft a manifest with: brand positioning, content balance (% mix of how-to, comparison, thought leadership), priority queue (first 10 topics), constraints
-- Recommend frequency: most brands start with 3 articles/week
-- `aeo strategy update --manifest "..." --frequency weekly --articles-per-cycle 3`
+- Recommend a cadence in the manifest text if useful; most brands start around 3 articles/week, but scheduling is configured outside `aeo strategy`
+- `aeo strategy update --manifest "..."`
 
 ### Step 3: Guide the user for external services
 
@@ -105,7 +105,7 @@ If no data exists, ask the user: "Would you like me to run an initial visibility
 
 ## 2. Daily Content Loop
 
-This is the core production cycle. Run it daily (or at whatever frequency the strategy specifies).
+This is the core production cycle. Run it daily, or at the cadence documented in the strategy manifest and configured in your scheduler.
 
 ### Step 1: Load context
 
@@ -274,7 +274,7 @@ Based on analysis, decide if the strategy needs updating:
 
 If updating:
 ```bash
-aeo strategy update --manifest "..." --frequency <new> --articles-per-cycle <new>
+aeo strategy update --manifest "..."
 ```
 
 **Flag for refresh:**
@@ -316,7 +316,7 @@ The workflows above describe **what** to do. This section describes **when**.
 
 | Loop | Default | Cron expression | Prerequisite |
 |------|---------|-----------------|-------------|
-| Daily Content | strategy.frequency (default: weekdays 09:00 UTC) | `0 9 * * 1-5` | Setup 5/5 ✅ |
+| Daily Content | Weekdays 09:00 UTC by default, or the cadence documented in the strategy manifest | `0 9 * * 1-5` | Setup 5/5 ✅ |
 | Weekly Report | Monday 10:00 UTC | `0 10 * * 1` | Setup 5/5 ✅ |
 | Monthly Audit | 1st of month 10:00 UTC | `0 10 1 * *` | Setup 5/5 ✅ |
 
@@ -326,18 +326,19 @@ Register these using your runtime's scheduling mechanism. Each schedule invokes 
 
 Before enabling any automated loop:
 1. `aeo domain setup` → all 5 items must be ✅
-2. `aeo strategy show` → manifest and schedule_config must exist
+2. `aeo strategy show` → manifest must exist
+3. Configure cadence in your scheduler/runtime; `aeo strategy` stores strategy text, not runtime schedules
 
 If prerequisites aren't met, skip the cycle and check again next trigger.
 
 ### Adjusting frequency
 
-The Daily Content cron should match `strategy.schedule_config.frequency`:
-- `daily` → `0 9 * * 1-5` (weekdays)
-- `weekly` → `0 9 * * 1` (Mondays only)
-- `biweekly` → `0 9 * * 1` (every other Monday — track last-run date)
+The Daily Content cron should match the cadence documented in the manifest or agreed with the user:
+- Weekdays → `0 9 * * 1-5`
+- Weekly → `0 9 * * 1`
+- Biweekly → `0 9 * * 1` plus scheduler-side last-run tracking
 
-When the Weekly Report workflow updates the strategy (Step 3), the scheduling frequency may change. Re-read `aeo strategy show` after each weekly cycle and adjust if needed.
+When the Weekly Report workflow updates the strategy (Step 3), cadence guidance may change. Re-read `aeo strategy show` after each weekly cycle and adjust your external scheduler if needed.
 
 ---
 

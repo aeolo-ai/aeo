@@ -321,6 +321,9 @@ func findFlag(args []string, names ...string) string {
 			if arg == name && i+1 < len(args) {
 				return args[i+1]
 			}
+			if strings.HasPrefix(arg, name+"=") {
+				return strings.TrimPrefix(arg, name+"=")
+			}
 		}
 	}
 	return ""
@@ -330,7 +333,7 @@ func findFlag(args []string, names ...string) string {
 func hasFlag(args []string, names ...string) bool {
 	for _, arg := range args {
 		for _, name := range names {
-			if arg == name {
+			if arg == name || strings.HasPrefix(arg, name+"=") {
 				return true
 			}
 		}
@@ -551,15 +554,19 @@ USAGE:
   aeo <command> <verb> [options]
 
 COMMANDS:
+  account       whoami | subscription | credits | ledger
   domain        list | switch <id> | brand | brand update | audit | channels
+  diagnose      visibility | visibility run | visibility poll <jobId> | audit | audit run | audit poll <jobId>
   channel       list | voice | add | update <id> | delete <id> | connect <id> | disconnect <id>
-	visibility    show | check run | check poll <jobId>
+  visibility    show | check run | check poll <jobId>
   audit         run | poll <jobId>
   strategy      show | update
   content       list | get <id> | review <id> | write | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
   segments      list | pause <tags> | resume <tags>
+  measure       overview | content <id> | traffic [--days] | visibility | report --command <cmd>
   metrics       overview | article <id> | traffic [--days]
+  publish       preview <id> | deploy <id> | redeploy <id>
   post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
   reference     analyze --url <url> --media <type>
   video         analyze --url <url> [--media instagram_reels|tiktok_reels]
@@ -582,6 +589,14 @@ Run 'aeo <command>' without a verb for detailed help.
 `
 
 var subUsage = map[string]string{
+	"account": `aeo account <verb>
+
+  whoami            Show current user (email, tier, trial days)
+  subscription      Show current subscription, tier, and credit summary
+  credits           Show current credit balance
+  ledger            Show credit ledger entries
+                    Flags: --days (default 30), --limit (default 50)
+`,
 	"domain": `aeo domain <verb>
 
   setup             Show setup checklist (integrations status)
@@ -620,11 +635,25 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
                     Flags: --max-pages (default 5, costs 3 credits per 5 pages), --channel-id
   poll <jobId>      Poll a background audit job
 `,
+	"diagnose": `aeo diagnose <area>
+
+  visibility        Show last visibility snapshot
+  visibility run    Trigger a credit-metered visibility check
+                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity,grok),
+                           --limit, --prompt-ids
+  visibility poll <jobId>
+                    Poll check status
+  audit             Show latest audit report
+  audit run         Start a site foundation audit
+                    Flags: --max-pages (default 5, costs 3 credits per 5 pages), --channel-id
+  audit poll <jobId>
+                    Poll a background audit job
+`,
 	"strategy": `aeo strategy <verb>
 
   show              Show content strategy
   update            Update content strategy
-                    Flags: --manifest, --frequency, --articles-per-cycle, --preferred-days, --auto-propose
+                    Flags: --manifest
 `,
 	"content": `aeo content <verb>
 
@@ -672,6 +701,21 @@ Notes:
   overview          Article performance overview
   article <id>      Detailed article stats
   traffic           Site-level GSC traffic (--days=7|14|30|90)
+`,
+	"measure": `aeo measure <verb>
+
+  overview          Article performance overview
+  content <id>      Detailed article stats
+  traffic           Site-level GSC traffic (--days=7|14|30|90)
+  visibility        Show last visibility snapshot
+  report            Submit command execution diagnostics
+                    Flags: --command (required), --status-code, --response-body, --context
+`,
+	"publish": `aeo publish <verb>
+
+  preview <id>      Generate preview link
+  deploy <id>       Deploy to Shopify (--channel)
+  redeploy <id>     Redeploy to Shopify
 `,
 	"billing": `aeo billing <verb>
 
@@ -787,6 +831,218 @@ func printSubUsage(cmd string) {
 	}
 }
 
+func accountLedgerPath(args []string) string {
+	days := 30
+	if v := findFlag(args, "--days"); v != "" {
+		fmt.Sscanf(v, "%d", &days)
+		if days <= 0 {
+			days = 30
+		}
+	}
+	limit := findFlag(args, "--limit")
+	if limit == "" {
+		limit = "50"
+	}
+	end := time.Now().UTC()
+	start := end.AddDate(0, 0, -days)
+	return "/account/credits/ledger?start=" + url.QueryEscape(start.Format(time.RFC3339)) +
+		"&end=" + url.QueryEscape(end.Format(time.RFC3339)) +
+		"&limit=" + url.QueryEscape(limit)
+}
+
+func runAccountCommand(args []string) {
+	if len(args) < 1 || wantsHelp(args) {
+		printSubUsage("account")
+		return
+	}
+	switch args[0] {
+	case "whoami":
+		run("/whoami", "GET", nil, "")
+	case "subscription", "status":
+		run("/account/subscription", "GET", nil, "")
+	case "credits":
+		run("/account/credits/ledger?limit=1", "GET", nil, "")
+	case "ledger":
+		run(accountLedgerPath(args), "GET", nil, "")
+	default:
+		printSubUsage("account")
+	}
+}
+
+func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
+	if len(args) < 1 {
+		if defaultShow {
+			run("/visibility", "GET", nil, domainID)
+		} else {
+			printSubUsage("visibility")
+		}
+		return
+	}
+	if wantsHelp(args) {
+		printSubUsage("visibility")
+		return
+	}
+	switch args[0] {
+	case "show":
+		run("/visibility", "GET", nil, domainID)
+	case "run":
+		runVisibilityCheck(args, domainID)
+	case "poll":
+		requireArg(args, 1, "aeo diagnose visibility poll <jobId>")
+		run("/visibility-check/"+args[1], "GET", nil, domainID)
+	case "check":
+		if len(args) < 2 {
+			fmt.Fprintln(os.Stderr, "Usage: aeo visibility check <run|poll>")
+			os.Exit(1)
+		}
+		switch args[1] {
+		case "run":
+			runVisibilityCheck(args, domainID)
+		case "poll":
+			requireArg(args, 2, "aeo visibility check poll <jobId>")
+			run("/visibility-check/"+args[2], "GET", nil, domainID)
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown visibility check command: %s\n", args[1])
+			os.Exit(1)
+		}
+	default:
+		printSubUsage("visibility")
+	}
+}
+
+func runVisibilityCheck(args []string, domainID string) {
+	engines := findFlag(args, "--engines")
+	if engines == "" {
+		engines = "chatgpt,gemini,perplexity,grok"
+	}
+	engineParts := strings.Split(engines, ",")
+	for i, p := range engineParts {
+		engineParts[i] = strings.TrimSpace(p)
+	}
+	body := map[string]any{"engines": engineParts}
+	if v := findFlag(args, "--limit"); v != "" {
+		var limit int
+		fmt.Sscanf(v, "%d", &limit)
+		if limit > 0 {
+			body["limit"] = limit
+		}
+	}
+	if v := findFlag(args, "--prompt-ids", "--prompts"); v != "" {
+		body["promptIds"] = splitCSV(v)
+	}
+	enginesJSON, _ := json.Marshal(body)
+	run("/visibility-check", "POST", enginesJSON, domainID)
+}
+
+func runAuditCommand(args []string, domainID string, defaultReport bool) {
+	if len(args) < 1 {
+		if defaultReport {
+			run("/audit-report", "GET", nil, domainID)
+		} else {
+			printSubUsage("audit")
+		}
+		return
+	}
+	if wantsHelp(args) {
+		printSubUsage("audit")
+		return
+	}
+	switch args[0] {
+	case "show":
+		run("/audit-report", "GET", nil, domainID)
+	case "run":
+		body := map[string]any{}
+		if v := findFlag(args, "--max-pages"); v != "" {
+			var pages int
+			fmt.Sscanf(v, "%d", &pages)
+			if pages > 0 {
+				body["maxPages"] = pages
+			}
+		}
+		if v := findFlag(args, "--channel-id", "--channel"); v != "" {
+			body["channelId"] = v
+		}
+		data, _ := json.Marshal(body)
+		run("/audit-run", "POST", data, domainID)
+	case "poll":
+		requireArg(args, 1, "aeo audit poll <jobId>")
+		run("/jobs/"+args[1], "GET", nil, domainID)
+	default:
+		printSubUsage("audit")
+	}
+}
+
+func runMetricsCommand(args []string, domainID string) {
+	if len(args) < 1 || wantsHelp(args) {
+		printSubUsage("metrics")
+		return
+	}
+	switch args[0] {
+	case "overview":
+		run("/metrics/overview", "GET", nil, domainID)
+	case "article", "content":
+		requireArg(args, 1, "aeo measure content <id>")
+		run("/metrics/article/"+args[1], "GET", nil, domainID)
+	case "traffic":
+		days := findFlag(args[1:], "--days")
+		path := "/metrics/traffic"
+		if days != "" {
+			path += "?days=" + days
+		}
+		run(path, "GET", nil, domainID)
+	default:
+		printSubUsage("metrics")
+	}
+}
+
+func runReportCommand(args []string, domainID string) {
+	if wantsHelp(args) {
+		printSubUsage("report")
+		return
+	}
+	reportCmd := findFlag(args, "--command")
+	if reportCmd == "" {
+		fmt.Fprintln(os.Stderr, "Error: --command required")
+		os.Exit(1)
+	}
+	reportBody := map[string]any{"command": reportCmd}
+	if sc := findFlag(args, "--status-code"); sc != "" {
+		var code int
+		fmt.Sscanf(sc, "%d", &code)
+		reportBody["statusCode"] = code
+	}
+	if rb := findFlag(args, "--response-body"); rb != "" {
+		reportBody["responseBody"] = rb
+	}
+	if ctx := findFlag(args, "--context"); ctx != "" {
+		reportBody["context"] = ctx
+	}
+	reportJSON, _ := json.Marshal(reportBody)
+	runSilent("/report", "POST", reportJSON, domainID)
+}
+
+func runPublishCommand(args []string, domainID string) {
+	if len(args) < 1 || wantsHelp(args) {
+		printSubUsage("publish")
+		return
+	}
+	switch args[0] {
+	case "preview":
+		requireArg(args, 1, "aeo publish preview <id>")
+		run("/content/"+args[1]+"/preview-link", "POST", nil, domainID)
+	case "deploy":
+		requireArg(args, 1, "aeo publish deploy <id>")
+		run("/content/"+args[1]+"/deploy", "POST", buildJSON(map[string]string{
+			"channel_id": findFlag(args, "--channel"),
+		}), domainID)
+	case "redeploy":
+		requireArg(args, 1, "aeo publish redeploy <id>")
+		run("/content/"+args[1]+"/redeploy", "PUT", nil, domainID)
+	default:
+		printSubUsage("publish")
+	}
+}
+
 func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
@@ -803,6 +1059,10 @@ func main() {
 		checkLatestVersion()
 	case "--help", "help":
 		fmt.Print(usage)
+
+	// ── account ──
+	case "account":
+		runAccountCommand(args[1:])
 
 	// ── domain ──
 	case "domain", "domains":
@@ -905,84 +1165,28 @@ func main() {
 			printSubUsage("channel")
 		}
 
-	// ── visibility ──
-	case "visibility":
+	// ── diagnose ──
+	case "diagnose":
 		if len(args) < 2 || wantsHelp(args) {
-			printSubUsage("visibility")
+			printSubUsage("diagnose")
 			return
 		}
 		switch args[1] {
-		case "show":
-			run("/visibility", "GET", nil, domainID)
-		case "check":
-			if len(args) < 3 {
-				fmt.Fprintln(os.Stderr, "Usage: aeo visibility check <run|poll>")
-				os.Exit(1)
-			}
-			switch args[2] {
-			case "run":
-				engines := findFlag(args, "--engines")
-				if engines == "" {
-					engines = "chatgpt,gemini,perplexity,grok"
-				}
-				engineParts := strings.Split(engines, ",")
-				for i, p := range engineParts {
-					engineParts[i] = strings.TrimSpace(p)
-				}
-				body := map[string]any{"engines": engineParts}
-				if v := findFlag(args, "--limit"); v != "" {
-					var limit int
-					fmt.Sscanf(v, "%d", &limit)
-					if limit > 0 {
-						body["limit"] = limit
-					}
-				}
-				if v := findFlag(args, "--prompt-ids", "--prompts"); v != "" {
-					body["promptIds"] = splitCSV(v)
-				}
-				enginesJSON, _ := json.Marshal(body)
-				run("/visibility-check", "POST", enginesJSON, domainID)
-			case "poll":
-				if len(args) < 4 {
-					fmt.Fprintln(os.Stderr, "Usage: aeo visibility check poll <jobId>")
-					os.Exit(1)
-				}
-				run("/visibility-check/"+args[3], "GET", nil, domainID)
-			default:
-				fmt.Fprintf(os.Stderr, "Unknown visibility check command: %s\n", args[2])
-				os.Exit(1)
-			}
+		case "visibility":
+			runVisibilityCommand(args[2:], domainID, true)
+		case "audit":
+			runAuditCommand(args[2:], domainID, true)
 		default:
-			printSubUsage("visibility")
+			printSubUsage("diagnose")
 		}
+
+	// ── visibility ──
+	case "visibility":
+		runVisibilityCommand(args[1:], domainID, false)
 
 	// ── audit ──
 	case "audit":
-		if len(args) < 2 || wantsHelp(args) {
-			printSubUsage("audit")
-			return
-		}
-		switch args[1] {
-		case "run":
-			body := map[string]any{}
-			if v := findFlag(args, "--max-pages"); v != "" {
-				var pages int
-				fmt.Sscanf(v, "%d", &pages)
-				if pages > 0 {
-					body["maxPages"] = pages
-				}
-			}
-			if v := findFlag(args, "--channel-id", "--channel"); v != "" {
-				body["channelId"] = v
-			}
-			data, _ := json.Marshal(body)
-			run("/audit-run", "POST", data, domainID)
-		case "poll":
-			requireArg(args, 2, "aeo audit poll <jobId>")
-			run("/jobs/"+args[2], "GET", nil, domainID)
-		default:
-			printSubUsage("audit")
-		}
+		runAuditCommand(args[1:], domainID, false)
 
 	// ── config ──
 	case "config":
@@ -1019,28 +1223,15 @@ func main() {
 			run("/strategy", "GET", nil, domainID)
 		case "update":
 			manifest := findFlag(args, "--manifest")
-			freq := findFlag(args, "--frequency")
-			if manifest == "" && freq == "" {
-				fmt.Fprintln(os.Stderr, "Error: --manifest or --frequency required")
+			if hasFlag(args, "--frequency", "--articles-per-cycle", "--preferred-days", "--auto-propose") {
+				fmt.Fprintln(os.Stderr, "Error: strategy scheduling flags were removed. Use --manifest to update the strategy.")
 				os.Exit(1)
 			}
-			body := map[string]any{}
-			if manifest != "" {
-				body["manifest"] = manifest
+			if manifest == "" {
+				fmt.Fprintln(os.Stderr, "Error: --manifest required")
+				os.Exit(1)
 			}
-			if freq != "" {
-				sc := map[string]any{"frequency": freq}
-				if apc := findFlag(args, "--articles-per-cycle"); apc != "" {
-					sc["articles_per_cycle"] = apc
-				}
-				if pd := findFlag(args, "--preferred-days"); pd != "" {
-					sc["preferred_days"] = pd
-				}
-				if findFlag(args, "--auto-propose") != "" {
-					sc["auto_propose"] = true
-				}
-				body["schedule_config"] = sc
-			}
+			body := map[string]any{"manifest": manifest}
 			data, _ := json.Marshal(body)
 			run("/strategy", "PUT", data, domainID)
 		default:
@@ -1328,25 +1519,23 @@ func main() {
 
 	// ── metrics ──
 	case "metrics":
+		runMetricsCommand(args[1:], domainID)
+
+	// ── measure ──
+	case "measure":
 		if len(args) < 2 || wantsHelp(args) {
-			printSubUsage("metrics")
+			printSubUsage("measure")
 			return
 		}
 		switch args[1] {
-		case "overview":
-			run("/metrics/overview", "GET", nil, domainID)
-		case "article":
-			requireArg(args, 2, "aeo metrics article <id>")
-			run("/metrics/article/"+args[2], "GET", nil, domainID)
-		case "traffic":
-			days := findFlag(args[2:], "--days")
-			path := "/metrics/traffic"
-			if days != "" {
-				path += "?days=" + days
-			}
-			run(path, "GET", nil, domainID)
+		case "overview", "content", "article", "traffic":
+			runMetricsCommand(args[1:], domainID)
+		case "visibility":
+			run("/visibility", "GET", nil, domainID)
+		case "report":
+			runReportCommand(args[2:], domainID)
 		default:
-			printSubUsage("metrics")
+			printSubUsage("measure")
 		}
 
 	// ── billing / credits ──
@@ -1365,23 +1554,7 @@ func main() {
 		case "credits":
 			run("/account/credits/ledger?limit=1", "GET", nil, "")
 		case "ledger":
-			days := 30
-			if v := findFlag(args, "--days"); v != "" {
-				fmt.Sscanf(v, "%d", &days)
-				if days <= 0 {
-					days = 30
-				}
-			}
-			limit := findFlag(args, "--limit")
-			if limit == "" {
-				limit = "50"
-			}
-			end := time.Now().UTC()
-			start := end.AddDate(0, 0, -days)
-			qs := "start=" + url.QueryEscape(start.Format(time.RFC3339)) +
-				"&end=" + url.QueryEscape(end.Format(time.RFC3339)) +
-				"&limit=" + url.QueryEscape(limit)
-			run("/account/credits/ledger?"+qs, "GET", nil, "")
+			run(accountLedgerPath(args), "GET", nil, "")
 		default:
 			printSubUsage("billing")
 		}
@@ -1608,29 +1781,7 @@ func main() {
 
 	// ── report ──
 	case "report":
-		if wantsHelp(args) {
-			printSubUsage("report")
-			return
-		}
-		reportCmd := findFlag(args, "--command")
-		if reportCmd == "" {
-			fmt.Fprintln(os.Stderr, "Error: --command required")
-			os.Exit(1)
-		}
-		reportBody := map[string]any{"command": reportCmd}
-		if sc := findFlag(args, "--status-code"); sc != "" {
-			var code int
-			fmt.Sscanf(sc, "%d", &code)
-			reportBody["statusCode"] = code
-		}
-		if rb := findFlag(args, "--response-body"); rb != "" {
-			reportBody["responseBody"] = rb
-		}
-		if ctx := findFlag(args, "--context"); ctx != "" {
-			reportBody["context"] = ctx
-		}
-		reportJSON, _ := json.Marshal(reportBody)
-		runSilent("/report", "POST", reportJSON, domainID)
+		runReportCommand(args[1:], domainID)
 
 	// ── feedback (account-scoped, free-form customer feedback) ──
 	case "feedback":
@@ -1660,6 +1811,10 @@ func main() {
 		}
 		jsonBody, _ := json.Marshal(body)
 		run("/feedback", "POST", jsonBody, domainID)
+
+	// ── publish ──
+	case "publish":
+		runPublishCommand(args[1:], domainID)
 
 	// ── post (channel posts) ──
 	case "post":
