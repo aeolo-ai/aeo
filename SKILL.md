@@ -119,13 +119,13 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo metrics article <id>` | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
 | `/aeo metrics traffic` | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
 
-### aeo prompts — Tracked prompts
+### aeo prompts — Visibility prompts
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo prompts list` | List prompts grouped by stage | [brand.md](references/brand.md) |
 | `/aeo prompts add` | Add a manual prompt to brand_prompts | [brand.md](references/brand.md) |
-| `/aeo prompts update <id>` | Edit an existing prompt (text, stage, query_form) | [brand.md](references/brand.md) |
+| `/aeo prompts update <id>` | Edit an existing prompt (text, stage, query_form, tags, measurement status) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
 
 ### aeo drive — Google Drive files

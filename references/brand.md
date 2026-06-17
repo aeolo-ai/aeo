@@ -84,7 +84,7 @@ After displaying:
 Ask the user for the prompt details, then run:
 
 ```bash
-aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --query_form=conversational
+aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --query-form=conversational
 ```
 
 Accepted fields:
@@ -96,6 +96,7 @@ Accepted fields:
 | `stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `"comparison"` |
 | `language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `"zh"` |
 | `query_form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `"long-tail"` |
+| `segment_tags` | string[] | — | `[]` | CLI: `--segment="enterprise,apac"` |
 
 Confirm the details with the user before submitting. After success, ask whether to run `/aeo visibility check run` to measure the new prompt set; it reserves credits based on prompt x engine count.
 
@@ -104,7 +105,7 @@ Confirm the details with the user before submitting. After success, ask whether 
 ## /aeo prompts update — Edit an existing prompt
 
 ```bash
-aeo prompts update <promptId> --prompt="updated text" --stage=use-case
+aeo prompts update <promptId> --prompt="updated text" --stage=use-case --status=untracked
 ```
 
 Accepted fields (all optional, at least one required):
@@ -115,6 +116,10 @@ Accepted fields (all optional, at least one required):
 | `localized_prompt` | string | Native-language prompt |
 | `stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | Move to different stage |
 | `query_form` | `short-tail` \| `long-tail` \| `conversational` | Update query form |
+| `segment_tags` | string[] | Replace metadata/filtering tags (CLI: `--segment foo,bar`) |
+| `status` | `tracked` \| `untracked` | Controls whether the prompt is measured |
+
+Tags are metadata/filtering only. Use `status` to control measurement.
 
 Use `/aeo prompts list` first to get the prompt ID. Confirm with user before updating.
 
