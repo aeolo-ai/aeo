@@ -8,7 +8,7 @@
 aeo domain brand
 ```
 
-Response: `text/markdown` — brand profile including name, category, industry, value proposition, key features, language, and `brand_context` (free-form GEO strategy markdown, up to 50,000 chars).
+Response: `text/markdown` — brand profile including name, category, industry, value proposition, key features, language, and `brand_context` (free-form brand positioning / durable notes markdown, up to 50,000 chars).
 
 If empty or JSON error, suggest running setup and checking the domain ID.
 
@@ -30,7 +30,7 @@ Accepted fields:
 | `value_proposition` | string (max 2000) | Core positioning statement |
 | `key_features` | string[] (max 20) | Feature list for brand mentions |
 | `primary_language` | ISO 639-1 | e.g. `"en"`, `"ko"`, `"ja"` |
-| `brand_context` | string (max 50000) | Free-form GEO strategy (see template below) |
+| `brand_context` | string (max 50000) | Free-form brand positioning and durable notes (see template below) |
 
 ```bash
 aeo domain brand update --name="..." --category="..." --value-proposition="..."
@@ -40,7 +40,12 @@ Partial update — unset fields are preserved.
 
 ### brand_context template
 
-`brand_context` is free-form markdown. Suggest this structure when helping a user build it from scratch:
+`brand_context` is free-form markdown for durable brand facts, positioning,
+audience, narratives, and constraints. Do not store voice examples here; use
+`writing_styles` for structured tone rules and `brand_voice_examples` for
+concrete GOOD/BAD/reference samples.
+
+Suggest this structure when helping a user build it from scratch:
 
 ```markdown
 ## Brand Overview
@@ -58,8 +63,8 @@ Partial update — unset fields are preserved.
 ## Competitive Context
 [Main competitors, how to frame comparisons, where the brand wins]
 
-## Tone & Voice
-[Writing style, formality level, phrases to use/avoid]
+## Constraints
+[Compliance requirements, claims to avoid, source preferences, positioning guardrails]
 ```
 
 ---

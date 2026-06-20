@@ -77,9 +77,13 @@ If brand profile isn't loaded yet, fetch it first (`/aeo domain brand`) — bran
 
 **Must be completed before writing a single word.**
 
-Once the brand profile is loaded, look for the **Tone & Voice section** in `brand_context`.
+Once the brand profile is loaded, look for:
 
-#### If a Tone & Voice section exists
+- the default tone profile from `writing_styles`;
+- GOOD/BAD/reference examples from `brand_voice_examples`;
+- any legacy **Tone & Voice** notes in `brand_context` only as fallback context.
+
+#### If a tone profile exists
 
 Extract in the format below and apply consistently throughout all subsequent steps (Outline heading naming → Writing tone → FAQ style):
 
@@ -94,12 +98,12 @@ Extract in the format below and apply consistently throughout all subsequent ste
 
 After extraction, confirm with the user in one line: _"This article will be written in a [characteristics] tone. Does that sound right?"_
 
-#### If no Tone & Voice section exists
+#### If no tone profile exists
 
 **Stop and ask the user directly. Never decide the tone arbitrarily.**
 
 ```
-No Tone & Voice information found in the brand context.
+No writing style profile found for this brand.
 I have a few questions to determine the article's tone:
 
 1. Overall tone — Is it closer to formal (professional/polished) / casual (friendly/conversational) / authoritative?
@@ -107,11 +111,12 @@ I have a few questions to determine the article's tone:
 3. If you have example sentences or copy that you think represent the brand well, please share them.
 ```
 
-After receiving answers, produce a Tone & Voice memory patch for the
-`brand_context` Tone & Voice section, then proceed.
+After receiving answers, produce a reviewed writing style patch for
+`writing_styles`, and include any concrete sample copy as proposed
+`brand_voice_examples`. Do not bury voice examples inside `brand_context`.
 
 - Interactive CLI/operator flow: after explicit approval, apply it with
-  `/aeo brand update`.
+  the writing style / voice example management surface when available.
 - Background writing job or chat flow: do not write product memory directly.
   Include the patch in the final response for review.
 
@@ -131,7 +136,7 @@ If examples exist:
 - **BAD examples** — if your draft resembles any of these, rewrite.
 - After writing, compare your draft against the GOOD examples. Would they feel like the same brand wrote it?
 
-If no examples are returned, skip this step and rely on Tone & Voice rules from Step 1.5 only.
+If no examples are returned, skip this step and rely on the writing style profile from Step 1.5 only.
 
 > Voice examples provide concrete few-shot guidance that complements the abstract Tone & Voice profile. The profile says "casual and friendly"; the examples show *exactly how* that looks in practice.
 

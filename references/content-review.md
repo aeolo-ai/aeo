@@ -62,7 +62,7 @@ Reviews existing content based on GEO domain expertise.
 | **Appears within a list** | Does the brand appear as part of a list, not as standalone promotion? | Brand mention principles |
 | **Competitors mentioned together** | Are competitors mentioned alongside for naturalness? | Brand mention principles |
 | **Fact-based** | Is only verifiable information used (specs, pricing, review summaries)? | Brand mention principles |
-| **Tone consistency** | Is it consistent with the Tone & Voice in brand_context? | content-create Step 1.5 |
+| **Tone consistency** | Is it consistent with the approved writing style profile and voice examples? | content-create Step 1.5 |
 
 #### 5. Semantic Authenticity
 

@@ -1,6 +1,11 @@
 # Tone of Voice Extraction — Channel Analysis
 
-Crawl a single URL, analyze the posts, and extract/update a Tone of Voice profile in `brand_context`. Run multiple times with different URLs to build a complete picture.
+Crawl a single URL, analyze the posts, and extract a Tone of Voice profile.
+Store structured voice rules in `writing_styles` when a reviewed writing-style
+apply surface is available, and store concrete GOOD/BAD/reference samples in
+`brand_voice_examples`. Treat any legacy Tone & Voice notes in `brand_context`
+as fallback context only. Run multiple times with different URLs to build a
+complete picture.
 
 ---
 
@@ -157,62 +162,55 @@ Verify saved examples: `aeo post examples --platform threads`
 
 ---
 
-### Step 6 — Update brand_context ToV
+### Step 6 — Propose Voice Store Updates
 
-Load the current `brand_context` Tone & Voice section (if exists). Merge:
+Load the current default `writing_styles` profile, existing
+`brand_voice_examples`, and any legacy `brand_context` Tone & Voice section.
+Then propose updates to the voice-specific stores:
 
 **If own channel:**
-- Core Voice + Channel Modifiers (concise — rules and attributes only, no examples)
-- Add pointer: `Voice examples: see /aeo post write (auto-loaded from examples/channel-analysis/)`
+- Update `writing_styles` with Core Voice + Channel Modifiers (concise rules and attributes only, no examples).
+- Add concrete GOOD/BAD samples to `brand_voice_examples`.
 
 **If reference account:**
-- Add to Reference Benchmarks section in brand_context
-- Add reference GOOD examples to the voice examples file under `## GOOD — Reference: {account}`
+- Add reference techniques as proposed `brand_voice_examples` with `type=reference`.
+- Keep benchmark notes out of `brand_context` unless they affect durable brand positioning.
 
-#### brand_context Profile Structure (compact — no examples here)
+#### Writing Style Profile Structure (compact — no examples here)
 
 ```markdown
-## Tone & Voice
-
-### Core Voice
+## Core Voice
 - **Person**: [extracted]
 - **Energy**: [extracted]
 - **Authority**: [extracted]
 - **Humor**: [extracted]
 - **Language**: [extracted]
 
-### Vocabulary DNA
+## Vocabulary DNA
 - **Use**: [5-10 phrases]
 - **Avoid**: [phrases]
 
-### Channel Modifiers
-#### Threads
+## Channel Modifiers
+### Threads
 - Formality: [extracted]
 - Post style: [extracted]
 - Best performing: [type]
-#### LinkedIn
+### LinkedIn
 - Formality: [extracted]
 - Post style: [extracted]
 - Best performing: [type]
-
-### Reference Benchmarks
-- [@account]: [technique borrowed]
-
-> Voice examples (few-shot) are stored separately and auto-loaded by /aeo post write.
 ```
 
 ---
 
 ### Step 7 — Confirm & Save
 
-1. Show the user: brand_context changes (diff) + voice examples file
+1. Show the user: proposed `writing_styles` changes + proposed `brand_voice_examples`
 2. Ask: "Does this capture your brand's voice? Anything to adjust?"
 3. On approval:
-   - Interactive CLI/operator flow: `/aeo brand update` to save
-     brand_context Tone & Voice
+   - Interactive CLI/operator flow: save through the writing style / voice examples management surface when available
    - Background writing job or chat flow: do not write product memory directly;
-     return a reviewed brand_context patch instead
-   - Write voice examples file to `examples/channel-analysis/`
+     return reviewed `writing_styles` / `brand_voice_examples` patches instead
 
 ---
 
@@ -224,7 +222,8 @@ Run 2: /aeo post analyze --url https://linkedin.com/company/x   → adds LinkedI
 Run 3: /aeo post analyze --url https://threads.com/@competitor   → adds Reference Benchmark + reference examples
 ```
 
-Each run merges into existing profile + appends to voice examples file.
+Each run merges into the existing writing style profile and appends reviewed
+examples to `brand_voice_examples`.
 
 ---
 

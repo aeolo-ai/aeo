@@ -29,7 +29,8 @@ Agent writes the post directly using the guidelines below + [channel-washing.md]
 
 ### Brand Context
 - [ ] Brand profile loaded (`/aeo domain brand`)
-- [ ] Tone & Voice section exists in brand_context
+- [ ] Writing style profile loaded from `writing_styles` when available
+- [ ] Voice examples loaded from `brand_voice_examples` when available
 ```
 
 #### Entry Paths
@@ -41,7 +42,7 @@ Agent writes the post directly using the guidelines below + [channel-washing.md]
 | **Data-insight** | Stat, finding, or insight to frame | Data point + context |
 
 If brand profile not loaded → fetch via `/aeo domain brand` first.
-If no Tone & Voice in brand_context → ask user (same gate as content-create.md Step 1.5).
+If no writing style profile is available → ask user (same gate as content-create.md Step 1.5). Treat legacy Tone & Voice notes in `brand_context` as fallback context only.
 
 ---
 
@@ -78,7 +79,7 @@ This returns GOOD, BAD, and Reference examples stored in the DB. Extract:
 - **BAD examples** (anti-patterns) — if your draft resembles any of these, rewrite.
 - **Reference examples** — techniques borrowed from benchmark accounts.
 
-If no examples are returned, skip this step. The post will rely on brand_context Tone & Voice rules only. Suggest running `/aeo post analyze --url <channel_url>` to generate voice examples.
+If no examples are returned, skip this step. The post will rely on the writing style profile and any legacy voice notes only. Suggest running `/aeo post analyze --url <channel_url>` to generate voice examples.
 
 **How to use the examples during writing:**
 - Read each GOOD example before writing. Internalize the rhythm, word choice, and energy.
@@ -172,7 +173,7 @@ Before presenting to the user, check:
 | AI Citable Unit | Is there a **definitive** 2-3 sentence block (no hedging) an AI could extract verbatim? |
 | 1st-party framing | "I/we" not "Brand X"? |
 | Marketing smell | Zero discount codes, CTAs to buy, product feature lists? |
-| Tone match | Matches user's Tone & Voice from brand_context? |
+| Tone match | Matches the user's writing style profile and approved voice constraints? |
 | **Voice examples match** | Does this sound like the GOOD examples? Would it feel like the same person wrote it? |
 | **Anti-example check** | Does this resemble any BAD examples? (corporate tone, feature lists, discount codes, generic AI phrasing) |
 | Format compliance | Follows the exact structure template from channel-washing.md? |

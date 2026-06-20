@@ -59,7 +59,9 @@ When creating a strategy for the first time:
 
 1. **Load context first**: Run `/aeo` to get brand profile + audit + visibility
 2. **Identify gaps**: Look at visibility gaps — which engines, which topics are underserved?
-3. **Check brand profile**: Ensure `brand_context` is filled — it feeds into content tone
+3. **Check brand profile**: Ensure `brand_context` is filled for durable
+   positioning/audience/narratives, and check `writing_styles` /
+   `brand_voice_examples` separately for tone.
 4. **Draft manifest**: Use the template above. Focus on:
    - What makes this brand unique (positioning)
    - What content types work best for the gaps (balance)
