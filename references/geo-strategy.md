@@ -148,14 +148,10 @@ If any of these 3 are blocked, all other optimizations are meaningless. If techn
 
 From data loaded via `/aeo domain brand`:
 
-- **optimization_type** check:
-  - `brand` → Goal is for the brand name to be cited by AI. Natural inclusion in third-party listicles
-  - `product` → Specific product included in recommendations/comparisons. Prioritize product comparison content
-  - `campaign` → Season/message exposure. Trend-linked content
-
 - **competitors** usage: Include alongside competitors in comparison content for naturalness
 - **key_features + value_proposition**: Source for fact-based descriptions when mentioning the brand
 - **brand_context**: Market positioning, target audience, core narrative — used for determining article angle
+- **content_strategy.manifest**: Reviewed priorities, target angles, and publishing direction. Prefer it over generated snapshot/analysis fallbacks when present.
 
 ---
 
@@ -201,7 +197,7 @@ The angle for which gaps to fill first may vary depending on the brand's current
 | `local-authority` | "Best X in [location]?" | When visibility is needed for location-based queries |
 | `brand-awareness` | "What is X?" | When AI doesn't even know the brand exists — prerequisite for other strategies |
 
-Use alongside `optimization_type` (brand/product/campaign) to determine content angle.
+Use alongside `content_strategy.manifest` and current visibility gaps to determine content angle.
 
 ### Cross-Posting Flow (Reference)
 
