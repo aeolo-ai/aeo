@@ -1,11 +1,11 @@
 # Tone of Voice Extraction — Channel Analysis
 
 Crawl a single URL, analyze the posts, and extract a Tone of Voice profile.
-Store structured voice rules in `writing_styles` when a reviewed writing-style
-apply surface is available, and store concrete GOOD/BAD/reference samples in
-`brand_voice_examples`. Treat any legacy Tone & Voice notes in `brand_context`
-as fallback context only. Run multiple times with different URLs to build a
-complete picture.
+Store concrete GOOD/BAD/reference samples in `brand_voice_examples`. Keep any
+structured voice rules as proposed replacement Voice profile material; do not
+write new `writing_styles` records. Treat broad Tone & Voice notes in
+`brand_context` as temporary context only. Run multiple times with different
+URLs to build a complete picture.
 
 ---
 
@@ -162,21 +162,21 @@ Verify saved examples: `aeo post examples --platform threads`
 
 ---
 
-### Step 6 — Propose Voice Store Updates
+### Step 6 — Propose Voice Updates
 
-Load the current default `writing_styles` profile, existing
-`brand_voice_examples`, and any legacy `brand_context` Tone & Voice section.
-Then propose updates to the voice-specific stores:
+Load existing `brand_voice_examples` and any `brand_context` Tone & Voice
+section. Then propose updates to the voice-specific stores:
 
 **If own channel:**
-- Update `writing_styles` with Core Voice + Channel Modifiers (concise rules and attributes only, no examples).
 - Add concrete GOOD/BAD samples to `brand_voice_examples`.
+- Return Core Voice + Channel Modifiers as proposed replacement Voice profile
+  material, not as a `writing_styles` patch.
 
 **If reference account:**
 - Add reference techniques as proposed `brand_voice_examples` with `type=reference`.
 - Keep benchmark notes out of `brand_context` unless they affect durable brand positioning.
 
-#### Writing Style Profile Structure (compact — no examples here)
+#### Replacement Voice Profile Candidate (compact — no examples here)
 
 ```markdown
 ## Core Voice
@@ -205,12 +205,13 @@ Then propose updates to the voice-specific stores:
 
 ### Step 7 — Confirm & Save
 
-1. Show the user: proposed `writing_styles` changes + proposed `brand_voice_examples`
+1. Show the user: proposed Voice profile candidate + proposed `brand_voice_examples`
 2. Ask: "Does this capture your brand's voice? Anything to adjust?"
 3. On approval:
-   - Interactive CLI/operator flow: save through the writing style / voice examples management surface when available
+   - Interactive CLI/operator flow: save concrete examples through the voice examples management surface when available
    - Background writing job or chat flow: do not write product memory directly;
-     return reviewed `writing_styles` / `brand_voice_examples` patches instead
+     return reviewed `brand_voice_examples` patches and keep structured profile
+     material pending until the replacement Voice profile exists
 
 ---
 
@@ -222,8 +223,8 @@ Run 2: /aeo post analyze --url https://linkedin.com/company/x   → adds LinkedI
 Run 3: /aeo post analyze --url https://threads.com/@competitor   → adds Reference Benchmark + reference examples
 ```
 
-Each run merges into the existing writing style profile and appends reviewed
-examples to `brand_voice_examples`.
+Each run appends reviewed examples to `brand_voice_examples` and refines the
+replacement Voice profile candidate.
 
 ---
 

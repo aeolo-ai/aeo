@@ -27,7 +27,7 @@ This returns a 5-item checklist. Read it and determine what's already done.
   - If available, browse the domain's website for additional context
   - If neither is sufficient, ask the user for: what they do, who their audience is, and what makes them different
   - Draft a brand_context covering: overview, target audience, key narratives, competitive positioning, and constraints
-  - Capture tone separately as a proposed `writing_styles` update and concrete samples as `brand_voice_examples`
+  - Capture concrete voice samples as `brand_voice_examples`; keep broad tone constraints as a short `brand_context` note until the replacement Voice profile exists
   - Show it to the user for confirmation
   - `aeo domain brand update --brand-context "..."`
 

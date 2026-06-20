@@ -79,16 +79,15 @@ If brand profile isn't loaded yet, fetch it first (`/aeo domain brand`) — bran
 
 Once the brand profile is loaded, look for:
 
-- the default tone profile from `writing_styles`;
 - GOOD/BAD/reference examples from `brand_voice_examples`;
-- any legacy **Tone & Voice** notes in `brand_context` only as fallback context.
+- any broad **Tone & Voice** notes in `brand_context` only as temporary context.
 
-#### If a tone profile exists
+#### If voice evidence exists
 
 Extract in the format below and apply consistently throughout all subsequent steps (Outline heading naming → Writing tone → FAQ style):
 
 ```
-## Extracted Tone Profile
+## Extracted Voice Guidance
 - Formality: [formal / balanced / casual]
 - Voice characteristics: [extracted adjectives]
 - Phrases to use: [example sentences/expressions]
@@ -98,12 +97,12 @@ Extract in the format below and apply consistently throughout all subsequent ste
 
 After extraction, confirm with the user in one line: _"This article will be written in a [characteristics] tone. Does that sound right?"_
 
-#### If no tone profile exists
+#### If no voice evidence exists
 
 **Stop and ask the user directly. Never decide the tone arbitrarily.**
 
 ```
-No writing style profile found for this brand.
+No reviewed voice examples found for this brand.
 I have a few questions to determine the article's tone:
 
 1. Overall tone — Is it closer to formal (professional/polished) / casual (friendly/conversational) / authoritative?
@@ -111,12 +110,13 @@ I have a few questions to determine the article's tone:
 3. If you have example sentences or copy that you think represent the brand well, please share them.
 ```
 
-After receiving answers, produce a reviewed writing style patch for
-`writing_styles`, and include any concrete sample copy as proposed
-`brand_voice_examples`. Do not bury voice examples inside `brand_context`.
+After receiving answers, include any concrete sample copy as proposed
+`brand_voice_examples`. If the user gives only broad constraints, propose a
+concise `domains.brand_context` note until the replacement Voice profile exists.
+Do not bury concrete voice examples inside `brand_context`.
 
 - Interactive CLI/operator flow: after explicit approval, apply it with
-  the writing style / voice example management surface when available.
+  the voice example management surface when available.
 - Background writing job or chat flow: do not write product memory directly.
   Include the patch in the final response for review.
 

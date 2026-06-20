@@ -42,8 +42,8 @@ Partial update — unset fields are preserved.
 
 `brand_context` is free-form markdown for durable brand facts, positioning,
 audience, narratives, and constraints. Do not store voice examples here; use
-`writing_styles` for structured tone rules and `brand_voice_examples` for
-concrete GOOD/BAD/reference samples.
+`brand_voice_examples` for concrete GOOD/BAD/reference samples. Broad voice
+constraints may be noted here only until the replacement Voice profile exists.
 
 Suggest this structure when helping a user build it from scratch:
 

@@ -29,8 +29,8 @@ Agent writes the post directly using the guidelines below + [channel-washing.md]
 
 ### Brand Context
 - [ ] Brand profile loaded (`/aeo domain brand`)
-- [ ] Writing style profile loaded from `writing_styles` when available
 - [ ] Voice examples loaded from `brand_voice_examples` when available
+- [ ] Broad voice constraints checked in `brand_context` when voice examples are sparse
 ```
 
 #### Entry Paths
