@@ -19,7 +19,12 @@ If no custom sources are configured, ask the user during onboarding or before th
 "Where does your team keep product data, test results, and customer feedback?
 (Google Drive folders, specific URLs, internal wikis, etc.)"
 
-Save their answer: `aeo config data-sources update --data-sources "..."`
+Turn their answer into a Source Policy patch.
+
+- Interactive CLI/operator flow: after explicit approval, apply it with
+  `aeo config data-sources update --data-sources "..."`
+- Background writing job or chat flow: do not write product memory directly.
+  Return the `domains.data_sources` patch for review.
 
 ## Research order
 

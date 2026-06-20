@@ -65,7 +65,12 @@ When creating a strategy for the first time:
    - What content types work best for the gaps (balance)
    - Top 3–5 topics to write next (priority queue)
 5. **Document cadence in the manifest if needed**: Match to the team's capacity. Start conservative (for example, weekly with 2 articles), but keep cadence as plain strategy text unless a separate scheduler is configured.
-6. **Save**: `aeo strategy update --manifest "..."`
+6. **Propose/apply**:
+   - Interactive CLI/operator flow: after explicit approval, save with
+     `aeo strategy update --manifest "..."`
+   - Background writing job or chat flow: do not write product memory directly.
+     Return a reviewed `content_strategy.manifest` patch for the user/operator
+     to apply.
 
 ---
 

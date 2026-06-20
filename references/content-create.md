@@ -107,8 +107,16 @@ I have a few questions to determine the article's tone:
 3. If you have example sentences or copy that you think represent the brand well, please share them.
 ```
 
-After receiving answers → immediately save to the Tone & Voice section of `brand_context` via `/aeo brand update`, then proceed.
-This way, the same questions won't need to be repeated for future articles.
+After receiving answers, produce a Tone & Voice memory patch for the
+`brand_context` Tone & Voice section, then proceed.
+
+- Interactive CLI/operator flow: after explicit approval, apply it with
+  `/aeo brand update`.
+- Background writing job or chat flow: do not write product memory directly.
+  Include the patch in the final response for review.
+
+This way, the same questions can be promoted into durable memory without
+silently changing product context from an autonomous writing pass.
 
 ### Step 1.6 — Load Voice Examples (few-shot)
 

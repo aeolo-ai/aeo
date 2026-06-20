@@ -208,7 +208,10 @@ Load the current `brand_context` Tone & Voice section (if exists). Merge:
 1. Show the user: brand_context changes (diff) + voice examples file
 2. Ask: "Does this capture your brand's voice? Anything to adjust?"
 3. On approval:
-   - `/aeo brand update` to save brand_context Tone & Voice
+   - Interactive CLI/operator flow: `/aeo brand update` to save
+     brand_context Tone & Voice
+   - Background writing job or chat flow: do not write product memory directly;
+     return a reviewed brand_context patch instead
    - Write voice examples file to `examples/channel-analysis/`
 
 ---
