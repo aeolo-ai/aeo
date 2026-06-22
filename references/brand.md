@@ -14,7 +14,7 @@ If empty or JSON error, suggest running setup and checking the domain ID.
 
 ---
 
-## /aeo domain brand update — Update brand context fields
+## /aeo brand update — Update brand context fields
 
 1. Fetch current Agent/Brand Context with `aeo agent context` first (show it to the user)
 2. Ask the user what they want to change
@@ -33,7 +33,7 @@ Accepted fields:
 | `brand_context` | string (max 50000) | Free-form brand positioning and durable notes (see template below) |
 
 ```bash
-aeo domain brand update --name="..." --category="..." --value-proposition="..."
+aeo brand update --name="..." --category="..." --value-proposition="..."
 ```
 
 Partial update — unset fields are preserved.

@@ -28,7 +28,7 @@ This returns a 5-item checklist. Read it and determine what's already done.
   - If neither is sufficient, ask the user for: what they do, who their audience is, and what makes them different
   - Draft a brand_context covering: overview, target audience, key narratives, competitive positioning, and constraints
   - Show it to the user for confirmation
-  - `aeo domain brand update --brand-context "..."`
+  - `aeo brand update --brand-context "..."`
 
 **Data Sources** (if empty):
 - Run `aeo config data-sources` — if no custom sources configured:
@@ -156,7 +156,7 @@ Before writing, read:
 - The brand's `brand_context` via `aeo agent context`
 - Task-specific reference analysis or sample copy only when the user explicitly selected/provided it
 
-Use `aeo content generate` for production generation. If the user explicitly wants manual drafting, write locally and import with `aeo content import`. Key requirements:
+Default external-agent path: write locally, then import with `aeo content import`. Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job. Key requirements:
 - BLUF (Bottom Line Up Front) in first 2-3 sentences
 - Inline citations with `[Source](URL)` — minimum 3 external sources
 - Brand density 15-25% (mentions in lists and recommendations, not solo promo)

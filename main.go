@@ -666,10 +666,13 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
                     Flags: --status, --limit, --offset
   get <id>          Get full article content
   review <id>       Load review workspace (article + brand + audit context)
-  generate          Start an AI content generation job (costs 5 credits)
+  import            Import an agent-written draft article
+                    Required: --title, --body (or --body-file)
+                    Optional: --type, --keywords (comma-separated), --language, --rationale,
+                              --meta-description, --sources (JSON array)
+  generate          Explicit-only Aeolo server-side generation job (costs 5 credits)
                     Required: --prompt (or --prompt-file)
-                    Optional: --media, --language, --channel-voice-reference
-  write             Deprecated alias for generate
+                    Optional: --media, --language
   jobs              List active writing jobs
                     Optional: --all
   update <id>       Update content item
@@ -680,10 +683,6 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   preview <id>      Generate preview link
   deploy <id>       Deploy to Shopify (--channel)
   redeploy <id>     Redeploy to Shopify
-  import            Import a draft article
-                    Required: --title, --body (or --body-file)
-                    Optional: --type, --keywords (comma-separated), --language, --rationale,
-                              --meta-description, --sources (JSON array)
 `,
 	"prompts": `aeo prompts <verb>
 

@@ -35,7 +35,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo domain list` | List accessible domains | this file |
 | `/aeo domain switch [id]` | Switch active domain | this file |
-| `/aeo domain brand update` | Update brand context fields | [brand.md](references/brand.md) |
+| `/aeo brand update` | Update brand context fields | [brand.md](references/brand.md) |
 | `/aeo domain audit` | Show latest audit report | this file |
 | `/aeo domain channels` | List connected channels (platform, status, ID) | this file |
 | `/aeo domain setup` | Show setup checklist (integrations status) | this file |
@@ -85,16 +85,16 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo content list` | List content items (--status, --limit, --offset) | [content-manage.md](references/content-manage.md) |
 | `/aeo content get <id>` | Read full article content (markdown) | [content-manage.md](references/content-manage.md) |
-| `/aeo content generate` | Start a server-side content generation job (uses production credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
+| `/aeo content import` | Push an already-written draft to content history | [content-create.md](references/content-create.md) |
+| `/aeo content generate` | Explicit-only server-side content generation job (uses production credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
 | `/aeo content jobs` | List active content generation jobs | [polling.md](references/polling.md) |
 | `/aeo content update <id>` | Update a content item (status, title, meta, keywords, body via patches or full replace) | [content-manage.md](references/content-manage.md) |
 | `/aeo content preview <id>` | Generate preview link and open in browser | [content-manage.md](references/content-manage.md) |
 | `/aeo content deploy <id>` | Deploy an article to the connected Shopify channel | [content-manage.md](references/content-manage.md) |
 | `/aeo content redeploy <id>` | Update an already-deployed Shopify article in-place (keeps URL) | [content-manage.md](references/content-manage.md) |
-| `/aeo content import` | Push an already-written draft to content history | [content-create.md](references/content-create.md) |
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
 
-> Use `content generate` for the server-side paid generation job and `content import` for already-written drafts.
+> Default external-agent writing path: draft directly, then use `content import`. Use `content generate` only when the user explicitly wants an Aeolo server-side paid generation job.
 
 ### aeo post — Channel posts (social media distribution)
 
@@ -228,10 +228,10 @@ Never call a write API without confirmation. Always show what you're about to do
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Skill workflows** (`content review`, `post write`): These require LLM reasoning and are not the canonical server-side generation command. `aeo content generate` starts a server-side content generation job and spends production credits; use `aeo content jobs` or the relevant poll command for background status.
+- **Skill workflows** (`content review`, `post write`, manual article drafting): These require LLM reasoning in the external agent. Draft directly and import with `aeo content import`; `aeo content generate` is only for explicit server-side generation jobs and spends production credits.
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
-Before writing or generating any content (`/aeo content generate` or manual draft/import), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
+Before writing or generating any content (manual draft/import or explicit `/aeo content generate`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
 
 ---
 

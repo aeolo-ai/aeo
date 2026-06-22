@@ -20,7 +20,9 @@ generation pass.
 
 ## Manual Draft/Import Path — GEO-optimized article
 
-`aeo content generate` is the canonical server-side generation command. Use this manual path only when the user explicitly wants the agent to draft locally; after writing, save the draft and import via `aeo content import`.
+This is the default external-agent writing path. Draft the article locally in the agent reasoning loop; after writing, save the draft and import via `aeo content import`.
+
+Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job.
 
 ---
 
