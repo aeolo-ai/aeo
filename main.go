@@ -97,21 +97,21 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 
 	var reqURL string
 	if path == "/domains" {
-		reqURL = creds.APIBase + "/v1/connector/domains"
+		reqURL = creds.APIBase + "/v2/connector/domains"
 	} else if path == "/whoami" {
-		reqURL = creds.APIBase + "/v1/connector/whoami"
+		reqURL = creds.APIBase + "/v2/connector/whoami"
 	} else if path == "/feedback" {
-		reqURL = creds.APIBase + "/v1/connector/feedback"
+		reqURL = creds.APIBase + "/v2/connector/feedback"
 	} else if strings.HasPrefix(path, "/account/") {
-		reqURL = creds.APIBase + "/v1/connector" + path
+		reqURL = creds.APIBase + "/v2/connector" + path
 	} else if path == "/image/search" || strings.HasPrefix(path, "/image/search?") {
 		// Pexels search is account-scoped, not domain-scoped.
-		reqURL = creds.APIBase + "/v1/connector" + path
+		reqURL = creds.APIBase + "/v2/connector" + path
 	} else {
 		if did == "" {
 			return "", fmt.Errorf("domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
 		}
-		reqURL = creds.APIBase + "/v1/connector/domains/" + did + path
+		reqURL = creds.APIBase + "/v2/connector/domains/" + did + path
 	}
 
 	var bodyReader io.Reader
@@ -221,7 +221,7 @@ func downloadFile(path, outputPath, domainOverride string) {
 		os.Exit(1)
 	}
 
-	reqURL := creds.APIBase + "/v1/connector/domains/" + did + path
+	reqURL := creds.APIBase + "/v2/connector/domains/" + did + path
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
@@ -557,20 +557,21 @@ USAGE:
 
 COMMANDS:
   account       whoami | subscription | credits | ledger
-  domain        list | switch <id> | brand | brand update | audit | channels
+  agent         context
+  domain        list | switch <id> | audit | channels
   diagnose      visibility | visibility run | visibility poll <jobId> | audit | audit run | audit poll <jobId>
-  channel       list | voice | add | update <id> | delete <id> | connect <id> | disconnect <id>
+  channel       list | add | update <id> | delete <id> | connect <id> | disconnect <id>
   visibility    show | check run | check poll <jobId>
   audit         run | poll <jobId>
   strategy      show | update
-  content       list | get <id> | review <id> | write | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
+  content       list | get <id> | review <id> | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
   segments      list
   measure       overview | content <id> | traffic [--days] | visibility | report --command <cmd>
   metrics       overview | article <id> | traffic [--days]
   publish       preview <id> | deploy <id> | redeploy <id>
   post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
-  reference     analyze --url <url> --media <type>
+  reference     analyze --url <url> --media <type> | style --url <url>
   video         analyze --url <url> [--media instagram_reels|tiktok_reels]
   drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
   products      List products in the catalog
@@ -599,13 +600,17 @@ var subUsage = map[string]string{
   ledger            Show credit ledger entries
                     Flags: --days (default 30), --limit (default 50)
 `,
+	"agent": `aeo agent <verb>
+
+  context           Show default agent runtime context for the active domain
+`,
 	"domain": `aeo domain <verb>
 
   setup             Show setup checklist (integrations status)
   list              List accessible domains
   switch <id>       Switch active domain
-  brand             Show brand profile
-  brand update      Update brand profile
+  brand             Deprecated alias for 'aeo agent context'
+  brand update      Update brand context
                     Flags: --name, --industry, --category, --value-proposition, --brand-context
   audit             Show latest audit report
   channels          List connected channels
@@ -613,8 +618,6 @@ var subUsage = map[string]string{
 	"channel": `aeo channel <verb>
 
   list              List connected channels
-  voice             Show latest channel style analysis
-                    Optional: --provider blog|threads|tiktok|instagram, --url <source_url>
   add               Add a channel (--url required, --type, --label)
   update <id>       Update a channel (--url, --type, --label)
   delete <id>       Delete a non-primary channel
@@ -663,9 +666,10 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
                     Flags: --status, --limit, --offset
   get <id>          Get full article content
   review <id>       Load review workspace (article + brand + audit context)
-  write             Start an AI writing job (costs 5 credits)
+  generate          Start an AI content generation job (costs 5 credits)
                     Required: --prompt (or --prompt-file)
                     Optional: --media, --language, --channel-voice-reference
+  write             Deprecated alias for generate
   jobs              List active writing jobs
                     Optional: --all
   update <id>       Update content item
@@ -738,6 +742,9 @@ Notes:
                     Required: --url, --media
                     Media: linkedin_post, threads_post, visual_asset, instagram_reels, tiktok_reels
                     Optional: --language
+  style             Read selected reference style evidence
+                    Required: --url
+                    Optional: --provider blog|threads|linkedin|instagram|tiktok
 `,
 	"video": `aeo video <verb>
 
@@ -781,7 +788,7 @@ Notes:
 
   list              List channel posts
                     Flags: --platform, --status, --limit, --offset
-  analyze           Crawl a channel/reference URL and queue voice analysis
+  analyze           Crawl a channel/reference URL and queue reference analysis
                     Required: --url
                     Optional: --provider blog|threads|tiktok|instagram, --mode owned|reference, --limit
   get <id>          Get a channel post by ID
@@ -790,11 +797,6 @@ Notes:
                     Optional: --title, --post-type, --target, --content-id, --channel-id
   preview <id>      Generate preview link
   delete <id>       Delete a channel post
-  examples          List voice examples (--platform)
-  examples add      Add a voice example
-                    Required: --platform, --type (good|bad), --body
-                    Optional: --source-url, --note
-  examples delete <id>  Delete a voice example
   approve <id>      Approve a draft post for publishing
   publish <id>      Publish an approved post to its platform
 `,
@@ -1066,6 +1068,19 @@ func main() {
 	case "account":
 		runAccountCommand(args[1:])
 
+	// ── agent ──
+	case "agent":
+		if len(args) < 2 || wantsHelp(args) {
+			printSubUsage("agent")
+			return
+		}
+		switch args[1] {
+		case "context":
+			run("/brand-profile", "GET", nil, domainID)
+		default:
+			printSubUsage("agent")
+		}
+
 	// ── domain ──
 	case "domain", "domains":
 		if len(args) < 2 || cmd == "domains" || wantsHelp(args) {
@@ -1131,7 +1146,7 @@ func main() {
 				}
 				qs += "url=" + url.QueryEscape(v)
 			}
-			path := "/channel-voice"
+			path := "/reference-style"
 			if qs != "" {
 				path += "?" + qs
 			}
@@ -1281,7 +1296,7 @@ func main() {
 		switch sub {
 		case "list":
 			contentList()
-		case "write":
+		case "generate", "write":
 			prompt := findFlag(args, "--prompt")
 			if v := findFlag(args, "--prompt-file"); v != "" {
 				raw, err := os.ReadFile(v)
@@ -1582,6 +1597,17 @@ func main() {
 			}
 			b, _ := json.Marshal(body)
 			run("/reference-analysis/jobs", "POST", b, domainID)
+		case "style":
+			refURL := findFlag(args, "--url")
+			if refURL == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo reference style --url <url> [--provider <provider>]")
+				os.Exit(1)
+			}
+			path := "/reference-style?url=" + url.QueryEscape(refURL)
+			if provider := findFlag(args, "--provider"); provider != "" {
+				path += "&provider=" + url.QueryEscape(provider)
+			}
+			run(path, "GET", nil, domainID)
 		case "poll":
 			requireArg(args, 2, "aeo reference poll <jobId>")
 			run("/jobs/"+args[2], "GET", nil, domainID)
@@ -1888,7 +1914,7 @@ func main() {
 				}
 			}
 			b, _ := json.Marshal(body)
-			run("/channel-voice", "POST", b, domainID)
+			run("/reference-style", "POST", b, domainID)
 		case "get":
 			requireArg(args, 2, "aeo post get <id>")
 			run("/channel-posts/"+args[2], "GET", nil, domainID)
@@ -1940,40 +1966,6 @@ func main() {
 		case "delete":
 			requireArg(args, 2, "aeo post delete <id>")
 			run("/channel-posts/"+args[2], "DELETE", nil, domainID)
-		case "examples":
-			if len(args) > 2 && args[2] == "add" {
-				platform := findFlag(args, "--platform")
-				exType := findFlag(args, "--type")
-				body := findFlag(args, "--body")
-				if platform == "" || exType == "" || body == "" {
-					fmt.Fprintf(os.Stderr, "Error: --platform, --type, and --body are required.\nUsage: aeo post examples add --platform threads --type good --body \"...\"\n")
-					os.Exit(1)
-				}
-				exBody := map[string]any{
-					"platform":    platform,
-					"exampleType": exType,
-					"body":        body,
-				}
-				if v := findFlag(args, "--source-url"); v != "" {
-					exBody["sourceUrl"] = v
-				}
-				if v := findFlag(args, "--note"); v != "" {
-					exBody["note"] = v
-				}
-				exJSON, _ := json.Marshal(exBody)
-				run("/voice-examples", "POST", exJSON, domainID)
-			} else if len(args) > 2 && args[2] == "delete" {
-				requireArg(args, 3, "aeo post examples delete <id>")
-				run("/voice-examples/"+args[3], "DELETE", nil, domainID)
-			} else {
-				// list
-				platform := findFlag(args, "--platform")
-				path := "/voice-examples"
-				if platform != "" {
-					path += "?platform=" + platform
-				}
-				run(path, "GET", nil, domainID)
-			}
 		case "approve":
 			requireArg(args, 2, "aeo post approve <id>")
 			run("/channel-posts/"+args[2]+"/approve", "POST", nil, domainID)
@@ -2311,7 +2303,7 @@ func connectChannel(channelID, domainOverride string) {
 	}
 
 	// Get OAuth URL via connector API
-	authURL := fmt.Sprintf("%s/v1/connector/domains/%s/social/auth-url?channelId=%s&platform=auto", creds.APIBase, did, channelID)
+	authURL := fmt.Sprintf("%s/v2/connector/domains/%s/social/auth-url?channelId=%s&platform=auto", creds.APIBase, did, channelID)
 	authResp, err := doAPIRequest(authURL, "GET", nil, creds.APIKey)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting OAuth URL: %s\n", err)

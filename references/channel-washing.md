@@ -12,7 +12,7 @@ Transform hub articles, original ideas, or data insights into channel-native for
 | Original idea (no article) | Write directly in channel format |
 | Data/insight snippet | Frame as channel-native post |
 
-Works with `/aeo content write` (articles) and standalone channel content.
+Works with generated/imported hub articles and standalone channel content.
 
 ---
 

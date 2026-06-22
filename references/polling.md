@@ -11,7 +11,7 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 |---------|------------|-----------------|
 | Visibility check | `aeo visibility check run` | 3-8 min |
 | Site audit | `aeo audit run` | 3–8 min |
-| AI writing | `aeo content write` | 2–8 min |
+| Content generation | `aeo content generate` | 2–8 min |
 | Reference analysis | `aeo reference analyze` | 2–6 min |
 
 ---

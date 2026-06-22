@@ -32,17 +32,17 @@ When writing about the brand in an article, every claim must have a proof point 
 3. Third-party reviews/test results
 4. Client-provided materials (Google Drive, meeting notes, etc.)
 
-### Brand Profile → Ammunition Conversion
+### Brand Context → Ammunition Conversion
 
-Brand profile data retrieved via `/aeo domain brand` is in raw form. It needs to be converted to the Ammunition format.
+Brand context data retrieved via `/aeo agent context` is in raw form. It needs to be converted to the Ammunition format.
 
-| Brand Profile Field | Ammunition Conversion Method |
+| Brand Context Field | Ammunition Conversion Method |
 |---------------------|------------------------------|
 | `value_proposition` | Break down into core claim statements → find proof point + source for each claim |
 | `key_features` | Convert each feature into a Claim → verify proof from specs/product pages |
 | `category` / `industry` | For positioning context — not direct Claims |
 
-If brand profile alone lacks sufficient proof:
+If brand context alone lacks sufficient proof:
 1. Supplement from session documents (Google Drive, meeting notes, product specs)
 2. Crawl official website/product pages
 3. If still insufficient, request from the user

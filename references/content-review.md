@@ -11,7 +11,7 @@ Reviews existing content based on GEO domain expertise.
 1. **Load context** — Fetch the following 3 items in parallel:
    ```bash
    aeo content get <id> > /tmp/aeo_review_article.md &
-   aeo domain brand > /tmp/aeo_review_brand.md &   # /aeo domain brand
+   aeo agent context > /tmp/aeo_review_brand.md &   # /aeo agent context
    aeo domain audit > /tmp/aeo_review_audit.md &    # /aeo domain audit
    wait
    ```
@@ -62,7 +62,7 @@ Reviews existing content based on GEO domain expertise.
 | **Appears within a list** | Does the brand appear as part of a list, not as standalone promotion? | Brand mention principles |
 | **Competitors mentioned together** | Are competitors mentioned alongside for naturalness? | Brand mention principles |
 | **Fact-based** | Is only verifiable information used (specs, pricing, review summaries)? | Brand mention principles |
-| **Tone consistency** | Is it consistent with the approved writing style profile and voice examples? | content-create Step 1.5 |
+| **Tone consistency** | Is it consistent with the approved task-specific task-specific reference evidence and relevant voice examples? | content-create Step 1.5 |
 
 #### 5. Semantic Authenticity
 
@@ -83,7 +83,7 @@ Catches semantic issues where the article reads like "AI-written content" or "br
 
 #### 6. Engine Fit
 
-Based on the target engines in the brand profile or visibility gap data:
+Based on the target engines in the brand context or visibility gap data:
 
 | Engine | Check Points |
 |--------|-------------|
@@ -130,4 +130,4 @@ Based on the target engines in the brand profile or visibility gap data:
 
 - Reviews are **read-only** — not subject to the CUD Rule. Edits are made via `/aeo content update` after user confirmation.
 - Externally written articles (local files) can also be reviewed — if a file path is provided instead of `<id>`, the file is read and the same checklist is applied.
-- Reviews can be performed without a brand profile, but the Brand Integration category is skipped and this is noted explicitly.
+- Reviews can be performed without brand context, but the Brand Integration category is skipped and this is noted explicitly.

@@ -21,16 +21,16 @@ While SEO focused on search result "rankings," GEO aims to be **cited, recommend
 
 ---
 
-## Aeolo 4-Step Pipeline
+## Core GEO Inputs
 
 ```
-Step 1: Brand    → "What does this domain do?"
-Step 2: Prompts  → "What should we ask the AI engines?"
-Step 3: Visibility → "Is the AI mentioning this brand?"
-Step 4: Content  → "What's missing, and what should we write?"
+Brand Context      → "What does this domain do?"
+Content Strategy   → "What direction is already approved?"
+Visibility Gaps    → "Where is AI not mentioning this brand?"
+Existing Content    → "What can be refreshed, linked, or extended?"
 ```
 
-The agent is the executor of Step 4 — filling gaps with content. First, read and analyze the data from Steps 1–3.
+Use Agent/Brand Context, content strategy, visibility gaps, and existing content to decide the next content action.
 
 ---
 
@@ -146,7 +146,7 @@ If any of these 3 are blocked, all other optimizations are meaningless. If techn
 
 ## Using Brand Context
 
-From data loaded via `/aeo domain brand`:
+From data loaded via `/aeo agent context`:
 
 - **competitors** usage: Include alongside competitors in comparison content for naturalness
 - **key_features + value_proposition**: Source for fact-based descriptions when mentioning the brand

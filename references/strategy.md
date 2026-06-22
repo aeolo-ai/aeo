@@ -9,20 +9,26 @@ Show the current content strategy for the active domain.
 aeo strategy show
 ```
 
-Returns the strategy manifest (markdown). If no strategy exists, returns a template.
+Returns the manifest (markdown) and schedule_config table. If no strategy exists, returns a template.
 
 ### `/aeo strategy update`
 Create or update the content strategy. Uses PUT (atomic replace via upsert).
 
 ```bash
 aeo strategy update \
-  --manifest "## Brand Positioning\n..."
+  --manifest "## Brand Positioning\n..." \
+  --frequency weekly \
+  --articles-per-cycle 3 \
+  --preferred-days mon,wed,fri
 ```
 
 **Flags:**
 | Flag | Type | Description |
 |------|------|-------------|
 | `--manifest` | string | Full strategy manifest (markdown, max 100K chars) |
+| `--frequency` | enum | `daily`, `weekly`, `biweekly`, `monthly` |
+| `--articles-per-cycle` | int | 1–20 articles per publishing cycle |
+| `--preferred-days` | list | Comma-separated: `mon,tue,wed,thu,fri,sat,sun` |
 
 ---
 
@@ -53,26 +59,31 @@ Competitor mentions policy.
 
 ---
 
+## Schedule Config Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `frequency` | string | — | Publishing cadence |
+| `articles_per_cycle` | number | — | How many articles per cycle |
+| `preferred_days` | string[] | — | Days of the week to publish |
+
+---
+
 ## Initial Strategy Creation Guide
 
 When creating a strategy for the first time:
 
-1. **Load context first**: Run `/aeo` to get brand profile + audit + visibility
+1. **Load context first**: Run `/aeo agent context` to get brand context + audit + visibility
 2. **Identify gaps**: Look at visibility gaps — which engines, which topics are underserved?
-3. **Check brand profile**: Ensure `brand_context` is filled for durable
-   positioning/audience/narratives, and check `brand_voice_examples`
-   separately for concrete voice evidence.
+3. **Check brand context**: Ensure `brand_context` is filled for durable
+   positioning/audience/narratives. Use tone/reference analysis only when a
+   task explicitly selects it.
 4. **Draft manifest**: Use the template above. Focus on:
    - What makes this brand unique (positioning)
    - What content types work best for the gaps (balance)
    - Top 3–5 topics to write next (priority queue)
-5. **Document cadence in the manifest if needed**: Match to the team's capacity. Start conservative (for example, weekly with 2 articles), but keep cadence as plain strategy text unless a separate scheduler is configured.
-6. **Propose/apply**:
-   - Interactive CLI/operator flow: after explicit approval, save with
-     `aeo strategy update --manifest "..."`
-   - Background writing job or chat flow: do not write product memory directly.
-     Return a reviewed `content_strategy.manifest` patch for the user/operator
-     to apply.
+5. **Set schedule**: Match to the team's capacity. Start conservative (weekly, 2 articles)
+6. **Save**: `aeo strategy update --manifest "..." --frequency weekly --articles-per-cycle 2`
 
 ---
 
@@ -81,7 +92,7 @@ When creating a strategy for the first time:
 - **After proposals are generated**: Add accepted topics to Priority Queue, remove completed ones
 - **After publishing an article**: Update Changelog, adjust Content Balance if mix shifted
 - **After a visibility check**: New gaps may surface — update Priority Queue
-- **After brand profile changes**: Positioning section may need alignment
+- **After brand context changes**: Positioning section may need alignment
 - **Monthly review**: Full review of all sections, trim stale items
 
 ---
@@ -96,6 +107,11 @@ When creating a strategy for the first time:
 PUT body:
 ```json
 {
-  "manifest": "## Brand Positioning\n..."
+  "manifest": "## Brand Positioning\n...",
+  "schedule_config": {
+    "frequency": "weekly",
+    "articles_per_cycle": 3,
+    "preferred_days": ["mon", "wed", "fri"]
+  }
 }
 ```

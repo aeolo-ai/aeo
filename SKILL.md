@@ -35,11 +35,16 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo domain list` | List accessible domains | this file |
 | `/aeo domain switch [id]` | Switch active domain | this file |
-| `/aeo domain brand` | Show brand profile | [brand.md](references/brand.md) |
-| `/aeo domain brand update` | Update brand profile fields | [brand.md](references/brand.md) |
+| `/aeo domain brand update` | Update brand context fields | [brand.md](references/brand.md) |
 | `/aeo domain audit` | Show latest audit report | this file |
 | `/aeo domain channels` | List connected channels (platform, status, ID) | this file |
 | `/aeo domain setup` | Show setup checklist (integrations status) | this file |
+
+### aeo agent — Agent context
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo agent context` | Show the same default brand operating context used by the dashboard agent | [brand.md](references/brand.md) |
 
 ### aeo channel — Channel management
 
@@ -80,22 +85,22 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo content list` | List content items (--status, --limit, --offset) | [content-manage.md](references/content-manage.md) |
 | `/aeo content get <id>` | Read full article content (markdown) | [content-manage.md](references/content-manage.md) |
-| `/aeo content write` | Start an AI writing job (uses production credits) | [content-create.md](references/content-create.md) |
-| `/aeo content jobs` | List active writing jobs | [polling.md](references/polling.md) |
+| `/aeo content generate` | Start a server-side content generation job (uses production credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
+| `/aeo content jobs` | List active content generation jobs | [polling.md](references/polling.md) |
 | `/aeo content update <id>` | Update a content item (status, title, meta, keywords, body via patches or full replace) | [content-manage.md](references/content-manage.md) |
 | `/aeo content preview <id>` | Generate preview link and open in browser | [content-manage.md](references/content-manage.md) |
 | `/aeo content deploy <id>` | Deploy an article to the connected Shopify channel | [content-manage.md](references/content-manage.md) |
 | `/aeo content redeploy <id>` | Update an already-deployed Shopify article in-place (keeps URL) | [content-manage.md](references/content-manage.md) |
-| `/aeo content write` | Write a GEO-optimized article (agent writes directly → save draft → import) | [content-create.md](references/content-create.md) |
 | `/aeo content import` | Push an already-written draft to content history | [content-create.md](references/content-create.md) |
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
+
+> Use `content generate` for the server-side paid generation job and `content import` for already-written drafts.
 
 ### aeo post — Channel posts (social media distribution)
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo post analyze --url <URL>` | Crawl one URL (own channel or reference) → extract ToV → merge into brand_context | [tov-extract.md](references/tov-extract.md) |
-| `/aeo post examples` | List voice examples for the current domain (--platform filter) | [tov-extract.md](references/tov-extract.md) |
+| `/aeo post analyze --url <URL>` | Analyze one channel/reference URL and propose task-specific voice evidence | [tov-extract.md](references/tov-extract.md) |
 | `/aeo post write` | Write a channel post (agent writes directly → review → import) | [post-create.md](references/post-create.md) |
 | `/aeo post list` | List channel posts (--platform, --status, --limit, --offset) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post get <id>` | Get a channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
@@ -119,13 +124,13 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo metrics article <id>` | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
 | `/aeo metrics traffic` | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
 
-### aeo prompts — Visibility prompts
+### aeo prompts — Tracked prompts
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo prompts list` | List prompts grouped by stage | [brand.md](references/brand.md) |
 | `/aeo prompts add` | Add a manual prompt to brand_prompts | [brand.md](references/brand.md) |
-| `/aeo prompts update <id>` | Edit an existing prompt (text, stage, query_form, tags, measurement status) | [brand.md](references/brand.md) |
+| `/aeo prompts update <id>` | Edit an existing prompt (text, stage, query_form) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
 
 ### aeo drive — Google Drive files
@@ -200,8 +205,8 @@ aeo domain setup
 
 Returns a 5-item checklist showing which integrations are complete:
 
-1. **Brand Profile** — domain analyzed or value proposition set
-2. **Blog Channel (Shopify)** — Shopify OAuth connected with API token
+1. **Brand Context** — domain analyzed or value proposition set
+2. **Publishing Channel (Shopify)** — Shopify OAuth connected with API token
 3. **Analytics (GA4 + GSC)** — Google OAuth + GA4 property + GSC site selected
 4. **Data Source (Drive)** — Google Drive folder connected via SA viewer invite
 5. **Content Strategy** — strategy manifest created
@@ -216,17 +221,17 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content write, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, video generate, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, video generate, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first.
 
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Skill commands** (`content write`, `content review`, `post write`): These require LLM reasoning. `aeo content write` now starts a server-side writing job and spends production credits; use `aeo content jobs` or `aeo audit/reference poll <jobId>` for background status.
+- **Skill workflows** (`content review`, `post write`): These require LLM reasoning and are not the canonical server-side generation command. `aeo content generate` starts a server-side content generation job and spends production credits; use `aeo content jobs` or the relevant poll command for background status.
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
-Before writing any content (`/aeo content write`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
+Before writing or generating any content (`/aeo content generate` or manual draft/import), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
 
 ---
 
@@ -279,10 +284,10 @@ If not logged in, guide the user through authentication:
 
 ## /aeo — Load GEO context
 
-Fetch brand profile, audit report, and visibility data in parallel:
+Fetch agent context, audit report, and visibility data in parallel:
 
 ```bash
-aeo domain brand  > /tmp/aeo_brand.md &
+aeo agent context  > /tmp/aeo_brand.md &
 aeo domain audit  > /tmp/aeo_audit.md &
 aeo visibility show > /tmp/aeo_visibility.md &
 wait
@@ -295,7 +300,7 @@ Present as a unified briefing:
 ```
 ## Aeolo GEO Briefing — {domain}
 
-{brand-profile content}
+{agent-context content}
 
 ---
 

@@ -1,11 +1,10 @@
-# Tone of Voice Extraction — Channel Analysis
+# Voice Evidence Extraction — Channel Analysis
 
-Crawl a single URL, analyze the posts, and extract a Tone of Voice profile.
-Store concrete GOOD/BAD/reference samples in `brand_voice_examples`. Keep any
-structured voice rules as proposed replacement Voice profile material; do not
-write new `writing_styles` records. Treat broad Tone & Voice notes in
-`brand_context` as temporary context only. Run multiple times with different
-URLs to build a complete picture.
+Crawl or analyze a single URL and extract task-specific tone / format evidence.
+Do not write deprecated voice/style records.
+The output should stay attached to the analysis result as reusable reference
+evidence, then be selected explicitly by the user when a writing/generation task
+needs it. Do not merge analysis into `brand_context` automatically.
 
 ---
 
@@ -116,64 +115,45 @@ Extract these dimensions from the crawled posts:
 
 ### Step 4 — Select Example Posts
 
-From the crawled posts, select the **top 3-5 by engagement** as GOOD examples. These are the few-shot exemplars that `post write` will use to match tone.
+From the crawled posts, select the **top 3-5 by engagement** as task-selected references. These are candidates for task-specific few-shot context; `post write` should use only reviewed examples relevant to the current platform, language, and task.
 
 For each selected post, record:
 - Original text (verbatim)
 - Engagement numbers
 - Why it worked (1 line)
 
-Then generate 1-2 **BAD examples** — rewrite one of the GOOD posts in generic AI tone to show what to avoid. This teaches the LLM the contrast between authentic brand voice and generic output.
+Then generate 1-2 **BAD examples** — rewrite one of the GOOD posts in generic AI tone to show what to avoid. This teaches contrast without making the examples universal style rules.
 
 ---
 
-### Step 5 — Save Voice Examples via API
+### Step 5 — Produce Reference Evidence
 
-Save each example to the DB via CLI. This makes examples accessible to all agents (local, Fly.io, etc.).
+Return a compact style brief that can be attached to the analysis result and selected later by the user.
 
-```bash
-# GOOD example (high engagement post)
-aeo post examples add \
-  --platform threads \
-  --type good \
-  --body "We are invited to activate + promote padel at Coachella..." \
-  --source-url "https://www.threads.com/@yourbrand.official" \
-  --note "Community CTA — 936 likes, highest engagement"
-
-# BAD example (rewrite in generic AI tone to show contrast)
-aeo post examples add \
-  --platform threads \
-  --type bad \
-  --body "Our SPF 50 Sunstick is specifically designed for athletes..." \
-  --note "Corporate tone, feature list, discount code — everything to avoid"
+```markdown
+## Style Brief
+- Tone:
+- Format:
+- Hook:
+- Rhythm:
+- Do:
+- Don't:
+- Source URL:
 ```
 
-For reference accounts:
-```bash
-aeo post examples add \
-  --platform threads \
-  --type reference \
-  --body "{competitor's high-engagement post verbatim}" \
-  --source-url "https://www.threads.com/@competitor" \
-  --note "Borrowed technique: question-based CTA drives 5x replies"
-```
-
-Verify saved examples: `aeo post examples --platform threads`
+This is evidence, not global brand memory. Keep it scoped to the analyzed URL.
 
 ---
 
-### Step 6 — Propose Voice Updates
+### Step 6 — Propose Optional Durable Updates
 
-Load existing `brand_voice_examples` and any `brand_context` Tone & Voice
-section. Then propose updates to the voice-specific stores:
+Only propose durable brand-context changes if the analysis reveals a rule that should affect every future task for the brand.
 
 **If own channel:**
-- Add concrete GOOD/BAD samples to `brand_voice_examples`.
-- Return Core Voice + Channel Modifiers as proposed replacement Voice profile
-  material, not as a `writing_styles` patch.
+- Return Core Voice + Channel Modifiers as proposed notes.
+- Ask the user before turning any broad rule into `brand_context`.
 
 **If reference account:**
-- Add reference techniques as proposed `brand_voice_examples` with `type=reference`.
 - Keep benchmark notes out of `brand_context` unless they affect durable brand positioning.
 
 #### Replacement Voice Profile Candidate (compact — no examples here)
@@ -203,28 +183,24 @@ section. Then propose updates to the voice-specific stores:
 
 ---
 
-### Step 7 — Confirm & Save
+### Step 7 — Confirm Usage
 
-1. Show the user: proposed Voice profile candidate + proposed `brand_voice_examples`
-2. Ask: "Does this capture your brand's voice? Anything to adjust?"
-3. On approval:
-   - Interactive CLI/operator flow: save concrete examples through the voice examples management surface when available
-   - Background writing job or chat flow: do not write product memory directly;
-     return reviewed `brand_voice_examples` patches and keep structured profile
-     material pending until the replacement Voice profile exists
+1. Show the user the style brief and representative evidence.
+2. Ask whether this reference should be used for the current task.
+3. Do not write product memory directly from this flow.
 
 ---
 
 ## Multiple Runs
 
 ```
-Run 1: /aeo post analyze --url https://threads.com/@mybrand     → Core Voice + Threads modifier + Threads examples
-Run 2: /aeo post analyze --url https://linkedin.com/company/x   → adds LinkedIn modifier + LinkedIn examples
-Run 3: /aeo post analyze --url https://threads.com/@competitor   → adds Reference Benchmark + reference examples
+Run 1: /aeo post analyze --url https://threads.com/@mybrand     → Core Voice + Threads style brief
+Run 2: /aeo post analyze --url https://linkedin.com/company/x   → LinkedIn style brief
+Run 3: /aeo post analyze --url https://threads.com/@competitor   → Reference benchmark brief
 ```
 
-Each run appends reviewed examples to `brand_voice_examples` and refines the
-replacement Voice profile candidate.
+Each reviewed run should remain a selectable analysis/reference result. Promote
+only durable, brand-wide rules into `brand_context` after explicit review.
 
 ---
 

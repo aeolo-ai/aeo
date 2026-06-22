@@ -4,7 +4,7 @@
 
 ## Content Creation — Rationale-Driven
 
-When creating content (via `/aeo content write` or `/aeo content import`), always include a **rationale** explaining why this content should exist:
+When creating content (via `/aeo content generate` or `/aeo content import`), always include a **rationale** explaining why this content should exist:
 - Which visibility gaps does it address?
 - Which prompts/keywords is it targeting?
 - What stage of the customer journey does it serve?

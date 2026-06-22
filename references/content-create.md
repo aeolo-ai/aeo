@@ -5,9 +5,22 @@ File naming: `{AEOLO_DOMAIN_ID}_{slug}.md`. See Step 5 for path resolution.
 
 ---
 
-## /aeo content write — Write a GEO-optimized article
+## /aeo content generate — Server-side content generation
 
-Agent writes the article directly using the guidelines below. No Mastra workflow API call — the agent is the writer. After writing, save the draft and import via `/aeo content import`.
+Starts a credit-metered background job. Use this when the user explicitly wants
+Aeolo to generate the article server-side; confirm topic, keywords, language,
+article type, and any task-specific reference/tone inputs first. Track progress
+with `/aeo content jobs`.
+
+The background job must treat reference material, voice examples, and broad
+tone notes as task context. Do not silently update brand memory from a
+generation pass.
+
+---
+
+## Manual Draft/Import Path — GEO-optimized article
+
+`aeo content generate` is the canonical server-side generation command. Use this manual path only when the user explicitly wants the agent to draft locally; after writing, save the draft and import via `aeo content import`.
 
 ---
 
@@ -19,7 +32,7 @@ Agent writes the article directly using the guidelines below. No Mastra workflow
 
 | Path | Trigger | Already Available | Additionally Needed |
 |------|---------|-------------------|---------------------|
-| **Gap-driven** | `/aeo` visibility gap or `/aeo content propose` result | Brand data, target prompts, gap context | Competitor facts |
+| **Gap-driven** | `aeo visibility show` gap + content strategy priority | Brand context, target prompts, gap context | Competitor facts |
 | **Client-brief** | User provides client materials/meeting notes/appeal points | Angle, materials (raw state) | Claims extraction, competitor context |
 | **Prompt-targeted** | "I want us to show up for this prompt" | Target prompt | Brand claims, competitors |
 | **Content Refresh** | Existing article's recency expired (91+ days) | Existing article structure + content | Latest data, updated competitor context |
@@ -55,7 +68,7 @@ Content Refresh is **writing a new article**, not a "patch." Read the existing a
 ```
 
 If Brand Ammunition is empty, refer to **[brand-ammunition.md](brand-ammunition.md)**:
-- Brand Claims → Extract from `/aeo domain brand` + session documents, then convert to Ammunition format
+- Brand Claims → Extract from `/aeo agent context` + session documents, then convert to Ammunition format
 - Competitor Context → Web research or request from user
 
 > **Authority Sources are not a Pre-flight target.** External third-party data (statistics, studies, etc.) for article credibility is gathered in Step 3 (Research).
@@ -71,18 +84,19 @@ Ask the user (or infer from context):
 - **Language** — `en` (default) | `ko` | `ja` | `zh` | `ar`
 - **Word count** — default 1500
 
-If brand profile isn't loaded yet, fetch it first (`/aeo domain brand`) — brand context shapes the entire article.
+If brand context isn't loaded yet, fetch it first (`/aeo agent context`) — brand context shapes the entire article.
 
-### Step 1.5 — Brand Tone & Voice (MANDATORY GATE)
+### Step 1.5 — Task Tone / Reference Guidance
 
-**Must be completed before writing a single word.**
+Do not read deprecated voice-example stores by default. The base agent context does not include tone/reference evidence; use only task-specific evidence that the user has selected or explicitly provided.
 
-Once the brand profile is loaded, look for:
+Look for:
 
-- GOOD/BAD/reference examples from `brand_voice_examples`;
-- any broad **Tone & Voice** notes in `brand_context` only as temporary context.
+- explicit reference-analysis output attached to this task;
+- concrete sample copy or URLs supplied by the user;
+- broad tone notes inside `brand_context`, only as fallback context.
 
-#### If voice evidence exists
+#### If task-specific tone/reference evidence exists
 
 Extract in the format below and apply consistently throughout all subsequent steps (Outline heading naming → Writing tone → FAQ style):
 
@@ -97,48 +111,22 @@ Extract in the format below and apply consistently throughout all subsequent ste
 
 After extraction, confirm with the user in one line: _"This article will be written in a [characteristics] tone. Does that sound right?"_
 
-#### If no voice evidence exists
+#### If no task-specific tone/reference evidence exists
 
-**Stop and ask the user directly. Never decide the tone arbitrarily.**
+Ask briefly if tone matters for this task. If the user wants default behavior, proceed with the brand context and content strategy.
 
 ```
-No reviewed voice examples found for this brand.
-I have a few questions to determine the article's tone:
+No selected tone/reference evidence is attached to this task.
+If tone matters here, I need one of:
 
-1. Overall tone — Is it closer to formal (professional/polished) / casual (friendly/conversational) / authoritative?
-2. Are there expressions or tones to avoid? (e.g., exaggerated marketing language, excessive technical jargon, etc.)
-3. If you have example sentences or copy that you think represent the brand well, please share them.
+1. a reference URL or analyzed reference result;
+2. example copy to match or avoid;
+3. a short tone instruction.
 ```
 
-After receiving answers, include any concrete sample copy as proposed
-`brand_voice_examples`. If the user gives only broad constraints, propose a
-concise `domains.brand_context` note until the replacement Voice profile exists.
-Do not bury concrete voice examples inside `brand_context`.
+Do not write product memory directly from this flow. If the answer should become durable brand context, summarize the proposed patch and ask for review.
 
-- Interactive CLI/operator flow: after explicit approval, apply it with
-  the voice example management surface when available.
-- Background writing job or chat flow: do not write product memory directly.
-  Include the patch in the final response for review.
-
-This way, the same questions can be promoted into durable memory without
-silently changing product context from an autonomous writing pass.
-
-### Step 1.6 — Load Voice Examples (few-shot)
-
-Load voice examples for blog content:
-
-```bash
-aeo post examples --platform blog
-```
-
-If examples exist:
-- **GOOD examples** — internalize the rhythm, vocabulary, sentence structure. Match them.
-- **BAD examples** — if your draft resembles any of these, rewrite.
-- After writing, compare your draft against the GOOD examples. Would they feel like the same brand wrote it?
-
-If no examples are returned, skip this step and rely on the writing style profile from Step 1.5 only.
-
-> Voice examples provide concrete few-shot guidance that complements the abstract Tone & Voice profile. The profile says "casual and friendly"; the examples show *exactly how* that looks in practice.
+If no task-specific tone/reference evidence is attached or provided, skip this step and rely on brand context plus content strategy.
 
 ### Step 2 — Outline
 
@@ -157,7 +145,7 @@ Show the outline to the user and confirm before writing.
 #### 3.1 — Load data sources
 
 ```bash
-aeo config data-sources show
+aeo config data-sources
 ```
 
 Read the configured sources. If none exist, use the default sources from data-access.md.
@@ -168,7 +156,7 @@ Search for topic-relevant material in this order:
 
 1. **Google Drive**: `aeo drive list` → scan folders mentioned in data_sources config → `aeo drive read <id>` for matches
 2. **Custom URLs**: If data_sources lists specific URLs, read/browse them
-3. **Brand context**: `aeo domain brand` → extract relevant claims and proof points
+3. **Brand context**: `aeo agent context` → extract relevant claims and proof points
 4. **Existing content**: `aeo content list --status=published` → check for related articles (avoid overlap, identify cross-link targets)
 
 Extract 1st-party facts: product test results (who, how many, conditions), customer testimonials, internal data.
@@ -284,12 +272,12 @@ Push a completed draft to the Aeolo content history for review and publishing.
 
 ### When to use
 
-- After writing an article (via `/aeo content write` or manually) — import to Aeolo pipeline
+- After writing an article manually — import to Aeolo content history
 - Any externally-written draft you want to register
 
 ### Flow
 
-1. Read the draft file at `[path]` (default: the path used in the current session's content write step)
+1. Read the draft file at `[path]` (default: the path used in the current session's manual draft step)
 2. Extract or confirm: `title`, `targetKeywords`, `articleType`, `language`
 3. Show the user a summary and confirm
 4. Run the CLI command:
@@ -393,7 +381,7 @@ When updating existing content, always update `dateModified`. Replace with the l
 - Mention competitors alongside for naturalness
 - Fact-based information only (specs, pricing, review summaries)
 - Mention density: **15–25%** of the total article — excessive mentions reduce AI trust
-- Use brand VP and key features from the brand profile (`/aeo domain brand`)
+- Use brand VP and key features from the brand context (`/aeo agent context`)
 
 ### Metadata Generation
 

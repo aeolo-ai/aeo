@@ -2,21 +2,21 @@
 
 ---
 
-## /aeo domain brand — Show current brand profile
+## /aeo agent context — Show current agent context
 
 ```bash
-aeo domain brand
+aeo agent context
 ```
 
-Response: `text/markdown` — brand profile including name, category, industry, value proposition, key features, language, and `brand_context` (free-form brand positioning / durable notes markdown, up to 50,000 chars).
+Response: `text/markdown` — the default brand operating context used by the agent, including brand snapshot, brand notes, content strategy, source policy, publishing channels, measurement status, provenance, and warnings.
 
 If empty or JSON error, suggest running setup and checking the domain ID.
 
 ---
 
-## /aeo domain brand update — Update brand profile fields
+## /aeo domain brand update — Update brand context fields
 
-1. Fetch current profile first (show it to the user)
+1. Fetch current Agent/Brand Context with `aeo agent context` first (show it to the user)
 2. Ask the user what they want to change
 3. Confirm before writing
 
@@ -41,9 +41,10 @@ Partial update — unset fields are preserved.
 ### brand_context template
 
 `brand_context` is free-form markdown for durable brand facts, positioning,
-audience, narratives, and constraints. Do not store voice examples here; use
-`brand_voice_examples` for concrete GOOD/BAD/reference samples. Broad voice
-constraints may be noted here only until the replacement Voice profile exists.
+audience, narratives, and constraints. Do not store reference-analysis dumps or
+one-off voice examples here; those should stay with the task/reference analysis
+that produced them. Only durable tone constraints that should affect all future
+work belong here.
 
 Suggest this structure when helping a user build it from scratch:
 
@@ -89,7 +90,7 @@ After displaying:
 Ask the user for the prompt details, then run:
 
 ```bash
-aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --query-form=conversational
+aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --query_form=conversational
 ```
 
 Accepted fields:
@@ -101,16 +102,15 @@ Accepted fields:
 | `stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `"comparison"` |
 | `language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `"zh"` |
 | `query_form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `"long-tail"` |
-| `segment_tags` | string[] | — | `[]` | CLI: `--segment="enterprise,apac"` |
 
-Confirm the details with the user before submitting. After success, ask whether to run `/aeo visibility check run` to measure the new prompt set; it reserves credits based on prompt x engine count.
+Confirm the details with the user before submitting. After success, suggest running `/aeo visibility check run` to measure visibility for the new prompt.
 
 ---
 
 ## /aeo prompts update — Edit an existing prompt
 
 ```bash
-aeo prompts update <promptId> --prompt="updated text" --stage=use-case --status=untracked
+aeo prompts update <promptId> --prompt="updated text" --stage=use-case
 ```
 
 Accepted fields (all optional, at least one required):
@@ -121,10 +121,6 @@ Accepted fields (all optional, at least one required):
 | `localized_prompt` | string | Native-language prompt |
 | `stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | Move to different stage |
 | `query_form` | `short-tail` \| `long-tail` \| `conversational` | Update query form |
-| `segment_tags` | string[] | Replace metadata/filtering tags (CLI: `--segment foo,bar`) |
-| `status` | `tracked` \| `untracked` | Controls whether the prompt is measured |
-
-Tags are metadata/filtering only. Use `status` to control measurement.
 
 Use `/aeo prompts list` first to get the prompt ID. Confirm with user before updating.
 

@@ -28,9 +28,9 @@ Agent writes the post directly using the guidelines below + [channel-washing.md]
 - [ ] Topic / angle
 
 ### Brand Context
-- [ ] Brand profile loaded (`/aeo domain brand`)
-- [ ] Voice examples loaded from `brand_voice_examples` when available
-- [ ] Broad voice constraints checked in `brand_context` when voice examples are sparse
+- [ ] Brand context loaded (`/aeo agent context`)
+- [ ] Task-specific reference analysis, sample copy, or URL checked when provided
+- [ ] Broad tone constraints checked in `brand_context` only as fallback
 ```
 
 #### Entry Paths
@@ -41,8 +41,8 @@ Agent writes the post directly using the guidelines below + [channel-washing.md]
 | **Original** | No article, standalone channel post | Topic + brand context |
 | **Data-insight** | Stat, finding, or insight to frame | Data point + context |
 
-If brand profile not loaded → fetch via `/aeo domain brand` first.
-If no writing style profile is available → ask user (same gate as content-create.md Step 1.5). Treat legacy Tone & Voice notes in `brand_context` as fallback context only.
+If brand context is not loaded → fetch via `/aeo agent context` first.
+If no task-specific task-specific reference evidence is available → ask user (same gate as content-create.md Step 1.5). Treat legacy voice notes in `brand_context` as fallback context only.
 
 ---
 
@@ -66,25 +66,16 @@ Read **[channel-washing.md](channel-washing.md)** and extract the rules for the 
 
 ---
 
-### Step 1.5 — Load Voice Examples (few-shot)
+### Step 1.5 — Apply Task-Specific Reference Evidence
 
-Load voice examples for the target platform from the API:
+Do not read deprecated voice-example stores by default. If the user selected a channel/reference analysis result or supplied a reference URL, extract only the reusable tone, hook, structure, and formatting rules for this task.
 
-```bash
-aeo post examples --platform {platform}
-```
+If no relevant reference evidence is attached, skip this step. The post should rely on the platform rules, brand context, and content strategy.
 
-This returns GOOD, BAD, and Reference examples stored in the DB. Extract:
-- **GOOD examples** — these are the few-shot exemplars. Match their tone, sentence structure, energy, and vocabulary when writing.
-- **BAD examples** (anti-patterns) — if your draft resembles any of these, rewrite.
-- **Reference examples** — techniques borrowed from benchmark accounts.
-
-If no examples are returned, skip this step. The post will rely on the writing style profile and any legacy voice notes only. Suggest running `/aeo post analyze --url <channel_url>` to generate voice examples.
-
-**How to use the examples during writing:**
-- Read each GOOD example before writing. Internalize the rhythm, word choice, and energy.
-- Do NOT copy them — write new content that *sounds like* them.
-- After writing, compare your draft against the GOOD examples. Would they feel like they came from the same person?
+**How to use reference evidence during writing:**
+- Match reusable rhythm, structure, and energy.
+- Do not copy source wording or claims unless the user explicitly supplied them as source material.
+- After writing, compare your draft against the task-selected references. Would they feel like they came from the same person?
 - Check against BAD examples. If your draft has any of those patterns (corporate tone, feature lists, discount codes), rewrite.
 
 ---
@@ -173,8 +164,8 @@ Before presenting to the user, check:
 | AI Citable Unit | Is there a **definitive** 2-3 sentence block (no hedging) an AI could extract verbatim? |
 | 1st-party framing | "I/we" not "Brand X"? |
 | Marketing smell | Zero discount codes, CTAs to buy, product feature lists? |
-| Tone match | Matches the user's writing style profile and approved voice constraints? |
-| **Voice examples match** | Does this sound like the GOOD examples? Would it feel like the same person wrote it? |
+| Tone match | Matches the user's task-specific task-specific reference evidence and approved voice constraints? |
+| **Reference evidence match** | Does this sound like the task-selected references? Would it feel like the same person wrote it? |
 | **Anti-example check** | Does this resemble any BAD examples? (corporate tone, feature lists, discount codes, generic AI phrasing) |
 | Format compliance | Follows the exact structure template from channel-washing.md? |
 | **Topic tags present** | Every post has exactly 1 topic tag? (Threads/LinkedIn) |
