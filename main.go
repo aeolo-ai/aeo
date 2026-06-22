@@ -737,17 +737,18 @@ Notes:
 `,
 	"reference": `aeo reference <verb>
 
-  analyze           Start a reference analysis job (costs 5 credits)
+  analyze           Start a reference analysis job (uses production credits)
                     Required: --url, --media
                     Media: linkedin_post, threads_post, visual_asset, instagram_reels, tiktok_reels
                     Optional: --language
   style             Read selected reference style evidence
                     Required: --url
                     Optional: --provider blog|threads|linkedin|instagram|tiktok
+  poll <jobId>      Poll a reference analysis job
 `,
 	"video": `aeo video <verb>
 
-  analyze           Analyze a short-form video URL synchronously (costs 5 credits)
+  analyze           Analyze a short-form video URL synchronously (uses production credits)
                     Required: --url
                     Optional: --media instagram_reels|tiktok_reels, --mime-type
 
