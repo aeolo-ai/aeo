@@ -38,8 +38,8 @@ This returns a 5-item checklist. Read it and determine what's already done.
 **Content Strategy** (if incomplete):
 - Consider: brand category, industry, competition density, available channels
 - Draft a manifest with: brand positioning, content balance (% mix of how-to, comparison, thought leadership), priority queue (first 10 topics), constraints
-- Recommend frequency: most brands start with 3 articles/week
-- `aeo strategy update --manifest "..." --frequency weekly --articles-per-cycle 3`
+- Encode cadence intent in the manifest (e.g. "publish ~3 articles/week"); actual scheduling is owned by the dispatcher / automation schedules, not by `strategy update`
+- `aeo strategy update --manifest "..."`
 
 ### Step 3: Guide the user for external services
 
@@ -275,7 +275,7 @@ Based on analysis, decide if the strategy needs updating:
 
 If updating:
 ```bash
-aeo strategy update --manifest "..." --frequency <new> --articles-per-cycle <new>
+aeo strategy update --manifest "..."
 ```
 
 **Flag for refresh:**
@@ -317,28 +317,28 @@ The workflows above describe **what** to do. This section describes **when**.
 
 | Loop | Default | Cron expression | Prerequisite |
 |------|---------|-----------------|-------------|
-| Daily Content | strategy.frequency (default: weekdays 09:00 UTC) | `0 9 * * 1-5` | Setup 5/5 ✅ |
+| Daily Content | weekdays 09:00 UTC | `0 9 * * 1-5` | Setup 5/5 ✅ |
 | Weekly Report | Monday 10:00 UTC | `0 10 * * 1` | Setup 5/5 ✅ |
 | Monthly Audit | 1st of month 10:00 UTC | `0 10 1 * *` | Setup 5/5 ✅ |
 
-Register these using your runtime's scheduling mechanism. Each schedule invokes the corresponding workflow section above.
+Register these using your runtime's scheduling mechanism. Cadence lives in the automation schedules / dispatcher — not in `strategy update`, which only sets the manifest. Each schedule invokes the corresponding workflow section above.
 
 ### Activation
 
 Before enabling any automated loop:
 1. `aeo domain setup` → all 5 items must be ✅
-2. `aeo strategy show` → manifest and schedule_config must exist
+2. `aeo strategy show` → a manifest must exist
 
 If prerequisites aren't met, skip the cycle and check again next trigger.
 
-### Adjusting frequency
+### Adjusting cadence
 
-The Daily Content cron should match `strategy.schedule_config.frequency`:
-- `daily` → `0 9 * * 1-5` (weekdays)
-- `weekly` → `0 9 * * 1` (Mondays only)
-- `biweekly` → `0 9 * * 1` (every other Monday — track last-run date)
+Tune the Daily Content cron to the brand's desired publishing rhythm:
+- daily (weekdays) → `0 9 * * 1-5`
+- weekly → `0 9 * * 1` (Mondays only)
+- biweekly → `0 9 * * 1` (every other Monday — track last-run date)
 
-When the Weekly Report workflow updates the strategy (Step 3), the scheduling frequency may change. Re-read `aeo strategy show` after each weekly cycle and adjust if needed.
+Adjust cadence in the automation schedules / dispatcher; `strategy update` no longer carries scheduling fields.
 
 ---
 

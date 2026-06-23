@@ -16,10 +16,9 @@ description: |
   "색인 요청", "request indexing".
 ---
 
-> **Requires**: `aeo` CLI — [Install/update](https://github.com/kithlabs/aeo)
+> **Requires**: `aeo` CLI — [Install/update](https://github.com/aeolo-ai/aeo)
 > ```
-> brew install kithlabs/aeo/aeo                        # Homebrew
-> curl -fsSL https://skills.tryaeolo.com | sh          # Direct install
+> curl -fsSL https://skills.tryaeolo.com | sh
 > ```
 > Run `aeo --version` to check for updates.
 
@@ -28,6 +27,8 @@ description: |
 Read and write live Aeolo data across the full GEO execution cycle.
 
 ## Command Reference
+
+> **Noun.verb aliases**: the connector accepts noun-first aliases for many commands, e.g. `diagnose visibility run` = `visibility check run`, `measure overview` = `metrics overview`, `publish deploy` = `content deploy`, and `posts`/`channels`/`media` noun forms. Both forms route to the same endpoint — use whichever reads better; this reference lists the canonical form.
 
 ### aeo domain — Domain profile & metadata
 
@@ -76,7 +77,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo strategy show` | Show current content strategy (manifest + schedule) | [strategy.md](references/strategy.md) |
+| `/aeo strategy show` | Show current content strategy (manifest) | [strategy.md](references/strategy.md) |
 | `/aeo strategy update` | Create or update content strategy | [strategy.md](references/strategy.md) |
 
 ### aeo content — Content lifecycle
@@ -101,16 +102,21 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo post analyze --url <URL>` | Analyze one channel/reference URL and propose task-specific voice evidence | [tov-extract.md](references/tov-extract.md) |
-| `/aeo post write` | Write a channel post (agent writes directly → review → import) | [post-create.md](references/post-create.md) |
+| `post write` | Write a channel post — agent writing workflow, ends in `aeo post import` (no bare CLI command) | [post-create.md](references/post-create.md) |
 | `/aeo post list` | List channel posts (--platform, --status, --limit, --offset) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post get <id>` | Get a channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post import` | Import a channel post draft (--platform, --body required) | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post preview <id>` | Generate a preview link for a channel post | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post approve <id>` | Approve a draft post for publishing | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post publish <id>` | Publish an approved post to its platform | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post delete <id>` | Delete a channel post | [channel-washing.md](references/channel-washing.md) |
 
 ### aeo reference / video — Analysis & generation
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (uses production credits) | [tov-extract.md](references/tov-extract.md) |
+| `/aeo reference style --url <url>` | Read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
 | `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits) | this file |
 | `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (uses production credits). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
@@ -133,12 +139,35 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo prompts update <id>` | Edit an existing prompt (text, stage, query_form) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
 
+### aeo segments — Segment tags
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo segments list` | List segment tags with prompt counts (tags are metadata/filtering only) | [brand.md](references/brand.md) |
+
+### aeo products / image — Thumbnail pipeline (Pexels + product swap)
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo products` (or `/aeo product list`) | List the product catalog (IDs + image status) used as swap sources | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo product add --pdp <url>` | Add a product by PDP URL (scrapes title/image/price) | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image search <query>` | Search Pexels for reference scenes (--per-page, --page) | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) | [image-thumbnails.md](references/image-thumbnails.md) |
+
+### aeo feedback — Send feedback to the team
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo feedback <message>` | Send feedback (bug, idea, anything) to the Aeolo team; bare command opens $EDITOR | this file |
+
 ### aeo drive — Google Drive files
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo drive list` | List files in connected Google Drive folder (--folder) | [drive.md](references/drive.md) |
 | `/aeo drive read <file_id>` | Read a file from Google Drive | [drive.md](references/drive.md) |
+| `/aeo drive download <file_id>` | Stream raw bytes to disk (pptx, large/binary files); `-o <path>` to set output | [drive.md](references/drive.md) |
 
 > **Supported types**: Google Docs/Sheets, txt/json/md/csv, **PDF**, **XLSX/XLS** (all sheets, 200-row cap each), **DOCX**, images (≤5MB base64). Not supported: `.doc`, `.pptx`, `.pages`, `.numbers`, `.key` — see [drive.md](references/drive.md).
 
@@ -228,7 +257,7 @@ Never call a write API without confirmation. Always show what you're about to do
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Skill workflows** (`content review`, `post write`, manual article drafting): These require LLM reasoning in the external agent. Draft directly and import with `aeo content import`; `aeo content generate` is only for explicit server-side generation jobs and spends production credits.
+- **Agent writing workflows** (manual article drafting → `aeo content import`, and `post write` → `aeo post import`): These have no bare CLI verb — they require LLM reasoning in the external agent. Draft directly and import; `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.)
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
 Before writing or generating any content (manual draft/import or explicit `/aeo content generate`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
@@ -252,16 +281,11 @@ Install with one command (no Go or Node.js required — it's a single binary):
 
 curl -fsSL https://skills.tryaeolo.com | sh
 
-Or with Homebrew:
-
-brew install kithlabs/aeo/aeo
-
 After install, verify: `aeo --version`
 
 ## Update
 
 aeo update              # self-update to latest
-brew upgrade aeo        # if installed via Homebrew
 ```
 
 Then verify the agent is authenticated:
