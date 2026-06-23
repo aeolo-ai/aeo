@@ -480,7 +480,7 @@ func editorPrompt(seed string) (string, error) {
 // upgrade notice if the current binary is outdated. Fails silently.
 func checkLatestVersion() {
 	client := &http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Get("https://api.github.com/repos/kithlabs/aeo/releases/latest")
+	resp, err := client.Get("https://api.github.com/repos/aeolo-ai/aeo/releases/latest")
 	if err != nil {
 		return
 	}
@@ -497,8 +497,7 @@ func checkLatestVersion() {
 	latest := strings.TrimPrefix(release.TagName, "v")
 	if latest != "" && latest != version {
 		fmt.Fprintf(os.Stderr, "\nUpdate available: %s → %s\n", version, latest)
-		fmt.Fprintf(os.Stderr, "  brew upgrade aeo\n")
-		fmt.Fprintf(os.Stderr, "  curl -fsSL https://skills.tryaeolo.com | sh\n")
+		fmt.Fprintf(os.Stderr, "  aeo update\n")
 	}
 }
 
@@ -2357,23 +2356,13 @@ func doAPIRequest(url, method string, body []byte, apiKey string) ([]byte, error
 
 func selfUpdate() {
 	fmt.Printf("Current version: %s\n", version)
-
-	// Detect if installed via Homebrew
-	exe, _ := os.Executable()
-	resolved, _ := filepath.EvalSymlinks(exe)
-	if strings.Contains(resolved, "Cellar") || strings.Contains(resolved, "homebrew") {
-		fmt.Println("Installed via Homebrew. Run:")
-		fmt.Println("  brew upgrade aeo")
-		return
-	}
-
 	fmt.Println("Downloading latest version...")
 
-	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/kithlabs/aeo/main/install.sh | sh")
+	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/aeolo-ai/aeo/main/install.sh | sh")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Update failed. Try:\n  brew update && brew upgrade aeo\n")
+		fmt.Fprintf(os.Stderr, "Update failed. Try:\n  curl -fsSL https://skills.tryaeolo.com | sh\n")
 		os.Exit(1)
 	}
 

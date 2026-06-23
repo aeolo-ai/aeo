@@ -4,7 +4,7 @@ set -e
 # aeo CLI installer
 # Usage: curl -fsSL https://skills.tryaeolo.com | sh
 
-REPO="kithlabs/aeo"
+REPO="aeolo-ai/aeo"
 INSTALL_DIR="${AEO_INSTALL_DIR:-/usr/local/bin}"
 BINARY="aeo"
 

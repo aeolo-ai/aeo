@@ -6,14 +6,14 @@ set -euo pipefail
 VERSION="$1"
 CHECKSUMS="$2"
 OUTPUT="$3"
-BASE="https://github.com/kithlabs/aeo/releases/download/v${VERSION}"
+BASE="https://github.com/aeolo-ai/aeo/releases/download/v${VERSION}"
 
 sha() { grep "$1" "$CHECKSUMS" | awk '{print $1}'; }
 
 cat > "$OUTPUT" <<FORMULA
 class Aeo < Formula
   desc "GEO CLI for AI search engine visibility"
-  homepage "https://github.com/kithlabs/aeo"
+  homepage "https://github.com/aeolo-ai/aeo"
   version "${VERSION}"
   license "Apache-2.0"
 

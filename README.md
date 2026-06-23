@@ -5,9 +5,8 @@
 **Get your brand cited by AI search — from the terminal.**
 **AI 검색이 인용하는 브랜드를, 터미널에서.**
 
-[![Release](https://img.shields.io/github/v/release/kithlabs/aeo?color=black)](https://github.com/kithlabs/aeo/releases)
+[![Release](https://img.shields.io/github/v/release/aeolo-ai/aeo?color=black)](https://github.com/aeolo-ai/aeo/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Homebrew](https://img.shields.io/badge/brew-kithlabs%2Faeo-orange)](https://github.com/kithlabs/homebrew-aeo)
 
 </div>
 
@@ -22,10 +21,6 @@
 ## Install
 
 ```bash
-# Homebrew
-brew install kithlabs/aeo/aeo
-
-# Or one-liner
 curl -fsSL https://skills.tryaeolo.com | sh
 ```
 
@@ -34,8 +29,7 @@ Single static Go binary. No runtime dependencies. macOS + Linux, amd64 + arm64.
 To upgrade:
 
 ```bash
-aeo update          # auto-detects Homebrew vs install.sh
-brew upgrade aeo    # explicit Homebrew path
+aeo update
 ```
 
 ## 60-second tour
@@ -121,7 +115,7 @@ AEOLO_API_BASE=... AEOLO_API_KEY=... aeo whoami
 
 ## Development (monorepo)
 
-This repo is consumed as a git submodule in the [Aeolo monorepo](https://github.com/kithlabs/aeolo). Standalone development is supported — clone this repo directly and `go build .`.
+This repo is consumed as a git submodule in the [Aeolo monorepo](https://github.com/aeolo-ai/aeolo). Standalone development is supported — clone this repo directly and `go build .`.
 
 ```bash
 git submodule update --init --recursive
@@ -141,11 +135,11 @@ git push origin v1.X.Y
 This triggers GitHub Actions, which:
 1. **GoReleaser** — builds linux/darwin × amd64/arm64
 2. Creates GitHub Release + uploads `install.sh`
-3. Auto-updates the [Homebrew tap](https://github.com/kithlabs/homebrew-aeo)
+3. Publishes the release binaries used by the installer
 
 ## Contributing
 
-Bug reports and feature ideas are welcome — open an [issue](https://github.com/kithlabs/aeo/issues), or send feedback inline:
+Bug reports and feature ideas are welcome — open an [issue](https://github.com/aeolo-ai/aeo/issues), or send feedback inline:
 
 ```bash
 aeo feedback "your message here"

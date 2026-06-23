@@ -1,3 +1,3 @@
-module github.com/kithlabs/aeo
+module github.com/aeolo-ai/aeo
 
 go 1.26.1
