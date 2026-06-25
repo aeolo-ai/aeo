@@ -47,6 +47,6 @@ Use the latest snapshot to understand current gap context.
 aeo visibility show
 ```
 
-Response: `text/markdown` — mention rate by engine, visibility gaps, top performing keywords.
+Response: `text/markdown` — **overall composite score + per-engine scores**, mention rate by engine (with avg position), stage breakdown, **Share of Voice** (which brands AI recommends, incl. competitors — populated even at 0% mentions), **citation-type distribution**, visibility gaps, cited sources, top queries, competitors. Enough to narrate the full score breakdown ("X% of AI recommendations go to CeraVe, Pure'AM 0%").
 
 If the response is empty or shows no check has been run, ask whether to run `/aeo visibility check run`.
