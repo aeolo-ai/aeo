@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var version = "1.4.0"
+var version = "2.0.0"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -62,7 +62,7 @@ type Credentials struct {
 func resolveCredentials() Credentials {
 	cfg := readConfig()
 	return Credentials{
-		APIBase:  envOr("AEOLO_API_BASE", strOr(cfg.APIBase, "https://api.tryaeolo.com")),
+		APIBase:  envOr("AEOLO_API_BASE", strOr(cfg.APIBase, "https://api.aeolo.io")),
 		APIKey:   envOr("AEOLO_API_KEY", cfg.APIKey),
 		DomainID: envOr("AEOLO_DOMAIN_ID", cfg.DomainID),
 	}
@@ -1718,7 +1718,7 @@ func main() {
 
 			activeKey := strOr(envKey, cfg.APIKey)
 			activeDomain := strOr(envDomain, cfg.DomainID)
-			activeBase := strOr(envBase, strOr(cfg.APIBase, "https://api.tryaeolo.com"))
+			activeBase := strOr(envBase, strOr(cfg.APIBase, "https://api.aeolo.io"))
 
 			if activeKey == "" {
 				fmt.Println("Not logged in. Run: aeo auth login")
@@ -1798,7 +1798,7 @@ func main() {
 		case "login":
 			apiBase := findFlag(args, "--api-base")
 			if apiBase == "" {
-				apiBase = "https://api.tryaeolo.com"
+				apiBase = "https://api.aeolo.io"
 			}
 			authLogin(apiBase)
 
@@ -2233,7 +2233,7 @@ func authLogin(apiBase string) {
 			APIKey:   result.Data.Token,
 			DomainID: "",
 		}
-		if apiBase != "https://api.tryaeolo.com" {
+		if apiBase != "https://api.aeolo.io" {
 			cfg.APIBase = apiBase
 		}
 		if len(result.Data.Domains) > 0 {
