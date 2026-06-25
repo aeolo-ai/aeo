@@ -19,6 +19,11 @@ aeo visibility check run --engines=chatgpt,gemini --limit=10
 aeo visibility check run --prompt-ids=id1,id2 --engines=chatgpt
 ```
 
+**Flags:**
+- `--engines <list>` — comma-separated. Supported set: `chatgpt,gemini,perplexity,google-ai-mode,google-aio` (this is also the default per the connector registry). `grok` is currently **disabled** — the binary help string still lists it but it is stale; don't pass it.
+- `--limit <n>` — cap the number of prompts checked
+- `--prompt-ids <id,id>` — check only specific prompts
+
 Response includes `jobId`, `promptCount`, selected engines, and reserved credits.
 
 ### Step 2 — Poll until complete

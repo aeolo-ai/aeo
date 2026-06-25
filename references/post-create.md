@@ -193,6 +193,8 @@ Optional flags:
 - `--post-type <type>` (value_post, commentary, event_recap, question, data_drop, hub_to_spoke)
 - `--content-id <id>` (link to source hub article)
 - `--channel-id <id>` (target channel, from `/aeo domain channels`)
+- `--target <target>` (publish target)
+- `--posts '<JSON array>'` (batch import — alternative to a single `--body`)
 
 ---
 

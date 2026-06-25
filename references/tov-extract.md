@@ -13,10 +13,16 @@ needs it. Do not merge analysis into `brand_context` automatically.
 One URL per invocation. Works for both your own channels and reference/benchmark accounts.
 
 ```
-/aeo post analyze --url https://www.threads.com/@yourbrand.official    ← own channel
-/aeo post analyze --url https://www.linkedin.com/company/yourbrand/    ← own channel
-/aeo post analyze --url https://www.threads.com/@competitor.account    ← reference
+/aeo post analyze --url https://www.threads.com/@yourbrand.official --mode owned        ← own channel
+/aeo post analyze --url https://www.linkedin.com/company/yourbrand/ --mode owned        ← own channel
+/aeo post analyze --url https://www.threads.com/@competitor.account --mode reference    ← reference
 ```
+
+**Flags:**
+- `--url` (required) — the channel/reference URL to analyze
+- `--provider blog|threads|tiktok|instagram` — override platform detection
+- `--mode owned|reference` — declare whether this is your own channel or a reference/benchmark (drives how the evidence is used in Step 2 below)
+- `--limit` — cap the number of posts analyzed
 
 ### When to Use
 
@@ -66,7 +72,7 @@ $B text
 
 ### Step 2 — Determine Context
 
-Is this the brand's own channel or a reference account?
+Is this the brand's own channel or a reference account? Express the decision with `--mode owned|reference` on the `post analyze` call.
 
 | Signal | Own Channel | Reference |
 |--------|------------|-----------|

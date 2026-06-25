@@ -28,7 +28,7 @@ This returns a 5-item checklist. Read it and determine what's already done.
   - If neither is sufficient, ask the user for: what they do, who their audience is, and what makes them different
   - Draft a brand_context covering: overview, target audience, key narratives, competitive positioning, and constraints
   - Show it to the user for confirmation
-  - `aeo brand update --brand-context "..."`
+  - `aeo domain brand update --brand-context "..."`
 
 **Data Sources** (if empty):
 - Run `aeo config data-sources` — if no custom sources configured:
@@ -198,7 +198,7 @@ Timing matters. Don't post everything on the same day — AI engines detect dupl
 | D+1-2 | LinkedIn | Professional insight, data-driven | 10-20% |
 | D+2-3 | Threads | Casual thread chain, conversational | <5% |
 
-For each channel post, use `/aeo post write --platform <platform>`. The post-create.md reference has platform-specific guidelines.
+For each channel post, follow the post writing workflow in [post-create.md](post-create.md) (draft the post directly in the agent loop, then import with `aeo post import --platform <platform> --body "..."`). There is no bare `aeo post write` command — `post write` is an agent-only writing workflow, and `--platform` is an `import` flag.
 
 Every spoke MUST link back to the canonical blog URL. This cross-linking is how AI engines build authority graphs.
 

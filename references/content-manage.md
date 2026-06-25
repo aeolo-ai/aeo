@@ -13,6 +13,8 @@ The rationale is stored in `content_history.rationale` and helps prioritize cont
 
 ---
 
+> The full `aeo content` verb set is `list | get <id> | review <id> | import | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>`. This file covers list/get/update/preview/deploy/redeploy; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
+
 ## /aeo content list — List content items
 
 ```bash
@@ -44,11 +46,18 @@ Response: `text/markdown` — full article content. Use this to review a draft b
 # Metadata update
 aeo content update <id> --status=review --title="New Title"
 
-# Full body replace
-aeo content update <id> --content "# New Article\n\nFull markdown content..."
+# Targeted body edit (preferred — surgical)
+aeo content update <id> --patch "old sentence>>>new sentence"
+
+# Full body replace (from a file)
+aeo content update <id> --body-file ./draft.md
 
 # SEO fields
 aeo content update <id> --meta-description="Updated description" --keywords="seo,geo,brand"
+
+# Thumbnail
+aeo content update <id> --thumbnail-url https://example.com/og.png
+aeo content update <id> --clear-thumbnail
 ```
 
 All flags are optional — send only what you want to change.
@@ -60,18 +69,24 @@ All flags are optional — send only what you want to change.
 | `status` | `--status` | `draft` \| `review` \| `published` \| `archived` | Workflow status |
 | `deploy_status` | `--deploy-status` | string | Deployment status |
 | `target_keywords` | `--keywords` | string[] | Comma-separated: `"seo,geo,brand"` |
-| `content` | `--content` / `--body` | string | Full body replacement |
+| body | `--body` / `--body-file` | string / file path | Full body replacement (`--body` is the legacy `--content` alias) |
+| body patch | `--patch` | `"search>>>replace"` | Targeted edit — replaces the first match without resending the whole body |
+| thumbnail | `--thumbnail-url` | url | Pin an external thumbnail directly |
+| thumbnail | `--clear-thumbnail` | flag | Drop the existing thumbnail |
 
 ### Body editing workflow
 
-Always read the current body first, modify it, then send the full replacement:
+For small changes prefer `--patch "search>>>replace"` — it edits in place without resending the whole article. For larger rewrites, read the current body, edit it locally, and send the full replacement via `--body-file`:
 
 ```bash
 # 1. Read current content
 aeo content get <id>
 
-# 2. Send updated body
-aeo content update <id> --content "# Updated Title\n\nRevised full markdown..."
+# 2a. Surgical edit
+aeo content update <id> --patch "outdated stat>>>updated stat"
+
+# 2b. Or full replacement from a file
+aeo content update <id> --body-file ./revised-draft.md
 ```
 
 ---

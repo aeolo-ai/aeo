@@ -1,6 +1,8 @@
-# aeo metrics — Article & Site Performance
+# aeo measure / metrics — Article & Site Performance
 
 Track deployed article performance and site-level search traffic via Google Analytics (GA4) and Google Search Console (GSC).
+
+> **Canonical noun is `measure`; `metrics` is an accepted alias.** Verb mapping: `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The examples below use the `metrics` alias for brevity, but `measure` is the canonical form. The `measure` noun additionally carries two verbs with no `metrics` alias: `measure visibility` and `measure report` (see the bottom of this file).
 
 ## Prerequisites
 
@@ -72,6 +74,22 @@ Requires Google Search Console connected.
 - **High impressions + low clicks** = ranking but not getting clicked → improve title/meta
 - **Top queries** show what people actually search to find the article — compare with `target_keywords`
 - **Site-level traffic** (`metrics traffic`) shows overall search presence — useful for spotting new keyword opportunities and tracking GEO impact across all pages
+
+### `aeo measure visibility`
+
+```bash
+aeo measure visibility [-d <domainId>]
+```
+
+Shows the last visibility snapshot — the same data as `aeo visibility show`. Exists only under the `measure` noun (there is no `metrics visibility` alias).
+
+### `aeo measure report --command <cmd>`
+
+```bash
+aeo measure report --command "<cmd>" [--status-code <code>] [--response-body <text>] [--context "<one sentence>"]
+```
+
+Submit command-execution diagnostics when a command fails. Required flag: `--command`. Optional: `--status-code`, `--response-body`, `--context`. Exists only under the `measure` noun (there is no `metrics report` alias). This is the same surface as the top-level `aeo report`.
 
 ## Connector API
 

@@ -14,7 +14,7 @@ If empty or JSON error, suggest running setup and checking the domain ID.
 
 ---
 
-## /aeo brand update — Update brand context fields
+## /aeo domain brand update — Update brand context fields
 
 1. Fetch current Agent/Brand Context with `aeo agent context` first (show it to the user)
 2. Ask the user what they want to change
@@ -33,8 +33,10 @@ Accepted fields:
 | `brand_context` | string (max 50000) | Free-form brand positioning and durable notes (see template below) |
 
 ```bash
-aeo brand update --name="..." --category="..." --value-proposition="..."
+aeo domain brand update --name="..." --category="..." --value-proposition="..."
 ```
+
+> Canonical form is `aeo domain brand update` (matches `aeo domain` help). Bare `aeo brand update` still routes as a legacy alias.
 
 Partial update — unset fields are preserved.
 
@@ -90,18 +92,19 @@ After displaying:
 Ask the user for the prompt details, then run:
 
 ```bash
-aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --query_form=conversational
+aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --segment foo,bar
 ```
 
-Accepted fields:
+Accepted flags (binary `aeo prompts add`):
 
-| Field | Type | Required | Default | Example |
-|-------|------|----------|---------|---------|
-| `canonical` | string | ✅ | — | `"best project management tools"` (CLI: `--prompt`) |
-| `localized_prompt` | string | — | same as canonical | `"最好的项目管理工具"` |
-| `stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `"comparison"` |
-| `language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `"zh"` |
-| `query_form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `"long-tail"` |
+| Flag | Type | Required | Default | Example |
+|------|------|----------|---------|---------|
+| `--prompt` | string | ✅ | — | `"best project management tools"` |
+| `--stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `comparison` |
+| `--language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `zh` |
+| `--segment` | comma-separated tags | — | — | `foo,bar` |
+
+> `--query-form` and the localized-prompt text are set via `aeo prompts update` (see below), not `add`.
 
 Confirm the details with the user before submitting. After success, suggest running `/aeo visibility check run` to measure visibility for the new prompt.
 
@@ -113,14 +116,15 @@ Confirm the details with the user before submitting. After success, suggest runn
 aeo prompts update <promptId> --prompt="updated text" --stage=use-case
 ```
 
-Accepted fields (all optional, at least one required):
+Accepted flags (all optional, at least one required):
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `canonical` | string | English prompt text |
-| `localized_prompt` | string | Native-language prompt |
-| `stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | Move to different stage |
-| `query_form` | `short-tail` \| `long-tail` \| `conversational` | Update query form |
+| Flag | Type | Notes |
+|------|------|-------|
+| `--prompt` | string | Prompt text |
+| `--stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | Move to different stage |
+| `--query-form` | `short-tail` \| `long-tail` \| `conversational` | Update query form (kebab-case) |
+| `--segment` | comma-separated tags | Replaces the prompt's tags |
+| `--status` | `tracked` \| `untracked` | Toggle measurement tracking |
 
 Use `/aeo prompts list` first to get the prompt ID. Confirm with user before updating.
 

@@ -28,15 +28,15 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 ## Command Reference
 
-> **Noun.verb aliases**: the connector accepts noun-first aliases for many commands, e.g. `diagnose visibility run` = `visibility check run`, `measure overview` = `metrics overview`, `publish deploy` = `content deploy`, and `posts`/`channels`/`media` noun forms. Both forms route to the same endpoint — use whichever reads better; this reference lists the canonical form.
+> **Noun.verb aliases**: the connector accepts noun-first aliases for many commands. `diagnose` is the canonical visibility/audit noun (`diagnose visibility`/`visibility run`/`visibility poll <jobId>`, `diagnose audit`/`audit run`/`audit poll <jobId>`) and `visibility`/`audit` are the friendly aliases. `measure` is canonical and `metrics` is the alias (`metrics overview` = `measure overview`). `account` is the canonical billing noun and `billing`/`whoami` are aliases (`billing subscription` = `account subscription`, `whoami` = `account whoami`). `aeo publish` is its own binary group (`publish preview|deploy|redeploy`) that mirrors `content deploy|redeploy|preview`. `posts`/`channels` noun forms also route. The CLI image/thumbnail nouns are `image` and `video` (the `content thumbnail`/`media` forms are connector-internal). Both forms route to the same endpoint — use whichever reads better.
 
-### aeo domain — Domain profile & metadata
+### aeo domain — Domain selection & brand metadata
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo domain list` | List accessible domains | this file |
 | `/aeo domain switch [id]` | Switch active domain | this file |
-| `/aeo brand update` | Update brand context fields | [brand.md](references/brand.md) |
+| `/aeo domain brand update` | Update brand context fields (bare `aeo brand update` still routes as a legacy alias) | [brand.md](references/brand.md) |
 | `/aeo domain audit` | Show latest audit report | this file |
 | `/aeo domain channels` | List connected channels (platform, status, ID) | this file |
 | `/aeo domain setup` | Show setup checklist (integrations status) | this file |
@@ -63,14 +63,14 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo visibility show` | Show the last visibility snapshot | [visibility.md](references/visibility.md) |
-| `/aeo visibility check run` | Run a credit-metered visibility check | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
+| `/aeo visibility check run` | Run a credit-metered visibility check (`--engines <list>`, `--limit <n>`, `--prompt-ids <id,id>`) | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 | `/aeo visibility check poll <jobId>` | Poll check status | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 
 ### aeo audit — Site foundation checks
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo audit run` | Start a site foundation audit (uses production credits) | [polling.md](references/polling.md) |
+| `/aeo audit run` | Start a site foundation audit (`--max-pages <n>` default 5, 3 credits per 5 pages; `--channel-id <id>`) | [polling.md](references/polling.md) |
 | `/aeo audit poll <jobId>` | Poll an audit job | [polling.md](references/polling.md) |
 
 ### aeo strategy — Content strategy
@@ -89,7 +89,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo content import` | Push an already-written draft to content history | [content-create.md](references/content-create.md) |
 | `/aeo content generate` | Explicit-only server-side content generation job (uses production credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
 | `/aeo content jobs` | List active content generation jobs | [polling.md](references/polling.md) |
-| `/aeo content update <id>` | Update a content item (status, title, meta, keywords, body via patches or full replace) | [content-manage.md](references/content-manage.md) |
+| `/aeo content update <id>` | Update a content item (`--status`, `--title`, `--meta-description`, `--keywords`, `--body`/`--body-file` full replace or `--patch "search>>>replace"` targeted edit, `--thumbnail-url`, `--clear-thumbnail`) | [content-manage.md](references/content-manage.md) |
 | `/aeo content preview <id>` | Generate preview link and open in browser | [content-manage.md](references/content-manage.md) |
 | `/aeo content deploy <id>` | Deploy an article to the connected Shopify channel | [content-manage.md](references/content-manage.md) |
 | `/aeo content redeploy <id>` | Update an already-deployed Shopify article in-place (keeps URL) | [content-manage.md](references/content-manage.md) |
@@ -101,7 +101,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo post analyze --url <URL>` | Analyze one channel/reference URL and propose task-specific voice evidence | [tov-extract.md](references/tov-extract.md) |
+| `/aeo post analyze --url <URL>` | Analyze one channel/reference URL and propose task-specific voice evidence (`--provider blog\|threads\|tiktok\|instagram`, `--mode owned\|reference`, `--limit`) | [tov-extract.md](references/tov-extract.md) |
 | `post write` | Write a channel post — agent writing workflow, ends in `aeo post import` (no bare CLI command) | [post-create.md](references/post-create.md) |
 | `/aeo post list` | List channel posts (--platform, --status, --limit, --offset) | [channel-washing.md](references/channel-washing.md) |
 | `/aeo post get <id>` | Get a channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
@@ -115,28 +115,32 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (uses production credits) | [tov-extract.md](references/tov-extract.md) |
+| `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (uses production credits). `--media linkedin_post\|threads_post\|visual_asset\|instagram_reels\|tiktok_reels`, `--language` optional | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference style --url <url>` | Read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
-| `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits) | this file |
+| `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
 | `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (uses production credits). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
 | `/aeo video poll <jobId...>` | Check status + result URLs of video generation jobs | this file |
 
-### aeo metrics — Article & site performance
+### aeo measure / metrics — Article & site performance
+
+> Canonical noun is `measure`; `metrics` is the accepted alias. `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The `measure` noun also carries two verbs with no `metrics` alias: `measure visibility` (last visibility snapshot, same data as `aeo visibility show`) and `measure report --command <cmd>` (submit command diagnostics).
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo metrics overview` | Show deployed articles with GA4 + GSC stats (last 30 days) | [metrics.md](references/metrics.md) |
-| `/aeo metrics article <id>` | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
-| `/aeo metrics traffic` | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
+| `/aeo measure overview` (alias `metrics overview`) | Show deployed articles with GA4 + GSC stats (last 30 days) | [metrics.md](references/metrics.md) |
+| `/aeo measure content <id>` (alias `metrics article <id>`) | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
+| `/aeo measure traffic` (alias `metrics traffic`) | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
+| `/aeo measure visibility` | Show last visibility snapshot (same data as `aeo visibility show`) | [metrics.md](references/metrics.md) |
+| `/aeo measure report --command <cmd>` | Submit command-execution diagnostics (`--status-code`, `--response-body`, `--context`) | [metrics.md](references/metrics.md) |
 
 ### aeo prompts — Tracked prompts
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo prompts list` | List prompts grouped by stage | [brand.md](references/brand.md) |
-| `/aeo prompts add` | Add a manual prompt to brand_prompts | [brand.md](references/brand.md) |
-| `/aeo prompts update <id>` | Edit an existing prompt (text, stage, query_form) | [brand.md](references/brand.md) |
+| `/aeo prompts add` | Add a manual prompt to brand_prompts (`--prompt`, `--stage`, `--language`, `--segment foo,bar`) | [brand.md](references/brand.md) |
+| `/aeo prompts update <id>` | Edit an existing prompt (`--prompt`, `--stage`, `--query-form`, `--segment foo,bar`, `--status tracked\|untracked`) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
 
 ### aeo segments — Segment tags
@@ -159,7 +163,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo feedback <message>` | Send feedback (bug, idea, anything) to the Aeolo team; bare command opens $EDITOR | this file |
+| `/aeo feedback [<message>]` | Send feedback (bug, idea, anything) to the Aeolo team; bare form opens $EDITOR (requires $EDITOR/$VISUAL set) | this file |
 
 ### aeo drive — Google Drive files
 
@@ -195,13 +199,16 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo auth status` | Show current stored credentials | this file |
 | `/aeo auth logout` | Clear stored credentials | this file |
 
-### aeo billing — Subscription and credits
+### aeo account — Account & subscription
+
+> `account` is the canonical noun. `billing` and `whoami` are aliases: `aeo billing subscription` = `aeo account subscription`, `aeo billing credits` = `aeo account credits`, `aeo billing ledger` = `aeo account ledger`, and bare `aeo whoami` = `aeo account whoami`.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo billing subscription` | Show current tier and credit summary | this file |
-| `/aeo billing credits` | Show current credit balance | this file |
-| `/aeo billing ledger` | Show recent credit ledger entries | this file |
+| `/aeo account whoami` (or `/aeo whoami`) | Show current user (email, tier, trial days) | this file |
+| `/aeo account subscription` | Show current subscription, tier, and credit summary | this file |
+| `/aeo account credits` | Show current credit balance | this file |
+| `/aeo account ledger` | Show credit ledger entries (`--days` default 30, `--limit` default 50) | this file |
 
 ### Utilities
 
@@ -463,7 +470,7 @@ When any `aeo` command fails, automatically submit a diagnostic report so failur
 
 ```bash
 aeo report \
-  --command "visibility-check run --engines=gemini,grok" \
+  --command "visibility check run --engines=chatgpt,gemini" \
   --status-code 500 \
   --response-body "Internal Server Error: worker timeout" \
   --context "Running scheduled visibility check after content deploy"
