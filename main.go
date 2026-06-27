@@ -575,7 +575,7 @@ COMMANDS:
   drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
   products      List products in the catalog
   product       list | add (--pdp <url>)
-  image         search <query> | swap (--content <id> --product <id> --reference <url>)
+  image         search <query> | swap (...) | generate (--prompt <text>) | poll <jobId...> | upload
   billing       subscription | credits | ledger
   auth          login | status | logout
   whoami        Show current user (email, tier, trial days)
@@ -782,6 +782,14 @@ Notes:
                     Required: --file <path>
                     Optional: --content <id> (pin as thumbnail), --mime-type (auto from extension)
                     Limits: image must be ≤25 megapixels (Shopify article cap)
+  generate          Generate image(s) from a text prompt (uses production credits)
+                    Required: --prompt <text>
+                    Optional: --model nano-banana-pro|gpt-image-2|grok-image (default nano-banana-pro),
+                              --sweep N (1-8 candidates), --aspect (default 16:9), --resolution,
+                              --ref url1,url2 (reference images), --brand-style
+                    Async — returns job IDs; poll with 'aeo image poll'
+  poll              Check status + result URLs of image generation jobs
+                    Usage: aeo image poll <jobId> [jobId...]
 `,
 	"post": `aeo post <verb>
 
@@ -2127,6 +2135,60 @@ func main() {
 			}
 			b, _ := json.Marshal(body)
 			run("/image/upload", "POST", b, domainID)
+		case "generate":
+			prompt := findFlag(args, "--prompt", "-p")
+			if prompt == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> [--model nano-banana-pro|gpt-image-2|grok-image] [--sweep N] [--aspect 16:9] [--resolution 1024] [--ref url1,url2] [--brand-style]")
+				os.Exit(1)
+			}
+			body := map[string]any{"prompt": prompt}
+			if v := findFlag(args, "--model"); v != "" {
+				body["model"] = v
+			} else {
+				body["model"] = "nano-banana-pro"
+			}
+			if v := findFlag(args, "--sweep", "--count"); v != "" {
+				var n int
+				fmt.Sscanf(v, "%d", &n)
+				if n > 0 {
+					body["count"] = n
+				}
+			}
+			if v := findFlag(args, "--aspect", "--aspect-ratio"); v != "" {
+				body["aspectRatio"] = v
+			} else {
+				body["aspectRatio"] = "16:9"
+			}
+			if v := findFlag(args, "--resolution"); v != "" {
+				body["resolution"] = v
+			}
+			if hasFlag(args, "--brand-style", "--style") {
+				body["applyBrandStyle"] = true
+			}
+			if v := findFlag(args, "--ref", "--references"); v != "" {
+				refs := []string{}
+				for _, r := range strings.Split(v, ",") {
+					if r = strings.TrimSpace(r); r != "" {
+						refs = append(refs, r)
+					}
+				}
+				body["referenceUrls"] = refs
+			}
+			b, _ := json.Marshal(body)
+			run("/image/generate", "POST", b, domainID)
+		case "poll":
+			ids := []string{}
+			for _, a := range args[2:] {
+				if !strings.HasPrefix(a, "-") {
+					ids = append(ids, a)
+				}
+			}
+			if len(ids) == 0 {
+				fmt.Fprintln(os.Stderr, "Usage: aeo image poll <jobId> [jobId...]")
+				os.Exit(1)
+			}
+			b, _ := json.Marshal(map[string]any{"ids": ids})
+			run("/video-generation/status", "POST", b, domainID)
 		default:
 			printSubUsage("image")
 		}

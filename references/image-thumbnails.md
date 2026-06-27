@@ -150,6 +150,29 @@ aeo image swap \
 
 ---
 
+## /aeo image generate — Prompt-based image generation
+
+```
+aeo image generate --prompt "minimalist beige skincare scene, single cream jar, soft daylight" --model nano-banana-pro --sweep 2
+```
+
+Unlike `image swap` (which composites a real product into a Pexels scene), `image generate` is a **pure text-to-image** job — no product or reference required, just describe what you want. It shares the same async visual-generation pipeline as `video generate`.
+
+- `--prompt` (required) — the scene/subject to generate.
+- `--model` — `nano-banana-pro` (default), `gpt-image-2`, or `grok-image`.
+- `--sweep N` — 1–8 candidate variations (default 1).
+- `--aspect` — aspect ratio (default `16:9`). `--resolution` — optional.
+- `--ref url1,url2` — up to 4 reference images to steer style/subject.
+- `--brand-style` — inject the brand's design style into the prompt.
+
+**Async** — returns job IDs immediately (KIE renders in the background). Poll with `aeo image poll <jobId...>`; when a job shows `completed`, its result URLs hold the finished image(s). Pin one as an article thumbnail with `aeo content thumbnail <contentId> --url <imageUrl>`, or download + `aeo image upload`.
+
+**Billing**: charged via production credits (image-generation pricing), reserved per candidate and captured only on success — failed renders are refunded. This path does NOT use the $10/mo swap cap. Tier gate: `content-create` (Starter+).
+
+> **swap vs generate**: use `swap` when you want the real product in the shot (most article thumbnails); use `generate` for abstract/lifestyle/background imagery or when no suitable product or reference scene exists.
+
+---
+
 ## Failure modes & retries
 
 | Error message contains | What to do |
@@ -167,7 +190,7 @@ The handler only charges the budget *after* a successful swap, so failed calls a
 
 ## CUD Rule
 
-`aeo image swap` and `aeo product add` are write operations — confirm with the user before calling. Show the chosen content title, product title, and reference URL preview, and ask "Proceed?" before running. See SKILL.md → "CUD Rule".
+`aeo image swap`, `aeo image generate`, and `aeo product add` are write operations — confirm with the user before calling. Show the chosen content title, product title, and reference URL preview, and ask "Proceed?" before running. See SKILL.md → "CUD Rule".
 
 ---
 
@@ -179,5 +202,7 @@ The CLI commands resolve to:
 - `POST /v1/connector/domains/:domainId/products` — body `{ pdpUrl }`
 - `GET  /v1/connector/image/search?q=...&perPage=...&page=...`
 - `POST /v1/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
+- `POST /v1/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
+- `POST /v1/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
 
 All return `text/markdown` on success, JSON `{ code, message }` on error.
