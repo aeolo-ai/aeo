@@ -339,7 +339,7 @@ When in doubt, **default to ranked_list** — 53% of AI citations come from list
 5. **Authority signals** — External authority source citations are mandatory. Statistics, research, .edu/.gov sources. Inline citation format: `[Source Name](URL)`. No unsourced claims.
 6. **Expert quotes (attributed)** — "Real name + title + quote" format. AI uses this for credibility assessment. No fabricated quotes.
 7. **FAQ section** — 3–5 FAQs at the bottom. Cover related questions not addressed in the main body.
-8. **Schema markup hints** — Specify the schema type as an HTML comment at the top of the article (before H1). Format: `<!-- schema: Type1, Type2 -->`
+8. **Schema markup hints** — Choose the right schema type for the article, but do NOT write it into the body. Aeolo derives JSON-LD from the structured `type`/`articleType` import field and renders it at deploy time. Use this mapping to pick the type:
 
    | articleType | Schema Hint |
    |---|---|
@@ -351,7 +351,7 @@ When in doubt, **default to ranked_list** — 53% of AI citations come from list
    | blog | `<!-- schema: Article, BlogPosting -->` |
    | thought_leadership | `<!-- schema: Article, BlogPosting -->` |
    | case_study | `<!-- schema: Article -->` |
-9. **Freshness signals** — Specify `datePublished` and `dateModified` at the top of the article. Content citation rate drops from 100% within 30 days to 18% after 1 year.
+9. **Freshness signals** — Do NOT write `datePublished`/`dateModified` into the article body. Aeolo stores freshness as structured metadata and renders it as JSON-LD at deploy time; the publish/refresh save sets the dates automatically. Recency still matters editorially: citation rate drops from 100% within 30 days to 18% after 1 year, so favor fresh angles and current data.
 10. **Internal + external links** — Cross-link your own content + link to external authority sources. AI actively crawls link graphs.
 
 ### Platform-Specific Tone Guide
@@ -375,7 +375,7 @@ If not specified, default to a "practical + structured" combination that works f
 | 181–365 days | 34% | Major rewrite |
 | 1 year+ | 18% | New article recommended |
 
-When updating existing content, always update `dateModified`. Replace with the latest statistics/data when possible.
+On a content refresh, Aeolo updates `dateModified` automatically on save — your job is to replace stale statistics/data with the latest, not to edit a date line in the body.
 
 ### Brand Mention Principles
 

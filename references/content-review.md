@@ -63,7 +63,7 @@ Run this **before** the quality checklist below, and run it **adversarially**: a
 
 | Item | Criteria | Reference |
 |------|----------|-----------|
-| **datePublished / dateModified** | Are they specified? | 10 Commandments #9 |
+| **Freshness metadata** | Is the body free of `datePublished`/`dateModified` lines? (dates live in structured metadata / deploy-time JSON-LD, not the body) | 10 Commandments #9 |
 | **Data recency** | Are cited statistics/data less than 1 year old? | Freshness rules |
 | **Article age** | What is the residual citation rate based on publish date? (0–30 days 100% → 1 year+ 18%) | Freshness rules |
 
