@@ -20,7 +20,7 @@ aeo visibility check run --prompt-ids=id1,id2 --engines=chatgpt
 ```
 
 **Flags:**
-- `--engines <list>` — comma-separated. Supported set: `chatgpt,gemini,perplexity,google-ai-mode,google-aio` (this is also the default per the connector registry). `grok` is currently **disabled** — the binary help string still lists it but it is stale; don't pass it.
+- `--engines <list>` — comma-separated. Supported set: `chatgpt,gemini,perplexity,google-ai-mode,google-aio,amazon`. Default (when the flag is omitted) is `chatgpt,gemini,perplexity`. `amazon` (Amazon Rufus, GA as of 2026-07-01) is opt-in — pass it explicitly; it costs more credits per query than the ChatGPT/Gemini/Perplexity engines. `grok` is currently **disabled** — never pass it.
 - `--limit <n>` — cap the number of prompts checked
 - `--prompt-ids <id,id>` — check only specific prompts
 

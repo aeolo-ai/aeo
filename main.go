@@ -629,7 +629,8 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 
   show              Show last visibility snapshot
   check run         Trigger a credit-metered visibility check
-                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity,grok),
+                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
+                           also available: google-ai-mode, google-aio, amazon),
                            --limit, --prompt-ids
   check poll <id>   Poll check status
 `,
@@ -643,7 +644,8 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 
   visibility        Show last visibility snapshot
   visibility run    Trigger a credit-metered visibility check
-                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity,grok),
+                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
+                           also available: google-ai-mode, google-aio, amazon),
                            --limit, --prompt-ids
   visibility poll <jobId>
                     Poll check status
@@ -778,6 +780,7 @@ Notes:
   swap              Generate a 16:9 thumbnail by swapping a product into a reference scene
                     Required: --content <id>, --product <id>, --reference <url>
                     Optional: --no-persist (don't save to content_history)
+                    Async — returns a job ID; poll with 'aeo image poll'
   upload            Upload a local image to the thumbnail bucket
                     Required: --file <path>
                     Optional: --content <id> (pin as thumbnail), --mime-type (auto from extension)
@@ -924,7 +927,7 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 func runVisibilityCheck(args []string, domainID string) {
 	engines := findFlag(args, "--engines")
 	if engines == "" {
-		engines = "chatgpt,gemini,perplexity,grok"
+		engines = "chatgpt,gemini,perplexity"
 	}
 	engineParts := strings.Split(engines, ",")
 	for i, p := range engineParts {
@@ -2085,7 +2088,7 @@ func main() {
 			productID := findFlag(args, "--product", "--product-id")
 			ref := findFlag(args, "--reference", "--reference-url")
 			if contentID == "" || productID == "" || ref == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo image swap --content <id> --product <id> --reference <url> [--no-persist]")
+				fmt.Fprintln(os.Stderr, "Usage: aeo image swap --content <id> --product <id> --reference <url> [--no-persist]\n\nAsync — returns a job ID; poll with 'aeo image poll <jobId>'.")
 				os.Exit(1)
 			}
 			body := map[string]any{
