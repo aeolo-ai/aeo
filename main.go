@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var version = "2.0.1"
+var version = "2.0.2"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -666,6 +666,8 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
   list              List content items
                     Flags: --status, --limit, --offset
   get <id>          Get full article content
+                    Flags: --head (metadata + first ~600 chars, token-friendly scan;
+                    omit for review/edit flows that need the full body)
   review <id>       Load review workspace (article + brand + audit context)
   import            Import an agent-written draft article
                     Required: --title, --body (or --body-file)
@@ -1348,7 +1350,13 @@ func main() {
 			run(path, "GET", nil, domainID)
 		case "get":
 			requireArg(args, 2, "aeo content get <id>")
-			run("/content/"+args[2], "GET", nil, domainID)
+			contentPath := "/content/" + args[2]
+			// --head: metadata + first ~600 chars only — token-friendly scan mode.
+			// Review flows must keep the full body (omit the flag).
+			if hasFlag(args, "--head") {
+				contentPath += "?head=true"
+			}
+			run(contentPath, "GET", nil, domainID)
 		case "review":
 			requireArg(args, 2, "aeo content review <id>")
 			run("/content/"+args[2]+"/review", "GET", nil, domainID)
