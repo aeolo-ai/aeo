@@ -198,11 +198,11 @@ The handler only charges the budget *after* a successful swap, so failed calls a
 
 The CLI commands resolve to:
 
-- `GET  /v1/connector/domains/:domainId/products`
-- `POST /v1/connector/domains/:domainId/products` — body `{ pdpUrl }`
-- `GET  /v1/connector/image/search?q=...&perPage=...&page=...`
-- `POST /v1/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
-- `POST /v1/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
-- `POST /v1/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
+- `GET  /v2/connector/domains/:domainId/products`
+- `POST /v2/connector/domains/:domainId/products` — body `{ pdpUrl }`
+- `GET  /v2/connector/image/search?q=...&perPage=...&page=...`
+- `POST /v2/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
+- `POST /v2/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
+- `POST /v2/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
 
 All return `text/markdown` on success, JSON `{ code, message }` on error.

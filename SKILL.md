@@ -29,6 +29,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 ## Command Reference
 
 > **Noun.verb aliases**: the connector accepts noun-first aliases for many commands. `diagnose` is the canonical visibility/audit noun (`diagnose visibility`/`visibility run`/`visibility poll <jobId>`, `diagnose audit`/`audit run`/`audit poll <jobId>`) and `visibility`/`audit` are the friendly aliases. `measure` is canonical and `metrics` is the alias (`metrics overview` = `measure overview`). `account` is the canonical billing noun and `billing`/`whoami` are aliases (`billing subscription` = `account subscription`, `whoami` = `account whoami`). `aeo publish` is its own binary group (`publish preview|deploy|redeploy`) that mirrors `content deploy|redeploy|preview`. `posts`/`channels` noun forms also route. The CLI image/thumbnail nouns are `image` and `video` (the `content thumbnail`/`media` forms are connector-internal). Both forms route to the same endpoint — use whichever reads better.
+>
+> **Terminal vs agent surface**: the noun-first plural (`posts`, `channels`) and legacy-verb (`brand update`) aliases are normalized by the connector command registry, so they resolve on the **dashboard-chat and MCP agent surfaces**. The raw `aeo` terminal binary only ships the canonical forms — in shell examples prefer `post` (not `posts`) and `domain brand update` (not `brand update`).
 
 ### aeo domain — Domain selection & brand metadata
 
@@ -57,6 +59,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo channel delete <id>` | Delete a non-primary channel | this file |
 | `/aeo channel connect <id>` | OAuth connect — opens browser for threads/linkedin/reddit | this file |
 | `/aeo channel disconnect <id>` | Disconnect OAuth integration from a channel | this file |
+| `/aeo channel voice` | Read selected channel-voice / reference-style evidence (`--provider`, `--url`) — same data as `reference style` | [tov-extract.md](references/tov-extract.md) |
 
 ### aeo visibility — Visibility data & checks
 
@@ -90,7 +93,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo content generate` | Explicit-only server-side content generation job (uses production credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
 | `/aeo content jobs` | List active content generation jobs | [polling.md](references/polling.md) |
 | `/aeo content update <id>` | Update a content item (`--status`, `--title`, `--meta-description`, `--keywords`, `--body`/`--body-file` full replace or `--patch "search>>>replace"` targeted edit, `--thumbnail-url`, `--clear-thumbnail`) | [content-manage.md](references/content-manage.md) |
-| `/aeo content preview <id>` | Generate preview link and open in browser | [content-manage.md](references/content-manage.md) |
+| `/aeo content preview <id>` | Generate a shareable preview link (prints the URL; does not open a browser) | [content-manage.md](references/content-manage.md) |
 | `/aeo content deploy <id>` | Deploy an article to the connected Shopify channel | [content-manage.md](references/content-manage.md) |
 | `/aeo content redeploy <id>` | Update an already-deployed Shopify article in-place (keeps URL) | [content-manage.md](references/content-manage.md) |
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
