@@ -34,9 +34,10 @@ Response: `text/markdown` — table with `id`, title, status, type, words, keywo
 
 ```bash
 aeo content get <id>
+aeo content get <id> --head   # scan-only: metadata + first ~600 chars of body
 ```
 
-Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying.
+Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying. Add `--head` when you only need to identify or triage an article (metadata + a short body preview); it avoids re-billing the full body on every later turn. Omit it (the default) whenever you actually need to read or edit the body.
 
 ---
 
