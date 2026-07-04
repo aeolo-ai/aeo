@@ -2,7 +2,7 @@
 
 Generate a 16:9 OG thumbnail by compositing a brand product onto a Pexels reference scene. The pipeline is one shot per call (~25s, ~$0.13) and persists to `content_history.thumbnail_url` so the next `aeo content deploy` ships the image to Shopify.
 
-> **Budget**: per-user monthly cap of **$10 USD** (UTC calendar month). The `aeo image swap` response shows remaining budget after each call. Failed swaps don't charge.
+> **Budget**: `image swap` is billed via production credits (swap pricing), reserved when the job starts and captured only on completion — failed renders are refunded. Poll the returned job ID with `aeo image poll <jobId>` to see the final result.
 >
 > **Tier gate**: `image swap` requires `content-create` (Starter+). `image search`, `image upload`, and `products` are open to all members with edit access.
 
@@ -128,25 +128,32 @@ aeo image swap \
 - `--reference` (required) — reference scene URL (from `aeo image search` or a direct URL)
 - `--no-persist` — return the generated URL without updating `content_history`. Useful for previewing before commit.
 
-**What the model does** (`gemini-3-pro-image-preview`):
+**What the model does** (`nano-banana-pro`, via KIE):
 - Takes the reference scene as image #1, the product packshot as image #2.
 - Replaces any held/displayed object in the scene with the brand product.
 - Preserves the scene's framing, lighting, and color temperature.
 - Preserves the product's form factor (stick stays stick, tube stays tube), label text, and packaging colors verbatim from the packshot.
 - Output: a 16:9 landscape image, uploaded to the `domain-thumbnails` Supabase bucket.
 
+**Async** — the KIE render takes 60–120s+ (longer than the HTTP gateway), so `image swap` returns a **job ID immediately** instead of blocking. Poll with `aeo image poll <jobId>`; when the job shows `completed`, its result URL is the finished thumbnail. With persist on (default) it is already pinned to `content_history.thumbnail_url`; with `--no-persist` it is a candidate only.
+
 **Response shape**:
 
 ```
-# Thumbnail Generated — <article title>
+# Thumbnail Swap Started — <article title>
 
-- **Thumbnail:** https://.../domain-thumbnails/<domain_id>/<content_id>-<ts>.png
+The product swap is rendering on KIE — it takes 60–120s, so it is **not done yet**.
+
+- **Job ID:** <jobId>
 - **Product:** <product title>
 - **Reference:** <pexels url>
-- **Persisted:** yes — saved to content_history
+- **Persist:** yes — pins content_history.thumbnail_url on completion
 
-**Monthly budget:** $X.XX / $10.00 spent · $Y.YY remaining (resets <iso ts>)
+Poll for completion with:
+    aeo image poll <jobId>
 ```
+
+Credits (production credits, swap pricing) are **reserved** when the job starts and **captured on completion** — a failed render is refunded automatically.
 
 ---
 
