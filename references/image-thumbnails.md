@@ -2,7 +2,7 @@
 
 Generate a 16:9 OG thumbnail by compositing a brand product onto a Pexels reference scene. The pipeline is one shot per call (~25s, ~$0.13) and persists to `content_history.thumbnail_url` so the next `aeo content deploy` ships the image to Shopify.
 
-> **Budget**: `image swap` is billed via production credits (swap pricing), reserved when the job starts and captured only on completion — failed renders are refunded. Poll the returned job ID with `aeo image poll <jobId>` to see the final result.
+> **Budget**: per-user monthly cap of **$10 USD** (UTC calendar month). The `aeo image swap` response shows remaining budget after each call. Failed swaps don't charge.
 >
 > **Tier gate**: `image swap` requires `content-create` (Starter+). `image search`, `image upload`, and `products` are open to all members with edit access.
 
@@ -128,32 +128,25 @@ aeo image swap \
 - `--reference` (required) — reference scene URL (from `aeo image search` or a direct URL)
 - `--no-persist` — return the generated URL without updating `content_history`. Useful for previewing before commit.
 
-**What the model does** (`nano-banana-pro`, via KIE):
+**What the model does** (`gemini-3-pro-image-preview`):
 - Takes the reference scene as image #1, the product packshot as image #2.
 - Replaces any held/displayed object in the scene with the brand product.
 - Preserves the scene's framing, lighting, and color temperature.
 - Preserves the product's form factor (stick stays stick, tube stays tube), label text, and packaging colors verbatim from the packshot.
 - Output: a 16:9 landscape image, uploaded to the `domain-thumbnails` Supabase bucket.
 
-**Async** — the KIE render takes 60–120s+ (longer than the HTTP gateway), so `image swap` returns a **job ID immediately** instead of blocking. Poll with `aeo image poll <jobId>`; when the job shows `completed`, its result URL is the finished thumbnail. With persist on (default) it is already pinned to `content_history.thumbnail_url`; with `--no-persist` it is a candidate only.
-
 **Response shape**:
 
 ```
-# Thumbnail Swap Started — <article title>
+# Thumbnail Generated — <article title>
 
-The product swap is rendering on KIE — it takes 60–120s, so it is **not done yet**.
-
-- **Job ID:** <jobId>
+- **Thumbnail:** https://.../domain-thumbnails/<domain_id>/<content_id>-<ts>.png
 - **Product:** <product title>
 - **Reference:** <pexels url>
-- **Persist:** yes — pins content_history.thumbnail_url on completion
+- **Persisted:** yes — saved to content_history
 
-Poll for completion with:
-    aeo image poll <jobId>
+**Monthly budget:** $X.XX / $10.00 spent · $Y.YY remaining (resets <iso ts>)
 ```
-
-Credits (production credits, swap pricing) are **reserved** when the job starts and **captured on completion** — a failed render is refunded automatically.
 
 ---
 
@@ -172,11 +165,52 @@ Unlike `image swap` (which composites a real product into a Pexels scene), `imag
 - `--ref url1,url2` — up to 4 reference images to steer style/subject.
 - `--brand-style` — inject the brand's design style into the prompt.
 
+**Campaign-driven prompt** (all optional — omit them and the request is byte-identical to the legacy raw-prompt path):
+
+- `--category` — the product's visual category: `beauty`, `furniture`, `fashion`, `objet`, or `other`. An unknown value is rejected with the valid set. Omitted → falls back to the domain default, then the onboarding category, then `other`.
+- `--item <topic>` — the product item topic (e.g. `serum`, `chair`, `bag`) that seeds the compiler's geometry.
+- `--direction <text>` — a text-direction preset (`editorial`, `clean`, `luxe`, `raw`, `warm`, `bright`, `moody`, `minimal`) or free text that seeds the grade/mood.
+
+When any campaign flag is present the deterministic prompt compiler builds the scene from the brand's real signature colors; when all three are omitted, nothing about the request changes.
+
+```bash
+aeo image generate --prompt "single cream jar on stone" --category beauty --item serum --direction editorial
+```
+
 **Async** — returns job IDs immediately (KIE renders in the background). Poll with `aeo image poll <jobId...>`; when a job shows `completed`, its result URLs hold the finished image(s). Pin one as an article thumbnail with `aeo content thumbnail <contentId> --url <imageUrl>`, or download + `aeo image upload`.
 
 **Billing**: charged via production credits (image-generation pricing), reserved per candidate and captured only on success — failed renders are refunded. This path does NOT use the $10/mo swap cap. Tier gate: `content-create` (Starter+).
 
 > **swap vs generate**: use `swap` when you want the real product in the shot (most article thumbnails); use `generate` for abstract/lifestyle/background imagery or when no suitable product or reference scene exists.
+
+---
+
+## /aeo video generate — Two lanes: text→video and image→video
+
+`video generate` runs on the same async visual-generation pipeline as `image generate`. It has two lanes, chosen by whether you pass `--start-frame`:
+
+- **Lane 2 — text→video (t2v, default).** No `--start-frame`. The model renders purely from `--prompt`. This is the existing behavior; nothing changed.
+- **Lane 1 — image→video (i2v).** `--start-frame <outputId>` takes a previously generated **image** output and uses it as the video's **first frame**, so the clip starts from that exact frame and animates forward. `<outputId>` is a `visual_generation_outputs.id` from an `image generate` (or swap) result on the **same domain**.
+
+```
+# Lane 2 — text→video (unchanged)
+aeo video generate --prompt "beige skincare flatlay, slow push-in" --model seedance-2-fast --sweep 2
+
+# Lane 1 — image→video: animate a generated image as the start frame
+aeo image generate --prompt "single cream jar on linen, soft daylight" --model nano-banana-pro
+aeo image poll <jobId>            # grab the completed output's id
+aeo video generate --prompt "slow push-in, gentle steam" --model seedance-2 --start-frame <outputId>
+```
+
+- `--start-frame <outputId>` — a generated **image** output id on this domain. Enables Lane 1.
+- Model support: `seedance-2` / `seedance-2-fast` wire it as the strict first frame; `kling-3` and `grok-video` take it as the leading image. All four models support Lane 1. A model with no image→video wire is rejected (never silently downgraded to t2v).
+- Everything else (`--prompt` required, `--sweep`, `--aspect`, `--duration`, `--audio`, `--model`) works identically in both lanes.
+
+**Single image source (Lane 1).** The start frame is the *only* image input. Combining `--start-frame` with `--ref` (extra reference images), `--brand-style`, or a reference **video** is rejected with `START_FRAME_CONFLICT` (HTTP 422) — it would pollute the frame or trip the reference-video credit surcharge. Remove those to use Lane 1.
+
+**Validation is up front.** The start frame is resolved and validated **before** any credit is reserved, so a bad id never charges you. Rejections (all HTTP 422): `INVALID_START_FRAME` (not found, or not a reachable own-domain storage image), `NOT_IMAGE` (the id is a video output), `CROSS_DOMAIN` (belongs to another domain), `MODEL_NO_I2V` (model can't do image→video), `START_FRAME_CONFLICT` (see above). Credit stays the base video-generation price — the start frame adds no surcharge.
+
+**Async** — like all video/image generation, `video generate` returns job IDs immediately; poll with `aeo video poll <jobId...>` until `completed`. Tier gate: `content-create` (Starter+).
 
 ---
 
@@ -205,11 +239,11 @@ The handler only charges the budget *after* a successful swap, so failed calls a
 
 The CLI commands resolve to:
 
-- `GET  /v1/connector/domains/:domainId/products`
-- `POST /v1/connector/domains/:domainId/products` — body `{ pdpUrl }`
-- `GET  /v1/connector/image/search?q=...&perPage=...&page=...`
-- `POST /v1/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
-- `POST /v1/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
-- `POST /v1/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
+- `GET  /v2/connector/domains/:domainId/products`
+- `POST /v2/connector/domains/:domainId/products` — body `{ pdpUrl }`
+- `GET  /v2/connector/image/search?q=...&perPage=...&page=...`
+- `POST /v2/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
+- `POST /v2/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle?, campaignCategory?, itemTopic?, textDirection? }` (async; returns `{ jobs, taskIds }`)
+- `POST /v2/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
 
 All return `text/markdown` on success, JSON `{ code, message }` on error.

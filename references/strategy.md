@@ -86,8 +86,8 @@ When creating a strategy for the first time:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/v1/connector/domains/:domainId/strategy` | Get strategy (markdown) |
-| PUT | `/v1/connector/domains/:domainId/strategy` | Create/replace strategy |
+| GET | `/v2/connector/domains/:domainId/strategy` | Get strategy (markdown) |
+| PUT | `/v2/connector/domains/:domainId/strategy` | Create/replace strategy |
 
 PUT body:
 ```json
