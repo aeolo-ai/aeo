@@ -2,7 +2,7 @@
 
 Track deployed article performance and site-level search traffic via Google Analytics (GA4) and Google Search Console (GSC).
 
-> **Canonical noun is `measure`; `metrics` is an accepted alias.** Verb mapping: `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The examples below use the `metrics` alias for brevity, but `measure` is the canonical form. The `measure` noun additionally carries two verbs with no `metrics` alias: `measure visibility` and `measure report` (see the bottom of this file).
+> **Canonical noun is `measure`; `metrics` is an accepted alias.** Verb mapping: `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`, `metrics performance` = `measure performance`. The examples below use the `metrics` alias for brevity, but `measure` is the canonical form. The `measure` noun additionally carries two verbs with no `metrics` alias: `measure visibility` and `measure report` (see the bottom of this file).
 
 ## Prerequisites
 
@@ -74,6 +74,20 @@ Requires Google Search Console connected.
 - **High impressions + low clicks** = ranking but not getting clicked → improve title/meta
 - **Top queries** show what people actually search to find the article — compare with `target_keywords`
 - **Site-level traffic** (`metrics traffic`) shows overall search presence — useful for spotting new keyword opportunities and tracking GEO impact across all pages
+
+### `aeo measure performance`
+
+```bash
+aeo measure performance [-d <domainId>]
+```
+
+Latest monthly performance report (alias: `metrics performance`). The dispatcher's
+monthly sweep ranks the domain's deployed articles by measured traffic and extracts
+the patterns the top articles share; this returns the most recent stored report as
+markdown — top articles, shared patterns, and facts-only takeaways. Report-only:
+nothing here writes back to any brand store. If no report exists yet, explains that
+reports are generated at the start of each calendar month once articles have
+measurable traffic.
 
 ### `aeo measure visibility`
 
