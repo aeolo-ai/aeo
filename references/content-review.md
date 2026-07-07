@@ -51,6 +51,10 @@ Run this **before** the quality checklist below, and run it **adversarially**: a
 | **FAQ section** | Are there 3–5 FAQs at the bottom of the article? | 10 Commandments #7 |
 | **FAQ is a `## ` H2** (blog articles only) | Is the FAQ section under a real markdown `## FAQ` / `## 자주 묻는 질문` H2 (not a bold "FAQ" line)? Deploy-time FAQPage schema only fires when it is. Not applicable to social posts. | 10 Commandments #7 |
 | **Schema hints** | Is the recommended schema type specified? | 10 Commandments #8 |
+| **Paragraph length** (blog articles only) | Are paragraphs short (≤ 3 sentences, one idea each), not walls of text that bury the quotable unit? | Layout & Readability |
+| **Bold key terms** | Are the load-bearing terms/numbers bolded for scannability — and is bold NOT used as a fake heading in place of a real `## `/`### `? | Layout & Readability |
+| **Callout / Pro-Tip blocks** | Are standout tips, warnings, or takeaways pulled into blockquote callouts (used for genuine tips, not decoration)? | Layout & Readability |
+| **Lists & tables for enumerable answers** | Are option/step/criteria answers rendered as lists or tables so each item is independently quotable, rather than parallel prose? | Layout & Readability |
 
 #### 2. Trust & Authority
 

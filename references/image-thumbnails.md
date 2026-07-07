@@ -165,11 +165,52 @@ Unlike `image swap` (which composites a real product into a Pexels scene), `imag
 - `--ref url1,url2` — up to 4 reference images to steer style/subject.
 - `--brand-style` — inject the brand's design style into the prompt.
 
+**Campaign-driven prompt** (all optional — omit them and the request is byte-identical to the legacy raw-prompt path):
+
+- `--category` — the product's visual category: `beauty`, `furniture`, `fashion`, `objet`, or `other`. An unknown value is rejected with the valid set. Omitted → falls back to the domain default, then the onboarding category, then `other`.
+- `--item <topic>` — the product item topic (e.g. `serum`, `chair`, `bag`) that seeds the compiler's geometry.
+- `--direction <text>` — a text-direction preset (`editorial`, `clean`, `luxe`, `raw`, `warm`, `bright`, `moody`, `minimal`) or free text that seeds the grade/mood.
+
+When any campaign flag is present the deterministic prompt compiler builds the scene from the brand's real signature colors; when all three are omitted, nothing about the request changes.
+
+```bash
+aeo image generate --prompt "single cream jar on stone" --category beauty --item serum --direction editorial
+```
+
 **Async** — returns job IDs immediately (KIE renders in the background). Poll with `aeo image poll <jobId...>`; when a job shows `completed`, its result URLs hold the finished image(s). Pin one as an article thumbnail with `aeo content thumbnail <contentId> --url <imageUrl>`, or download + `aeo image upload`.
 
 **Billing**: charged via production credits (image-generation pricing), reserved per candidate and captured only on success — failed renders are refunded. This path does NOT use the $10/mo swap cap. Tier gate: `content-create` (Starter+).
 
 > **swap vs generate**: use `swap` when you want the real product in the shot (most article thumbnails); use `generate` for abstract/lifestyle/background imagery or when no suitable product or reference scene exists.
+
+---
+
+## /aeo video generate — Two lanes: text→video and image→video
+
+`video generate` runs on the same async visual-generation pipeline as `image generate`. It has two lanes, chosen by whether you pass `--start-frame`:
+
+- **Lane 2 — text→video (t2v, default).** No `--start-frame`. The model renders purely from `--prompt`. This is the existing behavior; nothing changed.
+- **Lane 1 — image→video (i2v).** `--start-frame <outputId>` takes a previously generated **image** output and uses it as the video's **first frame**, so the clip starts from that exact frame and animates forward. `<outputId>` is a `visual_generation_outputs.id` from an `image generate` (or swap) result on the **same domain**.
+
+```
+# Lane 2 — text→video (unchanged)
+aeo video generate --prompt "beige skincare flatlay, slow push-in" --model seedance-2-fast --sweep 2
+
+# Lane 1 — image→video: animate a generated image as the start frame
+aeo image generate --prompt "single cream jar on linen, soft daylight" --model nano-banana-pro
+aeo image poll <jobId>            # grab the completed output's id
+aeo video generate --prompt "slow push-in, gentle steam" --model seedance-2 --start-frame <outputId>
+```
+
+- `--start-frame <outputId>` — a generated **image** output id on this domain. Enables Lane 1.
+- Model support: `seedance-2` / `seedance-2-fast` wire it as the strict first frame; `kling-3` and `grok-video` take it as the leading image. All four models support Lane 1. A model with no image→video wire is rejected (never silently downgraded to t2v).
+- Everything else (`--prompt` required, `--sweep`, `--aspect`, `--duration`, `--audio`, `--model`) works identically in both lanes.
+
+**Single image source (Lane 1).** The start frame is the *only* image input. Combining `--start-frame` with `--ref` (extra reference images), `--brand-style`, or a reference **video** is rejected with `START_FRAME_CONFLICT` (HTTP 422) — it would pollute the frame or trip the reference-video credit surcharge. Remove those to use Lane 1.
+
+**Validation is up front.** The start frame is resolved and validated **before** any credit is reserved, so a bad id never charges you. Rejections (all HTTP 422): `INVALID_START_FRAME` (not found, or not a reachable own-domain storage image), `NOT_IMAGE` (the id is a video output), `CROSS_DOMAIN` (belongs to another domain), `MODEL_NO_I2V` (model can't do image→video), `START_FRAME_CONFLICT` (see above). Credit stays the base video-generation price — the start frame adds no surcharge.
+
+**Async** — like all video/image generation, `video generate` returns job IDs immediately; poll with `aeo video poll <jobId...>` until `completed`. Tier gate: `content-create` (Starter+).
 
 ---
 
@@ -202,7 +243,7 @@ The CLI commands resolve to:
 - `POST /v2/connector/domains/:domainId/products` — body `{ pdpUrl }`
 - `GET  /v2/connector/image/search?q=...&perPage=...&page=...`
 - `POST /v2/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
-- `POST /v2/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
+- `POST /v2/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle?, campaignCategory?, itemTopic?, textDirection? }` (async; returns `{ jobs, taskIds }`)
 - `POST /v2/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
 
 All return `text/markdown` on success, JSON `{ code, message }` on error.

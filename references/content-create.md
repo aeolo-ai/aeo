@@ -233,6 +233,7 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
 - Inline citations as `[Source Name](URL)` throughout
 - Brand mentions at 15–25% density, always as part of a list (never solo promo)
 - FAQ section at the end (3–5 questions)
+- **Korean (`language: ko`) style guard** — write natural Korean and do not overuse or misuse the AI-tic words/marks `'축'`, `'결'`, `'박다'`, `'박았'`, `'—'`, `'ㅡ'`. Prefer natural alternatives (`'축'`→핵심/중심, `'결'`→결론/마무리, `'박다'`→넣다/삽입하다), never lean on the same word as a verbal tic, and keep em-dash (`'—'`/`'ㅡ'`) use sparse — prefer commas, colons, or separate sentences. (Legit words like 축제·구축·결과·연결 are fine; the concern is repetition/misuse.)
 
 **Output format:**
 - **Body**: Pure markdown only (from H1 to FAQ)
@@ -355,6 +356,25 @@ When in doubt, **default to ranked_list** — 53% of AI citations come from list
    | case_study | `<!-- schema: Article -->` |
 9. **Freshness signals** — Do NOT write `datePublished`/`dateModified` into the article body. Aeolo stores freshness as structured metadata and renders it as JSON-LD at deploy time; the publish/refresh save sets the dates automatically. Recency still matters editorially: citation rate drops from 100% within 30 days to 18% after 1 year, so favor fresh angles and current data.
 10. **Internal + external links** — Cross-link your own content + link to external authority sources. AI actively crawls link graphs.
+
+### Layout & Readability (skimmable formatting)
+
+Structure the page so a reader — and an AI-engine chunker — can lift a single answer without wading through a wall of text. These rules layer **on top of** the 10 Commandments; they never replace the required markdown `## ` H2 / `## FAQ` headings or the BLUF rule.
+
+- **BLUF, then skimmable body** — the core answer lands in the first 2–3 sentences (Commandment #1); the rest of the article stays scannable, not a monologue.
+- **Short paragraphs (≤ 3 sentences)** — keep each paragraph to at most three sentences and one idea. Long blocks bury the quotable unit; split them.
+- **Bold the key terms** — bold the load-bearing term, product name, or number in a passage (e.g. **2-hour reapplication window**, **no white cast**) so the scannable claim stands out. Do not bold whole sentences, and never use bold text as a substitute for a real `## `/`### ` heading (Commandment #3).
+- **Callout / Pro-Tip blocks** — pull a standout tip, warning, or key takeaway into a markdown blockquote so it reads as a distinct unit:
+
+  ```markdown
+  > **Pro tip:** Stick SPF reapplies over makeup without a mirror — the friction-free format is why it fixes the mid-day gap.
+  ```
+
+  Use these sparingly (roughly one per major section) for genuine tips, cautions, or takeaways — not as decoration.
+- **Tables where they help** — put any comparison, spec, or option matrix in a markdown table (Commandment #4). Prefer a small table over three parallel paragraphs a reader has to diff by hand.
+- **Lists for enumerable answers** — when the answer is a set of options, steps, or criteria, use a bulleted or numbered list so each item is independently quotable.
+
+> These are readability defaults for EN and KO alike. For Korean, apply them together with the Korean style guard above (natural Korean, no AI-tic word/mark overuse).
 
 ### Platform-Specific Tone Guide
 

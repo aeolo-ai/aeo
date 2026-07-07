@@ -122,7 +122,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo reference style --url <url>` | Read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
 | `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
-| `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (uses production credits). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
+| `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (uses production credits). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`, `--start-frame <outputId>` (Lane 1 image→video: a generated image output becomes the video start frame; omit for Lane 2 text→video). Async — returns job IDs. | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo video poll <jobId...>` | Check status + result URLs of video generation jobs | this file |
 
 ### aeo measure / metrics — Article & site performance
@@ -161,7 +161,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo image search <query>` | Search Pexels for reference scenes (--per-page, --page) | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (uses production credits). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8 candidates), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Async — returns job IDs. | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (uses production credits). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8 candidates), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Campaign-driven prompt (optional): `--category beauty\|furniture\|fashion\|objet\|other`, `--item <topic>`, `--direction <text>`. Async — returns job IDs. | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image poll <jobId...>` | Check status + result URLs of image generation jobs | [image-thumbnails.md](references/image-thumbnails.md) |
 
 ### aeo feedback — Send feedback to the team
