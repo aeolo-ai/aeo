@@ -111,6 +111,8 @@ Extract in the format below and apply consistently throughout all subsequent ste
 - Other notes: [additional style instructions]
 ```
 
+> Voice / channel-scaffold guidance shapes tone, phrasing, and section ordering only — it must NEVER replace markdown structure. Keep section headings as `## ` markdown headings and the FAQ as a `## FAQ` H2 even when mimicking a channel's format.
+
 After extraction, confirm with the user in one line: _"This article will be written in a [characteristics] tone. Does that sound right?"_
 
 #### If no task-specific tone/reference evidence exists
@@ -334,11 +336,11 @@ When in doubt, **default to ranked_list** — 53% of AI citations come from list
 
 1. **BLUF (Bottom Line Up Front)** — Place the core answer in the first 2–3 sentences. AI cites "specific answers," not entire articles. Don't beat around the bush in the intro.
 2. **Title ≠ H1** — Title is the long SEO version (question-based, keyword-rich). The body `#` is a short, punchy reader-facing heading. They must always be different text. Example: Title `"What's the Best SPF Stick for Outdoor Sports in 2026?"` → H1 `"Best SPF Sticks for Outdoor Sports"`
-3. **Logical H2/H3 hierarchy** — Semantic HTML5 structure. Each section must be independently quotable. A single H2 should make sense on its own.
+3. **Logical H2/H3 hierarchy (real markdown headings, not bold text)** — Semantic HTML5 structure. Every section heading MUST be a real markdown heading — `## ` for sections, `### ` for sub-sections — never bold text (`**Section**`) and never a bare numbered line (`1. Section`) masquerading as a heading. Each section must be independently quotable; a single H2 should make sense on its own. (The deploy-time GEO structure check counts `## ` H2 sections — bold/numbered "headings" are invisible to it and to AI-engine chunkers.)
 4. **Comparison tables** — Comparison data must be in markdown/HTML tables. AI prefers structured data over unstructured text.
 5. **Authority signals** — External authority source citations are mandatory. Statistics, research, .edu/.gov sources. Inline citation format: `[Source Name](URL)`. No unsourced claims.
-6. **Expert quotes (attributed)** — "Real name + title + quote" format. AI uses this for credibility assessment. No fabricated quotes.
-7. **FAQ section** — 3–5 FAQs at the bottom. Cover related questions not addressed in the main body.
+6. **Expert quotes — real and verifiable ONLY, or omit** — Use a direct quote ONLY when it is a real statement you found via `web_search` and can cite with the exact source URL where those words actually appear ("Real name + title + quote" + traceable URL). AI uses attributed quotes for credibility. **If you cannot find a real, verifiable quote, OMIT the quote entirely** — make the point in your own words or as an unquoted paraphrase of a cited source. Fabricating a named person's statement — inventing words for a real or made-up executive, expert, or customer — is PROHIBITED and has caused live incidents (a fake "이승건 토스 대표" quote; fabricated Einstein / McConnell quotes). A missing quote is fine; an invented one is a defect that blocks the article.
+7. **FAQ section (a `## FAQ` H2)** — 3–5 FAQs at the bottom, under a real markdown `## FAQ` (or `## 자주 묻는 질문`) H2 heading, with each question as an `### ` H3. Cover related questions not addressed in the main body. Aeolo's FAQ parser and the deploy-time FAQPage JSON-LD only fire when the FAQ section is a real `## ` heading matching this convention — a bold "FAQ" line does not count.
 8. **Schema markup hints** — Choose the right schema type for the article, but do NOT write it into the body. Aeolo derives JSON-LD from the structured `type`/`articleType` import field and renders it at deploy time. Use this mapping to pick the type:
 
    | articleType | Schema Hint |

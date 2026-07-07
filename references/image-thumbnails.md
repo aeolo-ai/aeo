@@ -2,7 +2,7 @@
 
 Generate a 16:9 OG thumbnail by compositing a brand product onto a Pexels reference scene. The pipeline is one shot per call (~25s, ~$0.13) and persists to `content_history.thumbnail_url` so the next `aeo content deploy` ships the image to Shopify.
 
-> **Budget**: `image swap` is billed via production credits (swap pricing), reserved when the job starts and captured only on completion — failed renders are refunded. Poll the returned job ID with `aeo image poll <jobId>` to see the final result.
+> **Budget**: per-user monthly cap of **$10 USD** (UTC calendar month). The `aeo image swap` response shows remaining budget after each call. Failed swaps don't charge.
 >
 > **Tier gate**: `image swap` requires `content-create` (Starter+). `image search`, `image upload`, and `products` are open to all members with edit access.
 
@@ -128,32 +128,25 @@ aeo image swap \
 - `--reference` (required) — reference scene URL (from `aeo image search` or a direct URL)
 - `--no-persist` — return the generated URL without updating `content_history`. Useful for previewing before commit.
 
-**What the model does** (`nano-banana-pro`, via KIE):
+**What the model does** (`gemini-3-pro-image-preview`):
 - Takes the reference scene as image #1, the product packshot as image #2.
 - Replaces any held/displayed object in the scene with the brand product.
 - Preserves the scene's framing, lighting, and color temperature.
 - Preserves the product's form factor (stick stays stick, tube stays tube), label text, and packaging colors verbatim from the packshot.
 - Output: a 16:9 landscape image, uploaded to the `domain-thumbnails` Supabase bucket.
 
-**Async** — the KIE render takes 60–120s+ (longer than the HTTP gateway), so `image swap` returns a **job ID immediately** instead of blocking. Poll with `aeo image poll <jobId>`; when the job shows `completed`, its result URL is the finished thumbnail. With persist on (default) it is already pinned to `content_history.thumbnail_url`; with `--no-persist` it is a candidate only.
-
 **Response shape**:
 
 ```
-# Thumbnail Swap Started — <article title>
+# Thumbnail Generated — <article title>
 
-The product swap is rendering on KIE — it takes 60–120s, so it is **not done yet**.
-
-- **Job ID:** <jobId>
+- **Thumbnail:** https://.../domain-thumbnails/<domain_id>/<content_id>-<ts>.png
 - **Product:** <product title>
 - **Reference:** <pexels url>
-- **Persist:** yes — pins content_history.thumbnail_url on completion
+- **Persisted:** yes — saved to content_history
 
-Poll for completion with:
-    aeo image poll <jobId>
+**Monthly budget:** $X.XX / $10.00 spent · $Y.YY remaining (resets <iso ts>)
 ```
-
-Credits (production credits, swap pricing) are **reserved** when the job starts and **captured on completion** — a failed render is refunded automatically.
 
 ---
 
@@ -205,11 +198,11 @@ The handler only charges the budget *after* a successful swap, so failed calls a
 
 The CLI commands resolve to:
 
-- `GET  /v1/connector/domains/:domainId/products`
-- `POST /v1/connector/domains/:domainId/products` — body `{ pdpUrl }`
-- `GET  /v1/connector/image/search?q=...&perPage=...&page=...`
-- `POST /v1/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
-- `POST /v1/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
-- `POST /v1/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
+- `GET  /v2/connector/domains/:domainId/products`
+- `POST /v2/connector/domains/:domainId/products` — body `{ pdpUrl }`
+- `GET  /v2/connector/image/search?q=...&perPage=...&page=...`
+- `POST /v2/connector/domains/:domainId/image/swap` — body `{ contentId, productId, referenceUrl, persist? }`
+- `POST /v2/connector/domains/:domainId/image/generate` — body `{ prompt, model?, aspectRatio?, resolution?, count?, referenceUrls?, applyBrandStyle? }` (async; returns `{ jobs, taskIds }`)
+- `POST /v2/connector/domains/:domainId/video-generation/status` — body `{ ids }` (poll; mode-agnostic, also used by `image poll`)
 
 All return `text/markdown` on success, JSON `{ code, message }` on error.

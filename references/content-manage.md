@@ -34,9 +34,10 @@ Response: `text/markdown` — table with `id`, title, status, type, words, keywo
 
 ```bash
 aeo content get <id>
+aeo content get <id> --head   # scan-only: metadata + first ~600 chars of body
 ```
 
-Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying.
+Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying. Add `--head` when you only need to identify or triage an article (metadata + a short body preview); it avoids re-billing the full body on every later turn. Omit it (the default) whenever you actually need to read or edit the body.
 
 ---
 
@@ -91,17 +92,17 @@ aeo content update <id> --body-file ./revised-draft.md
 
 ---
 
-## /aeo content preview <id> — Preview in browser
+## /aeo content preview <id> — Generate a preview link
 
 ```bash
 aeo content preview <id>
 ```
 
-Generates a preview link and automatically opens it in the browser. Use the `--no-open` flag to output the link only.
+Generates a shareable preview link and prints it. It does not open a browser (there is no `--no-open` flag) — surface the URL to the user yourself.
 
 Response: `{ "success": true, "data": { "content_id": "...", "title": "...", "preview_url": "https://tryaeolo.com/preview/{share_token}", "share_token": "..." } }`
 
-Idempotent — calling multiple times returns the same link. If the browser cannot be opened in the current environment, output the URL and inform the user.
+Idempotent — calling multiple times returns the same link.
 
 ---
 

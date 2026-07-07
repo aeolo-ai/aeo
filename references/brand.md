@@ -36,7 +36,7 @@ Accepted fields:
 aeo domain brand update --name="..." --category="..." --value-proposition="..."
 ```
 
-> Canonical form is `aeo domain brand update` (matches `aeo domain` help). Bare `aeo brand update` still routes as a legacy alias.
+> Canonical form is `aeo domain brand update` (matches `aeo domain` help). Bare `aeo brand update` routes only on the **dashboard-chat / MCP agent surface** (the connector registry normalizes it to `domain brand update`); the raw `aeo` terminal binary does not accept it, so always use `aeo domain brand update` in shell examples.
 
 Partial update — unset fields are preserved.
 
@@ -75,8 +75,10 @@ Suggest this structure when helping a user build it from scratch:
 ## /aeo prompts list — List prompts grouped by stage
 
 ```bash
-aeo prompts
+aeo prompts list
 ```
+
+> Use the explicit `list` verb. Bare `aeo prompts` prints sub-help in the terminal binary (it only lists via the agent surface), so `aeo prompts list` is the form that works everywhere.
 
 Response: `text/markdown` — table grouped by stage (foundational → comparison → use-case → implementation), showing language, query form, prompt text, visibility score, and last checked date.
 
