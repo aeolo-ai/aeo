@@ -165,7 +165,7 @@ Default external-agent path: write locally, then import with `aeo content import
 
 After writing, import as draft:
 ```bash
-aeo content import --title "..." --content "..." --type blog --keywords "k1,k2,k3"
+aeo content import --title "..." --body "..." --type blog --keywords "k1,k2,k3"
 ```
 
 ### Step 4: Quality gate (before deployment)
@@ -219,7 +219,7 @@ Run once per week. This is your feedback cycle — measure, analyze, adjust.
 ### Step 1: Fresh data
 
 ```bash
-aeo visibility check run --engines=chatgpt,gemini,perplexity,grok
+aeo visibility check run --engines=chatgpt,gemini,perplexity
 ```
 
 This takes 3-8 minutes. While waiting, gather metrics:

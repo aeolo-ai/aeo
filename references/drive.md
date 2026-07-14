@@ -20,13 +20,15 @@ You must connect a Google Drive folder from the Dashboard:
 
 ## Commands
 
-### `aeo drive` / `aeo drive list`
+### `aeo drive list`
 
 Lists the files in the connected folder.
 
 ```
-aeo drive
+aeo drive list
 ```
+
+> Use the explicit `list` verb. Bare `aeo drive` prints sub-help in the terminal binary (it only lists via the agent surface), so `aeo drive list` is the form that works everywhere.
 
 Output: Table of file names, types, sizes, and IDs. Folders are shown with type `folder`.
 

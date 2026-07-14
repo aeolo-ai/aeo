@@ -46,8 +46,10 @@ Run this **before** the quality checklist below, and run it **adversarially**: a
 | **BLUF** | Is the core answer in the first 2–3 sentences? | 10 Commandments #1 |
 | **H1** | Is it a question-based title? Does it match actual AI queries? | 10 Commandments #2 |
 | **H2/H3 hierarchy** | Can each section be independently quoted? | 10 Commandments #3 |
+| **Markdown headings** (blog articles only) | Is every section heading a real markdown `## `/`### ` heading — not bold text (`**Section**`) or a bare numbered line? Not applicable to social posts. | 10 Commandments #3 |
 | **Comparison tables** | If comparison data exists, is it structured as a table? | 10 Commandments #4 |
 | **FAQ section** | Are there 3–5 FAQs at the bottom of the article? | 10 Commandments #7 |
+| **FAQ is a `## ` H2** (blog articles only) | Is the FAQ section under a real markdown `## FAQ` / `## 자주 묻는 질문` H2 (not a bold "FAQ" line)? Deploy-time FAQPage schema only fires when it is. Not applicable to social posts. | 10 Commandments #7 |
 | **Schema hints** | Is the recommended schema type specified? | 10 Commandments #8 |
 
 #### 2. Trust & Authority

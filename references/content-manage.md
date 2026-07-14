@@ -13,7 +13,7 @@ The rationale is stored in `content_history.rationale` and helps prioritize cont
 
 ---
 
-> The full `aeo content` verb set is `list | get <id> | review <id> | import | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>`. This file covers list/get/update/preview/deploy/redeploy; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
+> The full `aeo content` verb set is `list | feed | get <id> | review <id> | import | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>`. This file covers list/feed/get/update/preview/deploy/redeploy; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
 
 ## /aeo content list — List content items
 
@@ -30,13 +30,30 @@ Response: `text/markdown` — table with `id`, title, status, type, words, keywo
 
 ---
 
+## /aeo content feed — Content Feed for your own site
+
+```bash
+aeo content feed
+```
+
+Returns your published articles as a delivery contract you can render on the customer's **own domain** (Tier A — the GEO-correct owned-media path). Response: `text/markdown` with:
+
+- **Feed URLs** — authed (`GET /v1/connector/domains/:id/feed.json`, keyed to your account; append `?base=https://yourdomain.com/blog` so canonical points at your domain) and, if a blog subdomain is set, a keyless public feed.
+- **Item shape** — standard **JSON Feed 1.1** + `_aeolo` extension: `content_html` (server-rendered body), `title`/`summary`/`image`/`date_published`/`tags`, `_aeolo.slug`, `_aeolo.schema_jsonld` (inline-ready schema.org Article), `_aeolo.canonical`.
+- **How to consume** — fetch server-side (SSR/SSG), render `content_html` in your layout, inline the JSON-LD, set the page canonical to your own URL. A client-only widget defeats GEO; the body must be in server HTML on your origin. Incremental pulls: `?limit=&since=`.
+
+Use this when the customer wants Aeolo articles on their existing site in their own design rather than the hosted `*.aeolo.blog` blog or a Shopify deploy.
+
+---
+
 ## /aeo content get <id> — Read full article content
 
 ```bash
 aeo content get <id>
+aeo content get <id> --head   # scan-only: metadata + first ~600 chars of body
 ```
 
-Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying.
+Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying. Add `--head` when you only need to identify or triage an article (metadata + a short body preview); it avoids re-billing the full body on every later turn. Omit it (the default) whenever you actually need to read or edit the body.
 
 ---
 
@@ -91,17 +108,17 @@ aeo content update <id> --body-file ./revised-draft.md
 
 ---
 
-## /aeo content preview <id> — Preview in browser
+## /aeo content preview <id> — Generate a preview link
 
 ```bash
 aeo content preview <id>
 ```
 
-Generates a preview link and automatically opens it in the browser. Use the `--no-open` flag to output the link only.
+Generates a shareable preview link and prints it. It does not open a browser (there is no `--no-open` flag) — surface the URL to the user yourself.
 
 Response: `{ "success": true, "data": { "content_id": "...", "title": "...", "preview_url": "https://tryaeolo.com/preview/{share_token}", "share_token": "..." } }`
 
-Idempotent — calling multiple times returns the same link. If the browser cannot be opened in the current environment, output the URL and inform the user.
+Idempotent — calling multiple times returns the same link.
 
 ---
 

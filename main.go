@@ -665,6 +665,7 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
 
   list              List content items
                     Flags: --status, --limit, --offset
+  feed              Content Feed URLs + JSON Feed contract (render Aeolo articles on your own site)
   get <id>          Get full article content
   review <id>       Load review workspace (article + brand + audit context)
   import            Import an agent-written draft article
@@ -1306,6 +1307,8 @@ func main() {
 		switch sub {
 		case "list":
 			contentList()
+		case "feed":
+			run("/content/feed", "GET", nil, domainID)
 		case "generate", "write":
 			prompt := findFlag(args, "--prompt")
 			if v := findFlag(args, "--prompt-file"); v != "" {

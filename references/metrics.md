@@ -95,8 +95,8 @@ Submit command-execution diagnostics when a command fails. Required flag: `--com
 
 | Endpoint | Method |
 |----------|--------|
-| `/v1/connector/domains/:domainId/metrics/overview` | GET |
-| `/v1/connector/domains/:domainId/metrics/article/:contentId` | GET |
-| `/v1/connector/domains/:domainId/metrics/traffic?days=N` | GET |
+| `/v2/connector/domains/:domainId/metrics/overview` | GET |
+| `/v2/connector/domains/:domainId/metrics/article/:contentId` | GET |
+| `/v2/connector/domains/:domainId/metrics/traffic?days=N` | GET |
 
 All are read-only (all token scopes).
