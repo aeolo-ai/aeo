@@ -623,7 +623,10 @@ var subUsage = map[string]string{
   connect <id>      Generate OAuth URL to connect a social channel
   disconnect <id>   Disconnect OAuth integration from a channel
 
-Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website
+Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website, custom
+
+--type custom connects your own site as a Content Feed pull-channel: returns a
+read API key + authed feed URL (with ?base) to render Aeolo articles on your domain.
 `,
 	"visibility": `aeo visibility <verb>
 
