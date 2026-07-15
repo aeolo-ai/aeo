@@ -404,7 +404,23 @@ Add a new channel to the current domain. Type is auto-detected from URL if not s
 aeo channel add --url https://www.threads.net/@mybrand --type threads --label "Threads Main"
 ```
 
-Types: `shopify`, `vercel`, `linkedin`, `threads`, `reddit`, `instagram`, `x`, `website`
+Types: `shopify`, `vercel`, `linkedin`, `threads`, `reddit`, `instagram`, `x`, `website`, `custom`
+
+**`--type custom` — connect the customer's own site as a Content Feed pull-channel.**
+Use this when they publish on a site we don't push to (their own blog, a static or
+hand-built site). It provisions the feed in one step:
+
+```bash
+aeo channel add --type custom --url https://yourdomain.com/blog
+```
+
+- mints a read-scoped API key (returned once) to pull the feed,
+- returns the authed feed URL with `?base=` so canonical points at their domain,
+- returns an ownership verify `<meta>` tag to paste into their site `<head>`.
+
+Then wire the feed **server-side** per the guide it links (render `content_html`, inline
+`_aeolo.schema_jsonld`, set the page canonical to `_aeolo.canonical`). A client-only
+widget defeats GEO. See also `aeo content feed` for the raw feed URLs + JSON Feed contract.
 
 ### /aeo channel update
 
