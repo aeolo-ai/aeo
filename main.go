@@ -528,6 +528,77 @@ func buildPromptJSON(fields map[string]string, tags []string) []byte {
 	return data
 }
 
+// buildPromptsBatchJSON converts a --prompts-json array into the API's
+// {"items": [...]} batch body. Entries may be plain strings or objects, and the
+// top-level --stage/--language/--query-form/--segment flags fill per-item gaps.
+// JSON rather than CSV because prompt text routinely contains commas.
+func buildPromptsBatchJSON(raw string, defaults map[string]string, tags []string) ([]byte, error) {
+	var entries []any
+	if err := json.Unmarshal([]byte(raw), &entries); err != nil {
+		return nil, fmt.Errorf(`--prompts-json must be a JSON array, e.g. '[{"prompt":"best crm for startups","stage":"comparison"}]'`)
+	}
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("--prompts-json is empty")
+	}
+
+	items := make([]map[string]any, 0, len(entries))
+	for i, entry := range entries {
+		item := map[string]any{}
+
+		switch v := entry.(type) {
+		case string:
+			item["canonical"] = strings.TrimSpace(v)
+		case map[string]any:
+			for _, key := range []string{"canonical", "prompt"} {
+				if s, ok := v[key].(string); ok && strings.TrimSpace(s) != "" {
+					item["canonical"] = strings.TrimSpace(s)
+					break
+				}
+			}
+			for _, key := range []string{"localized_prompt", "stage", "language", "query_form"} {
+				if s, ok := v[key].(string); ok && strings.TrimSpace(s) != "" {
+					item[key] = strings.TrimSpace(s)
+				}
+			}
+			if arr, ok := v["segment_tags"].([]any); ok {
+				itemTags := []string{}
+				for _, x := range arr {
+					if s, ok := x.(string); ok && strings.TrimSpace(s) != "" {
+						itemTags = append(itemTags, strings.TrimSpace(s))
+					}
+				}
+				item["segment_tags"] = itemTags
+			}
+		default:
+			return nil, fmt.Errorf("--prompts-json[%d] must be a string or an object", i)
+		}
+
+		if s, ok := item["canonical"].(string); !ok || s == "" {
+			return nil, fmt.Errorf(`--prompts-json[%d] is missing "prompt"`, i)
+		}
+
+		for key, val := range defaults {
+			if val == "" {
+				continue
+			}
+			if _, ok := item[key]; !ok {
+				item[key] = val
+			}
+		}
+		if _, ok := item["segment_tags"]; !ok && tags != nil {
+			item["segment_tags"] = tags
+		}
+
+		items = append(items, item)
+	}
+
+	data, err := json.Marshal(map[string]any{"items": items})
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode --prompts-json")
+	}
+	return data, nil
+}
+
 // splitCSV trims and dedupes a comma-separated string; empty input → nil so
 // callers can distinguish "no flag passed" from "explicit empty list".
 func splitCSV(raw string) []string {
@@ -692,7 +763,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 	"prompts": `aeo prompts <verb>
 
   list              List prompts grouped by stage
-  add               Add a prompt (--prompt, --stage, --language, --segment foo,bar)
+  add               Add one prompt (--prompt, --stage, --language, --segment foo,bar)
+                    or many at once (--prompts-json='[{"prompt":"...","stage":"comparison"}]', max 30)
   update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked)
   delete <id>       Delete a prompt
 `,
@@ -1498,21 +1570,38 @@ func main() {
 		case "list":
 			run("/prompts", "GET", nil, domainID)
 		case "add":
-			prompt := findFlag(args, "--prompt")
-			if prompt == "" {
-				fmt.Fprintln(os.Stderr, "Error: --prompt required")
-				os.Exit(1)
-			}
 			lang := findFlag(args, "--language")
 			if lang == "" {
 				lang = "en"
+			}
+			defaults := map[string]string{
+				"language":   lang,
+				"stage":      findFlag(args, "--stage"),
+				"query_form": findFlag(args, "--query-form"),
+			}
+			segments := splitCSV(findFlag(args, "--segment"))
+
+			if raw := findFlag(args, "--prompts-json"); raw != "" {
+				body, err := buildPromptsBatchJSON(raw, defaults, segments)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, "Error: "+err.Error())
+					os.Exit(1)
+				}
+				run("/prompts", "POST", body, domainID)
+				return
+			}
+
+			prompt := findFlag(args, "--prompt")
+			if prompt == "" {
+				fmt.Fprintln(os.Stderr, "Error: --prompt or --prompts-json required")
+				os.Exit(1)
 			}
 			body := buildPromptJSON(map[string]string{
 				"canonical":  prompt,
 				"language":   lang,
 				"stage":      findFlag(args, "--stage"),
 				"query_form": findFlag(args, "--query-form"),
-			}, splitCSV(findFlag(args, "--segment")))
+			}, segments)
 			run("/prompts", "POST", body, domainID)
 		case "update":
 			requireArg(args, 2, "aeo prompts update <id>")

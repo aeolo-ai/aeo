@@ -89,7 +89,7 @@ After displaying:
 
 ---
 
-## /aeo prompts add — Add a manual prompt
+## /aeo prompts add — Add manual prompts
 
 Ask the user for the prompt details, then run:
 
@@ -97,18 +97,40 @@ Ask the user for the prompt details, then run:
 aeo prompts add --prompt="best project management tools" --stage=comparison --language=en --segment foo,bar
 ```
 
+### Adding several at once
+
+**Whenever you have more than one prompt, send them in a single call** — pass a JSON array instead of calling `add` repeatedly (max 30 per call):
+
+```bash
+aeo prompts add --prompts-json='[
+  {"prompt":"best project management tools","stage":"comparison"},
+  {"prompt":"what is a kanban board","stage":"foundational"},
+  {"prompt":"how do I migrate off jira","stage":"implementation"}
+]'
+```
+
+Entries may be objects or plain strings. Per-item keys win; the top-level `--stage`/`--language`/`--query-form`/`--segment` flags fill in whatever an item omits:
+
+```bash
+aeo prompts add --language=ko --stage=comparison --prompts-json='["노션 vs 에어테이블","먼데이 vs 아사나"]'
+```
+
 Accepted flags (binary `aeo prompts add`):
 
 | Flag | Type | Required | Default | Example |
 |------|------|----------|---------|---------|
-| `--prompt` | string | ✅ | — | `"best project management tools"` |
+| `--prompt` | string | ✅ unless `--prompts-json` | — | `"best project management tools"` |
+| `--prompts-json` | JSON array of objects or strings, max 30 | ✅ unless `--prompt` | — | `'[{"prompt":"...","stage":"comparison"}]'` |
 | `--stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `comparison` |
 | `--language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `zh` |
+| `--query-form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `long-tail` |
 | `--segment` | comma-separated tags | — | — | `foo,bar` |
 
-> `--query-form` and the localized-prompt text are set via `aeo prompts update` (see below), not `add`.
+> Use `--prompts-json`, never a comma-separated list of prompts — prompt text routinely contains commas ("best CRM for startups, 2026") and would be shredded.
 
-Confirm the details with the user before submitting. After success, suggest running `/aeo visibility check run` to measure visibility for the new prompt.
+Batch adds are best-effort: valid prompts are inserted, and the response reports anything skipped with a reason (duplicate, too short/long, invalid stage). Duplicates are matched both against prompts already tracked on the domain and within the batch itself, so re-running a batch will not stack copies. Fix only the reported items and re-send those.
+
+Confirm the details with the user before submitting. After success, suggest running `/aeo visibility check run` to measure visibility for the new prompts.
 
 ---
 
