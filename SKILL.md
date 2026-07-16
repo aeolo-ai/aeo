@@ -419,7 +419,7 @@ aeo channel add --type custom --url https://yourdomain.com/blog
 - returns an ownership verify `<meta>` tag to paste into their site `<head>`.
 
 Then wire the feed **server-side** per the guide it links (render `content_html`, inline
-`_aeolo.schema_jsonld`, set the page canonical to `_aeolo.canonical`). A client-only
+`_geo.schema_jsonld`, set the page canonical to `_geo.canonical`). A client-only
 widget defeats GEO. See also `aeo content feed` for the raw feed URLs + JSON Feed contract.
 
 ### /aeo channel update

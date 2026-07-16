@@ -39,7 +39,7 @@ aeo content feed
 Returns your published articles as a delivery contract you can render on the customer's **own domain** (Tier A — the GEO-correct owned-media path). Response: `text/markdown` with:
 
 - **Feed URLs** — authed (`GET /v1/connector/domains/:id/feed.json`, keyed to your account; append `?base=https://yourdomain.com/blog` so canonical points at your domain) and, if a blog subdomain is set, a keyless public feed.
-- **Item shape** — standard **JSON Feed 1.1** + `_aeolo` extension: `content_html` (server-rendered body), `title`/`summary`/`image`/`date_published`/`tags`, `_aeolo.slug`, `_aeolo.schema_jsonld` (inline-ready schema.org Article), `_aeolo.canonical`.
+- **Item shape** — standard **JSON Feed 1.1** + `_geo` extension: `content_html` (server-rendered body), `title`/`summary`/`image`/`date_published`/`tags`, `_geo.slug`, `_geo.schema_jsonld` (inline-ready schema.org Article), `_geo.canonical`.
 - **How to consume** — fetch server-side (SSR/SSG), render `content_html` in your layout, inline the JSON-LD, set the page canonical to your own URL. A client-only widget defeats GEO; the body must be in server HTML on your origin. Incremental pulls: `?limit=&since=`.
 
 Use this when the customer wants Aeolo articles on their existing site in their own design rather than the hosted `*.aeolo.blog` blog or a Shopify deploy.
