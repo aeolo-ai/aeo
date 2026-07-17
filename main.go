@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var version = "2.0.1"
+var version = "2.0.3"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -84,6 +84,21 @@ func strOr(a, b string) string {
 
 // ── HTTP Client ─────────────────────────────────────────────────────────────
 
+// httpClient is the shared client for JSON API calls. The 60s timeout covers
+// slow writing/generation endpoints while ensuring a hung server can no longer
+// block the CLI forever. The version-check client keeps its own short 2s timeout.
+var httpClient = &http.Client{Timeout: 60 * time.Second}
+
+// downloadClient streams large files (e.g. a 23MB pptx) straight to disk, so it
+// uses a generous timeout rather than httpClient's 60s cap — a big download over
+// a slow link must not be aborted mid-transfer.
+var downloadClient = &http.Client{Timeout: 10 * time.Minute}
+
+// authClient bounds the device-flow login requests. Without a timeout a hung
+// auth endpoint would block the poll loop forever; the overall poll deadline in
+// authLogin caps total wait on top of this per-request timeout.
+var authClient = &http.Client{Timeout: 30 * time.Second}
+
 func callConnector(path, method string, body []byte, domainOverride string) (string, error) {
 	creds := resolveCredentials()
 	if creds.APIKey == "" {
@@ -127,7 +142,7 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Client-Version", version)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -230,7 +245,7 @@ func downloadFile(path, outputPath, domainOverride string) {
 	req.Header.Set("Authorization", "Bearer "+creds.APIKey)
 	req.Header.Set("X-Client-Version", version)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := downloadClient.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
@@ -283,7 +298,29 @@ func filenameFromContentDisposition(cd string) string {
 	if err != nil {
 		return ""
 	}
-	return params["filename"]
+	return sanitizeDownloadName(params["filename"])
+}
+
+// sanitizeDownloadName strips any directory components from a server-supplied
+// filename so a malicious Content-Disposition (e.g. "../../.ssh/authorized_keys"
+// or "/etc/passwd") can't make os.Create escape the working directory. Returns
+// "" for empty/"."/".." so callers fall back to a safe default name.
+//
+// It is deliberately cross-platform: filepath.Base on a unix build only splits
+// on '/', so we first take the last segment across BOTH '/' and '\\' (a
+// Windows-style "..\\..\\evil" name) and reject ':' entirely — that blocks
+// Windows drive-relative prefixes (C:foo) and NTFS alternate-data-streams
+// (file.txt:evil).
+func sanitizeDownloadName(name string) string {
+	name = strings.TrimSpace(name)
+	if i := strings.LastIndexAny(name, `/\`); i >= 0 {
+		name = name[i+1:]
+	}
+	name = filepath.Base(name)
+	if name == "." || name == ".." || name == string(filepath.Separator) || strings.ContainsRune(name, ':') {
+		return ""
+	}
+	return name
 }
 
 func humanBytes(n int64) string {
@@ -476,25 +513,39 @@ func editorPrompt(seed string) (string, error) {
 	return strings.TrimSpace(strings.Join(out, "\n")), nil
 }
 
-// checkLatestVersion queries GitHub for the latest release and prints an
-// upgrade notice if the current binary is outdated. Fails silently.
-func checkLatestVersion() {
-	client := &http.Client{Timeout: 2 * time.Second}
+// latestReleaseTag resolves the newest published release tag (e.g. "v2.0.3")
+// via the GitHub API. Returns an error on any failure so callers can decide to
+// fail silently (version check) or hard (self-update).
+func latestReleaseTag(timeout time.Duration) (string, error) {
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Get("https://api.github.com/repos/aeolo-ai/aeo/releases/latest")
 	if err != nil {
-		return
+		return "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return
+		return "", fmt.Errorf("GitHub API returned HTTP %d", resp.StatusCode)
 	}
 	var release struct {
 		TagName string `json:"tag_name"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return "", err
+	}
+	if release.TagName == "" {
+		return "", fmt.Errorf("release response had no tag_name")
+	}
+	return release.TagName, nil
+}
+
+// checkLatestVersion prints an upgrade notice if the current binary is outdated.
+// Fails silently and keeps a short 2s budget — it must never block a command.
+func checkLatestVersion() {
+	tag, err := latestReleaseTag(2 * time.Second)
+	if err != nil {
 		return
 	}
-	latest := strings.TrimPrefix(release.TagName, "v")
+	latest := strings.TrimPrefix(tag, "v")
 	if latest != "" && latest != version {
 		fmt.Fprintf(os.Stderr, "\nUpdate available: %s → %s\n", version, latest)
 		fmt.Fprintf(os.Stderr, "  aeo update\n")
@@ -741,6 +792,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Flags: --status, --limit, --offset
   feed              Content Feed URLs + JSON Feed contract (render Aeolo articles on your own site)
   get <id>          Get full article content
+                    Flags: --head (metadata + first ~600 chars, token-friendly scan;
+                    omit for review/edit flows that need the full body)
   review <id>       Load review workspace (article + brand + audit context)
   import            Import an agent-written draft article
                     Required: --title, --body (or --body-file)
@@ -956,6 +1009,7 @@ func runAccountCommand(args []string) {
 		run(accountLedgerPath(args), "GET", nil, "")
 	default:
 		printSubUsage("account")
+		os.Exit(1)
 	}
 }
 
@@ -997,7 +1051,31 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 		}
 	default:
 		printSubUsage("visibility")
+		os.Exit(1)
 	}
+}
+
+// validVisibilityEngines is the set of engine identifiers the server recognizes.
+// Source of truth: the visibility_results / ai_query_logs engine CHECK constraint
+// (aeolo migration 20260701042947) plus SUPPORTED_VISIBILITY_ENGINES in
+// apps/api/src/lib/visibility-prompts.ts. Tier/enablement filtering happens
+// server-side; this list only rejects typos before a credit-metered call.
+//
+// Drift caveat: the server may add engines. Sync this list each release, checked
+// against SUPPORTED_VISIBILITY_ENGINES + the DB CHECK constraint above.
+var validVisibilityEngines = []string{
+	"chatgpt", "gemini", "grok", "perplexity", "claude", "copilot",
+	"google-ai-mode", "google-aio", "google-search", "google-news",
+	"amazon", "naver",
+}
+
+func isValidVisibilityEngine(name string) bool {
+	for _, e := range validVisibilityEngines {
+		if e == name {
+			return true
+		}
+	}
+	return false
 }
 
 func runVisibilityCheck(args []string, domainID string) {
@@ -1005,9 +1083,23 @@ func runVisibilityCheck(args []string, domainID string) {
 	if engines == "" {
 		engines = "chatgpt,gemini,perplexity"
 	}
-	engineParts := strings.Split(engines, ",")
-	for i, p := range engineParts {
-		engineParts[i] = strings.TrimSpace(p)
+	// Validate before the network call so a typo can't waste credits — the
+	// server would silently strip unknown engines, hiding the mistake.
+	engineParts := make([]string, 0)
+	for _, p := range strings.Split(engines, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if !isValidVisibilityEngine(p) {
+			fmt.Fprintf(os.Stderr, "Error: unknown engine %q. Valid engines: %s\n", p, strings.Join(validVisibilityEngines, ", "))
+			os.Exit(1)
+		}
+		engineParts = append(engineParts, p)
+	}
+	if len(engineParts) == 0 {
+		fmt.Fprintln(os.Stderr, "Error: no engines specified")
+		os.Exit(1)
 	}
 	body := map[string]any{"engines": engineParts}
 	if v := findFlag(args, "--limit"); v != "" {
@@ -1059,6 +1151,7 @@ func runAuditCommand(args []string, domainID string, defaultReport bool) {
 		run("/jobs/"+args[1], "GET", nil, domainID)
 	default:
 		printSubUsage("audit")
+		os.Exit(1)
 	}
 }
 
@@ -1082,6 +1175,7 @@ func runMetricsCommand(args []string, domainID string) {
 		run(path, "GET", nil, domainID)
 	default:
 		printSubUsage("metrics")
+		os.Exit(1)
 	}
 }
 
@@ -1130,6 +1224,7 @@ func runPublishCommand(args []string, domainID string) {
 		run("/content/"+args[1]+"/redeploy", "PUT", nil, domainID)
 	default:
 		printSubUsage("publish")
+		os.Exit(1)
 	}
 }
 
@@ -1165,6 +1260,7 @@ func main() {
 			run("/brand-profile", "GET", nil, domainID)
 		default:
 			printSubUsage("agent")
+			os.Exit(1)
 		}
 
 	// ── domain ──
@@ -1206,6 +1302,7 @@ func main() {
 			fmt.Printf("✓ Switched to domain %s\n", args[2])
 		default:
 			printSubUsage("domain")
+			os.Exit(1)
 		}
 
 	// ── channel ──
@@ -1266,6 +1363,7 @@ func main() {
 			connectChannel(args[2], domainID)
 		default:
 			printSubUsage("channel")
+			os.Exit(1)
 		}
 
 	// ── diagnose ──
@@ -1281,6 +1379,7 @@ func main() {
 			runAuditCommand(args[2:], domainID, true)
 		default:
 			printSubUsage("diagnose")
+			os.Exit(1)
 		}
 
 	// ── visibility ──
@@ -1339,6 +1438,7 @@ func main() {
 			run("/strategy", "PUT", data, domainID)
 		default:
 			printSubUsage("strategy")
+			os.Exit(1)
 		}
 
 	// ── content ──
@@ -1426,7 +1526,13 @@ func main() {
 			run(path, "GET", nil, domainID)
 		case "get":
 			requireArg(args, 2, "aeo content get <id>")
-			run("/content/"+args[2], "GET", nil, domainID)
+			contentPath := "/content/" + args[2]
+			// --head: metadata + first ~600 chars only — token-friendly scan mode.
+			// Review flows must keep the full body (omit the flag).
+			if hasFlag(args, "--head") {
+				contentPath += "?head=true"
+			}
+			run(contentPath, "GET", nil, domainID)
 		case "review":
 			requireArg(args, 2, "aeo content review <id>")
 			run("/content/"+args[2]+"/review", "GET", nil, domainID)
@@ -1622,6 +1728,7 @@ func main() {
 			run("/prompts/"+args[2], "DELETE", nil, domainID)
 		default:
 			printSubUsage("prompts")
+			os.Exit(1)
 		}
 
 	// ── segments ──
@@ -1638,6 +1745,7 @@ func main() {
 			os.Exit(1)
 		default:
 			printSubUsage("segments")
+			os.Exit(1)
 		}
 
 	// ── metrics ──
@@ -1659,6 +1767,7 @@ func main() {
 			runReportCommand(args[2:], domainID)
 		default:
 			printSubUsage("measure")
+			os.Exit(1)
 		}
 
 	// ── billing / credits ──
@@ -1680,6 +1789,7 @@ func main() {
 			run(accountLedgerPath(args), "GET", nil, "")
 		default:
 			printSubUsage("billing")
+			os.Exit(1)
 		}
 
 	// ── reference analysis ──
@@ -1718,6 +1828,7 @@ func main() {
 			run("/jobs/"+args[2], "GET", nil, domainID)
 		default:
 			printSubUsage("reference")
+			os.Exit(1)
 		}
 
 	// ── video analysis ──
@@ -1803,6 +1914,7 @@ func main() {
 			run("/video-generation/status", "POST", b, domainID)
 		default:
 			printSubUsage("video")
+			os.Exit(1)
 		}
 
 	// ── whoami ──
@@ -2079,6 +2191,7 @@ func main() {
 			run("/channel-posts/"+args[2]+"/publish", "POST", nil, domainID)
 		default:
 			printSubUsage("post")
+			os.Exit(1)
 		}
 
 	// ── drive ──
@@ -2120,6 +2233,7 @@ func main() {
 			downloadFile("/drive/"+fileID+"/download", outputPath, domainID)
 		default:
 			printSubUsage("drive")
+			os.Exit(1)
 		}
 
 	// ── products / product (catalog used by image swap) ──
@@ -2144,6 +2258,7 @@ func main() {
 			run("/products", "POST", body, domainID)
 		default:
 			printSubUsage("product")
+			os.Exit(1)
 		}
 
 	// ── image (Pexels reference search + product-swap thumbnail) ──
@@ -2289,6 +2404,7 @@ func main() {
 			run("/video-generation/status", "POST", b, domainID)
 		default:
 			printSubUsage("image")
+			os.Exit(1)
 		}
 
 	// ── update ──
@@ -2320,7 +2436,7 @@ func main() {
 
 func authLogin(apiBase string) {
 	// Step 1: request device code
-	resp, err := http.Post(apiBase+"/auth/device/code", "application/json", nil)
+	resp, err := authClient.Post(apiBase+"/auth/device/code", "application/json", nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
@@ -2338,11 +2454,20 @@ func authLogin(apiBase string) {
 		UserCode        string `json:"user_code"`
 		VerificationURI string `json:"verification_uri"`
 		Interval        int    `json:"interval"`
+		ExpiresIn       int    `json:"expires_in"`
 	}
 	json.Unmarshal(body, &deviceResp)
 	if deviceResp.Interval == 0 {
 		deviceResp.Interval = 5
 	}
+	// Bound the poll loop: use the server's expires_in when provided, else 10min.
+	// Without a deadline the loop retries forever — network errors just `continue`,
+	// so a permanently unreachable server would hang the CLI indefinitely.
+	pollTimeout := 10 * time.Minute
+	if deviceResp.ExpiresIn > 0 {
+		pollTimeout = time.Duration(deviceResp.ExpiresIn) * time.Second
+	}
+	deadline := time.Now().Add(pollTimeout)
 
 	// Step 2: open browser
 	activateURL := deviceResp.VerificationURI + "?code=" + deviceResp.UserCode
@@ -2354,11 +2479,17 @@ func authLogin(apiBase string) {
 	// Step 3: poll for token
 	fmt.Print("  Waiting for authentication...")
 	for {
+		// Deadline check first so network errors (which `continue` below) count
+		// toward the timeout instead of looping silently forever.
+		if time.Now().After(deadline) {
+			fmt.Fprintln(os.Stderr, "\nError: authentication timed out. Run `aeo auth login` to try again.")
+			os.Exit(1)
+		}
 		time.Sleep(time.Duration(deviceResp.Interval) * time.Second)
 		fmt.Print(".")
 
 		tokenBody, _ := json.Marshal(map[string]string{"device_code": deviceResp.DeviceCode})
-		tokenResp, err := http.Post(apiBase+"/auth/device/token", "application/json", bytes.NewReader(tokenBody))
+		tokenResp, err := authClient.Post(apiBase+"/auth/device/token", "application/json", bytes.NewReader(tokenBody))
 		if err != nil {
 			continue
 		}
@@ -2500,7 +2631,7 @@ func doAPIRequest(url, method string, body []byte, apiKey string) ([]byte, error
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -2516,9 +2647,31 @@ func doAPIRequest(url, method string, body []byte, apiKey string) ([]byte, error
 
 func selfUpdate() {
 	fmt.Printf("Current version: %s\n", version)
-	fmt.Println("Downloading latest version...")
 
-	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/aeolo-ai/aeo/main/install.sh | sh")
+	// Resolve the exact release tag first, then pin the installer to it. Piping
+	// install.sh from `main` runs whatever HEAD happens to be — a compromised or
+	// mid-change main branch could inject an arbitrary script. Pinning to a
+	// published tag (whose install.sh verifies the release checksum) closes that.
+	tag, err := latestReleaseTag(10 * time.Second)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: could not resolve latest release (%s)\n", err)
+		os.Exit(1)
+	}
+	pinnedVersion := strings.TrimPrefix(tag, "v")
+	fmt.Printf("Downloading %s...\n", tag)
+
+	// The URL and version are passed as positional args ($1/$2), never
+	// interpolated into the shell, so a hostile tag string can't inject commands.
+	// Download to a temp file and check curl's exit explicitly: a `curl | sh`
+	// pipeline reports sh's exit, so a failed download (bad URL, 404, network)
+	// would still look successful and print "Updated successfully".
+	installURL := "https://raw.githubusercontent.com/aeolo-ai/aeo/" + tag + "/install.sh"
+	installScript := `set -e
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+curl -fsSL --connect-timeout 10 --max-time 60 "$1" -o "$tmp"
+AEO_VERSION="$2" sh "$tmp"`
+	cmd := exec.Command("sh", "-c", installScript, "sh", installURL, pinnedVersion)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

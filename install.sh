@@ -32,7 +32,7 @@ esac
 # endpoint has no quota.
 
 if [ -z "$AEO_VERSION" ]; then
-  LATEST_URL=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
+  LATEST_URL=$(curl -fsSLI --connect-timeout 10 --max-time 60 -o /dev/null -w '%{url_effective}' \
     "https://github.com/${REPO}/releases/latest")
   AEO_VERSION=$(printf '%s' "$LATEST_URL" | sed -E 's|.*/tag/v?([^/]+)$|\1|')
   if [ -z "$AEO_VERSION" ] || [ "$AEO_VERSION" = "$LATEST_URL" ]; then
@@ -51,7 +51,42 @@ echo "Installing aeo v${AEO_VERSION} (${OS}/${ARCH})..."
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-curl -fsSL "$URL" -o "${TMPDIR}/${TARBALL}"
+curl -fsSL --connect-timeout 10 --max-time 300 "$URL" -o "${TMPDIR}/${TARBALL}"
+
+# ── Verify checksum ──────────────────────────────────────────────────────────
+# Fetch the release checksums.txt and verify the tarball BEFORE extracting, so a
+# tampered download (MITM, compromised asset) can't be unpacked and executed.
+# Fail closed: abort if checksums are missing, unmatched, or don't verify.
+
+CHECKSUMS_URL="https://github.com/${REPO}/releases/download/v${AEO_VERSION}/checksums.txt"
+if ! curl -fsSL --connect-timeout 10 --max-time 60 "$CHECKSUMS_URL" -o "${TMPDIR}/checksums.txt"; then
+  echo "Error: could not download checksums.txt from ${CHECKSUMS_URL}"
+  exit 1
+fi
+
+EXPECTED=$(grep " ${TARBALL}\$" "${TMPDIR}/checksums.txt" | awk '{print $1}')
+if [ -z "$EXPECTED" ]; then
+  echo "Error: no checksum listed for ${TARBALL}"
+  exit 1
+fi
+
+if command -v sha256sum >/dev/null 2>&1; then
+  ACTUAL=$(sha256sum "${TMPDIR}/${TARBALL}" | awk '{print $1}')
+elif command -v shasum >/dev/null 2>&1; then
+  ACTUAL=$(shasum -a 256 "${TMPDIR}/${TARBALL}" | awk '{print $1}')
+else
+  echo "Error: no sha256 tool (sha256sum/shasum) available to verify download"
+  exit 1
+fi
+
+if [ "$EXPECTED" != "$ACTUAL" ]; then
+  echo "Error: checksum mismatch for ${TARBALL}"
+  echo "  expected: $EXPECTED"
+  echo "  actual:   $ACTUAL"
+  exit 1
+fi
+echo "✓ Checksum verified"
+
 tar xzf "${TMPDIR}/${TARBALL}" -C "$TMPDIR"
 
 # ── Install ──────────────────────────────────────────────────────────────────
