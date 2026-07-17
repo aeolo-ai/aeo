@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var version = "2.0.1"
+var version = "2.0.2"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -783,12 +783,14 @@ Notes:
   overview          Article performance overview
   article <id>      Detailed article stats
   traffic           Site-level GSC traffic (--days=7|14|30|90)
+  performance       Latest monthly performance report (top articles + patterns)
 `,
 	"measure": `aeo measure <verb>
 
   overview          Article performance overview
   content <id>      Detailed article stats
   traffic           Site-level GSC traffic (--days=7|14|30|90)
+  performance       Latest monthly performance report (top articles + patterns)
   visibility        Show last visibility snapshot
   report            Submit command execution diagnostics
                     Flags: --command (required), --status-code, --response-body, --context
@@ -1080,6 +1082,8 @@ func runMetricsCommand(args []string, domainID string) {
 			path += "?days=" + days
 		}
 		run(path, "GET", nil, domainID)
+	case "performance":
+		run("/metrics/performance", "GET", nil, domainID)
 	default:
 		printSubUsage("metrics")
 	}
@@ -1651,7 +1655,7 @@ func main() {
 			return
 		}
 		switch args[1] {
-		case "overview", "content", "article", "traffic":
+		case "overview", "content", "article", "traffic", "performance":
 			runMetricsCommand(args[1:], domainID)
 		case "visibility":
 			run("/visibility", "GET", nil, domainID)

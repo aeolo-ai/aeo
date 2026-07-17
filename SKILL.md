@@ -128,13 +128,14 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 ### aeo measure / metrics — Article & site performance
 
-> Canonical noun is `measure`; `metrics` is the accepted alias. `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The `measure` noun also carries two verbs with no `metrics` alias: `measure visibility` (last visibility snapshot, same data as `aeo visibility show`) and `measure report --command <cmd>` (submit command diagnostics).
+> Canonical noun is `measure`; `metrics` is the accepted alias. `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`, `metrics performance` = `measure performance`. The `measure` noun also carries two verbs with no `metrics` alias: `measure visibility` (last visibility snapshot, same data as `aeo visibility show`) and `measure report --command <cmd>` (submit command diagnostics).
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo measure overview` (alias `metrics overview`) | Show deployed articles with GA4 + GSC stats (last 30 days) | [metrics.md](references/metrics.md) |
 | `/aeo measure content <id>` (alias `metrics article <id>`) | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
 | `/aeo measure traffic` (alias `metrics traffic`) | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
+| `/aeo measure performance` (alias `metrics performance`) | Latest monthly performance report — top articles + shared patterns | [metrics.md](references/metrics.md) |
 | `/aeo measure visibility` | Show last visibility snapshot (same data as `aeo visibility show`) | [metrics.md](references/metrics.md) |
 | `/aeo measure report --command <cmd>` | Submit command-execution diagnostics (`--status-code`, `--response-body`, `--context`) | [metrics.md](references/metrics.md) |
 
