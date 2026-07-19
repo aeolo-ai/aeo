@@ -42,6 +42,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo domain audit` | Show latest audit report | this file |
 | `/aeo domain channels` | List connected channels (platform, status, ID) | this file |
 | `/aeo domain setup` | Show setup checklist (integrations status) | this file |
+| `/aeo domain rescan` | Re-crawl the domain and refresh its brand snapshot (name, category, value prop, typography/colors). Not credit-metered; synchronous. | [brand.md](references/brand.md) |
 
 ### aeo agent — Agent context
 
@@ -152,6 +153,7 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (credit cost varies by media type). `--media linkedin_post\|threads_post\|visual_asset\|instagram_reels\|tiktok_reels`, `--language` optional | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference style --url <url>` | Read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
+| `/aeo reference delete <jobId>` | Delete a reference analysis job (or a reference-style/channel-voice job — auto-detected). Soft-delete; cancels active work first. | [tov-extract.md](references/tov-extract.md) |
 | `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (15 credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
 | `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (credit-metered; cost scales with model and `--sweep` count). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
 | `/aeo video poll <jobId...>` | Check status + result URLs of video generation jobs | this file |
@@ -168,6 +170,7 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo measure content <id>` (alias `metrics article <id>`) | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
 | `/aeo measure traffic` (alias `metrics traffic`) | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
 | `/aeo measure visibility` | Show last visibility snapshot (same data as `aeo visibility show`) | [metrics.md](references/metrics.md) |
+| `/aeo measure attribution` | First-touch AI attribution (Traffic/Attribution page): attributed sessions, revenue, CVR, AOV + sessions by AI source (`--days 7\|30\|90`, default 30) | [metrics.md](references/metrics.md) |
 | `/aeo diag report --command <cmd>` (alias `measure report`) | Submit command-failure diagnostics (`--status-code`, `--response-body`, `--context`) | [metrics.md](references/metrics.md) |
 
 ### aeo report — Shareable report links
@@ -198,6 +201,8 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 |---------|-------------|-----------|
 | `/aeo products` (or `/aeo product list`) | List the product catalog (IDs + image status) used as swap sources | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo product add --pdp <url>` | Add a product by PDP URL (scrapes title/image/price) | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo products discover` | Crawl the domain sitemap for candidate PDP URLs to add (read-only; flags URLs already in the catalog) | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo products rescan` | Re-scrape every product PDP (up to 30) to backfill/refresh media, title, image, price | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image search <query>` | Search Pexels for reference scenes (--per-page, --page) | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene (5 credits) | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) | [image-thumbnails.md](references/image-thumbnails.md) |
@@ -221,6 +226,22 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo drive download <file_id>` | Stream raw bytes to disk (pptx, large/binary files); `-o <path>` to set output | [drive.md](references/drive.md) |
 
 > **Supported types**: Google Docs/Sheets, txt/json/md/csv, **PDF**, **XLSX/XLS** (all sheets, 200-row cap each), **DOCX**, images (≤5MB base64). Not supported: `.doc`, `.pptx`, `.pages`, `.numbers`, `.key` — see [drive.md](references/drive.md).
+
+### aeo integrations google — GA4 / GSC selection
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo integrations google properties` | List GA4 properties accessible to the connected Google account (for selection) | [metrics.md](references/metrics.md) |
+| `/aeo integrations google sites` | List Search Console sites accessible to the connected Google account (for selection) | [metrics.md](references/metrics.md) |
+| `/aeo integrations google set [--ga4-property <id>] [--gsc-site <url>]` | Select the GA4 property and/or GSC site for this domain (powers `measure overview`/`measure traffic`) | [metrics.md](references/metrics.md) |
+
+> Connecting Google is a browser sign-in (**Settings → domain integrations**), not a CLI command. If Google isn't connected these return an actionable pointer to Settings — connect there first, then pick a property/site.
+
+### aeo agency — Execution-agency matching waitlist
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo agency request --types seo,pr,blog,reddit,youtube,influencer [--other "..."]` | Join the execution-agency matching waitlist (Earned Media early access). Matching isn't live yet; this records interest and pings the team. Idempotent per (domain, type). | this file |
 
 ### aeo gsc — Google Search Console (browser automation)
 
@@ -304,7 +325,7 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel create, carousel update, carousel delete, audit run, reference analyze, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel create, carousel update, carousel delete, audit run, reference analyze, reference delete, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add, products rescan, domain rescan, agency request, integrations google set.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy`/`content unpublish` change the customer's live site.
 
