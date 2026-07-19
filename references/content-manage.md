@@ -116,7 +116,7 @@ aeo content preview <id>
 
 Generates a shareable preview link and prints it. It does not open a browser (there is no `--no-open` flag) — surface the URL to the user yourself.
 
-Response: `{ "success": true, "data": { "content_id": "...", "title": "...", "preview_url": "https://tryaeolo.com/preview/{share_token}", "share_token": "..." } }`
+Response: `{ "success": true, "data": { "content_id": "...", "title": "...", "preview_url": "https://aeolo.io/preview/{share_token}", "share_token": "..." } }`
 
 Idempotent — calling multiple times returns the same link.
 

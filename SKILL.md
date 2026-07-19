@@ -18,7 +18,7 @@ description: |
 
 > **Requires**: `aeo` CLI — [Install/update](https://github.com/aeolo-ai/aeo)
 > ```
-> curl -fsSL https://skills.tryaeolo.com | sh
+> curl -fsSL https://skills.aeolo.io | sh
 > ```
 > Run `aeo --version` to check for updates.
 
@@ -73,7 +73,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo audit run` | Start a site foundation audit (`--max-pages <n>` default 5, 3 credits per 5 pages; `--channel-id <id>`) | [polling.md](references/polling.md) |
+| `/aeo audit run` | Start a site foundation audit (`--max-pages <n>` default 5, credit cost is dynamic and scales with pages crawled; `--channel-id <id>`) | [polling.md](references/polling.md) |
 | `/aeo audit poll <jobId>` | Poll an audit job | [polling.md](references/polling.md) |
 
 ### aeo strategy — Content strategy
@@ -82,6 +82,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo strategy show` | Show current content strategy (manifest) | [strategy.md](references/strategy.md) |
 | `/aeo strategy update` | Create or update content strategy | [strategy.md](references/strategy.md) |
+| `/aeo strategy visual update` | Update the visual style guide used by image/video generation (`--description <text>`, `--keywords a,b,c`) | this file |
 
 ### aeo content — Content lifecycle
 
@@ -91,7 +92,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo content feed` | Content Feed URLs + JSON Feed contract to render Aeolo articles on your own site | [content-manage.md](references/content-manage.md) |
 | `/aeo content get <id>` | Read full article content (markdown) | [content-manage.md](references/content-manage.md) |
 | `/aeo content import` | Push an already-written draft to content history | [content-create.md](references/content-create.md) |
-| `/aeo content generate` | Explicit-only server-side content generation job (uses production credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
+| `/aeo content generate` | Explicit-only server-side content generation job (5 credits) | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
 | `/aeo content jobs` | List active content generation jobs | [polling.md](references/polling.md) |
 | `/aeo content update <id>` | Update a content item (`--status`, `--title`, `--meta-description`, `--keywords`, `--body`/`--body-file` full replace or `--patch "search>>>replace"` targeted edit, `--thumbnail-url`, `--clear-thumbnail`) | [content-manage.md](references/content-manage.md) |
 | `/aeo content preview <id>` | Generate a shareable preview link (prints the URL; does not open a browser) | [content-manage.md](references/content-manage.md) |
@@ -100,6 +101,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
 
 > Default external-agent writing path: draft directly, then use `content import`. Use `content generate` only when the user explicitly wants an Aeolo server-side paid generation job.
+>
+> **Deploy gate**: `content deploy`/`content redeploy` reject with HTTP 422 unless the title is ≤ 60 chars and the meta description is present and 50–160 chars. Check with `content get` and fix with `content update` before deploying.
 
 ### aeo post — Channel posts (social media distribution)
 
@@ -119,11 +122,11 @@ Read and write live Aeolo data across the full GEO execution cycle.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (uses production credits). `--media linkedin_post\|threads_post\|visual_asset\|instagram_reels\|tiktok_reels`, `--language` optional | [tov-extract.md](references/tov-extract.md) |
+| `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (credit cost varies by media type). `--media linkedin_post\|threads_post\|visual_asset\|instagram_reels\|tiktok_reels`, `--language` optional | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference style --url <url>` | Read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
-| `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (uses production credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
-| `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (uses production credits). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
+| `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (15 credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
+| `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (credit-metered; cost scales with model and `--sweep` count). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
 | `/aeo video poll <jobId...>` | Check status + result URLs of video generation jobs | this file |
 
 ### aeo measure / metrics — Article & site performance
@@ -160,9 +163,9 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo products` (or `/aeo product list`) | List the product catalog (IDs + image status) used as swap sources | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo product add --pdp <url>` | Add a product by PDP URL (scrapes title/image/price) | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image search <query>` | Search Pexels for reference scenes (--per-page, --page) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene (5 credits) | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (uses production credits). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8 candidates), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Async — returns job IDs. | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (credit-metered; cost scales with model and `--sweep` count). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8 candidates), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Async — returns job IDs. | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image poll <jobId...>` | Check status + result URLs of image generation jobs | [image-thumbnails.md](references/image-thumbnails.md) |
 
 ### aeo feedback — Send feedback to the team
@@ -263,9 +266,9 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, video generate, image swap, image generate, brand update, strategy update, prompts add, prompts update, prompts delete, post import.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, video generate, image swap, image generate, image upload, brand update, strategy update, strategy visual update, config data-sources update, prompts add, prompts update, prompts delete, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, product add.
 
-Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first.
+Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy` change the customer's live site.
 
 ## Communication Rules
 
@@ -292,7 +295,7 @@ If `aeo` is not found, guide installation first:
 
 Install with one command (no Go or Node.js required — it's a single binary):
 
-curl -fsSL https://skills.tryaeolo.com | sh
+curl -fsSL https://skills.aeolo.io | sh
 
 After install, verify: `aeo --version`
 

@@ -21,7 +21,7 @@
 ## Install
 
 ```bash
-curl -fsSL https://skills.tryaeolo.com | sh
+curl -fsSL https://skills.aeolo.io | sh
 ```
 
 Single static Go binary. No runtime dependencies. macOS + Linux, amd64 + arm64.

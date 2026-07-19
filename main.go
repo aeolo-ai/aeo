@@ -2522,7 +2522,7 @@ func selfUpdate() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Update failed. Try:\n  curl -fsSL https://skills.tryaeolo.com | sh\n")
+		fmt.Fprintf(os.Stderr, "Update failed. Try:\n  curl -fsSL https://skills.aeolo.io | sh\n")
 		os.Exit(1)
 	}
 
