@@ -55,7 +55,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 |---------|-------------|-----------|
 | `/aeo channel list` | List connected channels | this file |
 | `/aeo channel add` | Add a channel (--url required, --type, --label) | this file |
-| `/aeo channel update <id>` | Update a channel (--url, --type, --label) | this file |
+| `/aeo channel update <id>` | Update a channel: `--url`, `--type`, `--label`; `--auto-publish true\|false`; `--publish-target <id>` (shopify blog / wordpress category / cafe24 board, picked by the channel's platform) | this file |
+| `/aeo channel indexing <id> --enabled true\|false` | Toggle IndexNow auto-indexing; add `--backfill` to submit existing published articles | this file |
 | `/aeo channel delete <id>` | Delete a non-primary channel | this file |
 | `/aeo channel connect <id>` | OAuth connect — opens browser for threads/linkedin/reddit | this file |
 | `/aeo channel disconnect <id>` | Disconnect OAuth integration from a channel | this file |
@@ -66,7 +67,7 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo visibility show` | Show the last visibility snapshot | [visibility.md](references/visibility.md) |
-| `/aeo visibility check run` | Run a credit-metered visibility check (`--engines <list>`, `--limit <n>`, `--prompt-ids <id,id>`) | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
+| `/aeo visibility check run` | Run a credit-metered visibility check (`--engines <list>`, `--location KR\|US\|EU\|JP`, `--limit <n>`, `--prompt-ids <id,id>`). Unknown engines error out with the valid set; unsupported `--location` is rejected. | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 | `/aeo visibility check poll <jobId>` | Poll check status | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 
 ### aeo audit — Site foundation checks
@@ -110,7 +111,19 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo content deploy <id> [--target shopify\|blog\|wordpress\|cafe24]` | Deploy an approved article to a publish destination (default `shopify`; `blog` = hosted Aeolo blog) | [content-manage.md](references/content-manage.md) |
 | `/aeo content redeploy <id>` | Update an already-deployed Shopify article in-place (keeps URL) | [content-manage.md](references/content-manage.md) |
 | `/aeo content unpublish <id>` | Remove a deployed article from its platform (auto-detected; `--target` to force) and reset it to draft | [content-manage.md](references/content-manage.md) |
+| `/aeo content delete <id>` | Soft-delete an article (drops out of lists; restorable). Deployed copies stay live — `content unpublish` first to remove them. | [content-manage.md](references/content-manage.md) |
+| `/aeo content job cancel <jobId>` | Delete a finished writing job + its events (blocked while pending/running — let active jobs finish or fail) | [polling.md](references/polling.md) |
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
+
+### aeo carousel — Instagram carousel decks
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo carousel list [--limit N]` | List recent carousel decks for the domain | [content-manage.md](references/content-manage.md) |
+| `/aeo carousel get <jobId>` | Get a deck (slides + caption) by job ID | [content-manage.md](references/content-manage.md) |
+| `/aeo carousel create [--topic "..."]` | Generate a carousel deck (10 credits). Give `--topic`, or omit it for recommendation mode; optional `--language`, `--slides N`. Async — returns a job ID. | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
+| `/aeo carousel update <jobId> --caption "..."` | Edit the caption of a completed deck (plain text, ≤2200 chars) | [content-manage.md](references/content-manage.md) |
+| `/aeo carousel delete <jobId>` | Soft-delete a deck (cancels active work; assets stay recoverable) | [content-manage.md](references/content-manage.md) |
 
 > Default external-agent writing path: draft directly, then use `content import`. Use `content generate` only when the user explicitly wants an Aeolo server-side paid generation job.
 >
@@ -145,7 +158,9 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 
 ### aeo measure / metrics — Article & site performance
 
-> Canonical noun is `measure`; `metrics` is the accepted alias. `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The `measure` noun also carries two verbs with no `metrics` alias: `measure visibility` (last visibility snapshot, same data as `aeo visibility show`) and `measure report --command <cmd>` (submit command diagnostics).
+> Canonical noun is `measure`; `metrics` is the accepted alias. `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The `measure` noun also carries `measure visibility` (last visibility snapshot, same data as `aeo visibility show`).
+>
+> **Two different "report" commands — don't confuse them:** `diag report` (canonical; `measure report` is the deprecated alias) **submits command-failure diagnostics** to the Aeolo team. `report snapshot` **creates a shareable report link** for a customer. See the `aeo report` section below for `report snapshot`.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
@@ -153,7 +168,13 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo measure content <id>` (alias `metrics article <id>`) | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
 | `/aeo measure traffic` (alias `metrics traffic`) | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
 | `/aeo measure visibility` | Show last visibility snapshot (same data as `aeo visibility show`) | [metrics.md](references/metrics.md) |
-| `/aeo measure report --command <cmd>` | Submit command-execution diagnostics (`--status-code`, `--response-body`, `--context`) | [metrics.md](references/metrics.md) |
+| `/aeo diag report --command <cmd>` (alias `measure report`) | Submit command-failure diagnostics (`--status-code`, `--response-body`, `--context`) | [metrics.md](references/metrics.md) |
+
+### aeo report — Shareable report links
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo report snapshot` | Create a shareable report link. Freeze a rendered report and mint a secret/password share URL: `--type audit\|visibility\|traffic\|prompts\|performance` (required), `--html <rendered report HTML>` (required, ≥100 chars — the connector does not render server-side), `--access-mode secret_link\|password`, `--password <pw>`, `--expires 7\|30\|90\|never`, `--locale en\|ko`. | this file |
 
 ### aeo prompts — Tracked prompts
 
@@ -163,6 +184,7 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo prompts add` | Add prompts to brand_prompts — one (`--prompt`) or up to 30 at once (`--prompts-json`); also `--stage`, `--language`, `--segment foo,bar` | [brand.md](references/brand.md) |
 | `/aeo prompts update <id>` | Edit an existing prompt (`--prompt`, `--stage`, `--query-form`, `--segment foo,bar`, `--status tracked\|untracked`) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
+| `/aeo prompts generate` | Generate a CEP-based prompt set from brand context and save it to tracked prompts (free; needs brand analysis first). `--count N`, `--languages en,ko`, `--instruction "..."` | [brand.md](references/brand.md) |
 
 ### aeo segments — Segment tags
 
@@ -282,7 +304,7 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, audit run, reference analyze, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, prompts add, prompts update, prompts delete, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, product add.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel create, carousel update, carousel delete, audit run, reference analyze, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy`/`content unpublish` change the customer's live site.
 
