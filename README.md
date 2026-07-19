@@ -14,7 +14,7 @@
 
 `aeo` 는 [Aeolo](https://tryaeolo.com) 의 공식 CLI 다. **ChatGPT, Perplexity, Gemini, Grok** 이 브랜드를 어떻게 인용하는지 추적하고, 가시성을 끌어올릴 전략·콘텐츠를 관리하고, 채널로 바로 배포하는 — 이 모든 걸 터미널에서.
 
-> Built to be driven by AI coding agents (Claude Code, Cursor, Codex). One install, and your agent gets a full GEO toolchain. → [Use with Claude Code](#use-with-claude-code)
+> Built to be driven by AI coding agents (Claude Code, Cursor, Codex). One install, and your agent gets a full GEO toolchain. → [Use with your coding agent](#use-with-your-coding-agent)
 
 ---
 
@@ -89,9 +89,9 @@ Production actions reserve and capture Aeolo credits server-side. Failed backgro
 
 Run `aeo --help` for the complete reference, or `aeo <command> --help` for detail on any verb.
 
-## Use with Claude Code
+## Use with your coding agent
 
-`aeo` ships a [Claude Code skill](SKILL.md) that turns your agent into a full GEO co-pilot. Drop the skill into your Claude Code skills directory (`~/.claude/skills/aeo/`) — see [SKILL.md](SKILL.md) for the trigger phrases — then ask in plain language:
+`aeo` ships an [agent skill](SKILL.md) that turns your coding agent into a full GEO co-pilot. Install it once with `npx skills add aeolo-ai/aeo` — it lands in every skills-compatible agent on your machine (Claude Code, Codex, Cursor, …); see [SKILL.md](SKILL.md) for the trigger phrases — then ask in plain language:
 
 ```
 > 우리 브랜드 가시성 어때?

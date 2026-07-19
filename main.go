@@ -24,9 +24,12 @@ const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are m
 // ── Config ──────────────────────────────────────────────────────────────────
 
 type Config struct {
-	APIKey   string `json:"apiKey,omitempty"`
-	DomainID string `json:"domainId,omitempty"`
-	APIBase  string `json:"apiBase,omitempty"`
+	APIKey       string `json:"apiKey,omitempty"` // legacy static atok_ credential
+	AccessToken  string `json:"accessToken,omitempty"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+	TokenExpiry  int64  `json:"tokenExpiry,omitempty"` // unix seconds
+	DomainID     string `json:"domainId,omitempty"`
+	APIBase      string `json:"apiBase,omitempty"`
 }
 
 func configPath() string {
@@ -61,11 +64,73 @@ type Credentials struct {
 
 func resolveCredentials() Credentials {
 	cfg := readConfig()
+	apiBase := envOr("AEOLO_API_BASE", strOr(cfg.APIBase, "https://api.aeolo.io"))
+	apiKey := os.Getenv("AEOLO_API_KEY")
+	if apiKey == "" {
+		if cfg.RefreshToken != "" {
+			apiKey = ensureFreshAccessToken(apiBase, &cfg)
+		}
+		if apiKey == "" {
+			apiKey = cfg.APIKey
+		}
+	}
 	return Credentials{
-		APIBase:  envOr("AEOLO_API_BASE", strOr(cfg.APIBase, "https://api.aeolo.io")),
-		APIKey:   envOr("AEOLO_API_KEY", cfg.APIKey),
+		APIBase:  apiBase,
+		APIKey:   apiKey,
 		DomainID: envOr("AEOLO_DOMAIN_ID", cfg.DomainID),
 	}
+}
+
+// ensureFreshAccessToken returns a valid OAuth access token, refreshing via the
+// rotating refresh token when the cached one is missing or near expiry. The
+// rotated refresh token is persisted immediately — losing it kills the session.
+func ensureFreshAccessToken(apiBase string, cfg *Config) string {
+	if cfg.AccessToken != "" && time.Now().Unix() < cfg.TokenExpiry-120 {
+		return cfg.AccessToken
+	}
+
+	body, _ := json.Marshal(map[string]string{
+		"grant_type":    "refresh_token",
+		"refresh_token": cfg.RefreshToken,
+		"client_id":     "aeo-cli",
+	})
+	resp, err := http.Post(apiBase+"/oauth/token", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return cfg.AccessToken
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode >= 400 {
+		// A parallel aeo process may have rotated the refresh token first —
+		// re-read config and use its fresher credentials if present.
+		latest := readConfig()
+		if latest.AccessToken != "" && latest.AccessToken != cfg.AccessToken {
+			*cfg = latest
+			return cfg.AccessToken
+		}
+		fmt.Fprintln(os.Stderr, "Warning: session refresh failed. Run: aeo auth login")
+		return cfg.AccessToken
+	}
+
+	var tok struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIn    int64  `json:"expires_in"`
+	}
+	if json.Unmarshal(respBody, &tok) != nil || tok.AccessToken == "" {
+		return cfg.AccessToken
+	}
+
+	cfg.AccessToken = tok.AccessToken
+	if tok.RefreshToken != "" {
+		cfg.RefreshToken = tok.RefreshToken
+	}
+	if tok.ExpiresIn > 0 {
+		cfg.TokenExpiry = time.Now().Unix() + tok.ExpiresIn
+	}
+	writeConfig(*cfg)
+	return cfg.AccessToken
 }
 
 func envOr(key, fallback string) string {
@@ -85,6 +150,22 @@ func strOr(a, b string) string {
 // ── HTTP Client ─────────────────────────────────────────────────────────────
 
 func callConnector(path, method string, body []byte, domainOverride string) (string, error) {
+	out, err := callConnectorOnce(path, method, body, domainOverride)
+	if err != nil && strings.Contains(err.Error(), "Invalid or expired access token") {
+		// Access JWT died mid-flight — force a refresh and retry once.
+		cfg := readConfig()
+		if cfg.RefreshToken != "" {
+			cfg.AccessToken = ""
+			apiBase := envOr("AEOLO_API_BASE", strOr(cfg.APIBase, "https://api.aeolo.io"))
+			if ensureFreshAccessToken(apiBase, &cfg) != "" {
+				return callConnectorOnce(path, method, body, domainOverride)
+			}
+		}
+	}
+	return out, err
+}
+
+func callConnectorOnce(path, method string, body []byte, domainOverride string) (string, error) {
 	creds := resolveCredentials()
 	if creds.APIKey == "" {
 		return "", fmt.Errorf("not authenticated. Run: aeo auth login")
@@ -1825,8 +1906,9 @@ func main() {
 			activeKey := strOr(envKey, cfg.APIKey)
 			activeDomain := strOr(envDomain, cfg.DomainID)
 			activeBase := strOr(envBase, strOr(cfg.APIBase, "https://api.aeolo.io"))
+			oauthSession := envKey == "" && cfg.RefreshToken != ""
 
-			if activeKey == "" {
+			if activeKey == "" && !oauthSession {
 				fmt.Println("Not logged in. Run: aeo auth login")
 				return
 			}
@@ -1880,7 +1962,11 @@ func main() {
 				}
 			}
 
-			fmt.Printf("  API key:  %s...  (%s)\n", hint, src(envKey, cfg.APIKey))
+			if oauthSession {
+				fmt.Println("  Session:  OAuth (auto-refreshing)")
+			} else {
+				fmt.Printf("  API key:  %s...  (%s)\n", hint, src(envKey, cfg.APIKey))
+			}
 			if activeDomain == "" {
 				fmt.Printf("  Domain:   (not set)  (%s)\n", src(envDomain, cfg.DomainID))
 			} else {
@@ -2319,8 +2405,10 @@ func main() {
 // ── Auth Login (device flow) ────────────────────────────────────────────────
 
 func authLogin(apiBase string) {
-	// Step 1: request device code
-	resp, err := http.Post(apiBase+"/auth/device/code", "application/json", nil)
+	// Step 1: request device code — token_type: oauth asks the server for a
+	// short-lived access token + rotating refresh token instead of a static atok.
+	resp, err := http.Post(apiBase+"/auth/device/code", "application/json",
+		bytes.NewReader([]byte(`{"token_type":"oauth"}`)))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
@@ -2376,11 +2464,15 @@ func authLogin(apiBase string) {
 			os.Exit(1)
 		}
 
-		// Success — parse token + domains
+		// Success — parse credentials + domains
 		var result struct {
 			Data struct {
-				Token   string `json:"token"`
-				Domains []struct {
+				Token        string `json:"token"`
+				TokenType    string `json:"token_type"`
+				AccessToken  string `json:"access_token"`
+				RefreshToken string `json:"refresh_token"`
+				ExpiresIn    int64  `json:"expires_in"`
+				Domains      []struct {
 					ID     string `json:"id"`
 					Domain string `json:"domain"`
 					Name   string `json:"name"`
@@ -2389,9 +2481,17 @@ func authLogin(apiBase string) {
 		}
 		json.Unmarshal(tokenRespBody, &result)
 
-		cfg := Config{
-			APIKey:   result.Data.Token,
-			DomainID: "",
+		cfg := Config{DomainID: ""}
+		oauthSession := result.Data.TokenType == "oauth" && result.Data.AccessToken != ""
+		if oauthSession {
+			cfg.AccessToken = result.Data.AccessToken
+			cfg.RefreshToken = result.Data.RefreshToken
+			if result.Data.ExpiresIn > 0 {
+				cfg.TokenExpiry = time.Now().Unix() + result.Data.ExpiresIn
+			}
+		} else {
+			// Older servers still hand out a static atok.
+			cfg.APIKey = result.Data.Token
 		}
 		if apiBase != "https://api.aeolo.io" {
 			cfg.APIBase = apiBase
@@ -2403,7 +2503,9 @@ func authLogin(apiBase string) {
 
 		fmt.Println()
 		fmt.Println("✓ Logged in")
-		if len(result.Data.Token) > 12 {
+		if oauthSession {
+			fmt.Println("  Session: OAuth (auto-refreshing)")
+		} else if len(result.Data.Token) > 12 {
 			fmt.Printf("  API key: %s...\n", result.Data.Token[:12])
 		}
 		if len(result.Data.Domains) > 0 {
