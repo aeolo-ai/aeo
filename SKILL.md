@@ -84,6 +84,17 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo strategy update` | Create or update content strategy | [strategy.md](references/strategy.md) |
 | `/aeo strategy visual update` | Update the visual style guide used by image/video generation (`--description <text>`, `--keywords a,b,c`) | this file |
 
+### aeo automation — Automation schedules
+
+Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs on a cadence — **visibility** (the weekly AI auto-scan) and **content** (the autonomous writing loop). Both upsert on `(domain_id, task_kind)`.
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo automation schedules` | Show both automation tracks (state, frequency, days, timezone; content adds autonomy, articles/run, hero image) | [workflows.md](references/workflows.md) |
+| `/aeo automation schedule set --track visibility\|content` | Configure one track — `--enabled true\|false`, `--frequency daily\|weekly\|biweekly`, `--days mon,tue`, `--timezone <tz>`; content-only `--autonomy draft\|auto`, `--articles-per-run N` (1-14), `--hero true\|false` | [workflows.md](references/workflows.md) |
+
+> Partial updates are safe: `automation schedule set` inherits the track's existing settings for any flag you omit, so `--enabled false` alone just pauses the track without resetting its cadence. Configuring the visibility track is also how you turn the weekly visibility auto-scan on or off.
+
 ### aeo content — Content lifecycle
 
 | Command | What it does | Reference |
@@ -96,13 +107,16 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo content jobs` | List active content generation jobs | [polling.md](references/polling.md) |
 | `/aeo content update <id>` | Update a content item (`--status`, `--title`, `--meta-description`, `--keywords`, `--body`/`--body-file` full replace or `--patch "search>>>replace"` targeted edit, `--thumbnail-url`, `--clear-thumbnail`) | [content-manage.md](references/content-manage.md) |
 | `/aeo content preview <id>` | Generate a shareable preview link (prints the URL; does not open a browser) | [content-manage.md](references/content-manage.md) |
-| `/aeo content deploy <id>` | Deploy an article to the connected Shopify channel | [content-manage.md](references/content-manage.md) |
+| `/aeo content deploy <id> [--target shopify\|blog\|wordpress\|cafe24]` | Deploy an approved article to a publish destination (default `shopify`; `blog` = hosted Aeolo blog) | [content-manage.md](references/content-manage.md) |
 | `/aeo content redeploy <id>` | Update an already-deployed Shopify article in-place (keeps URL) | [content-manage.md](references/content-manage.md) |
+| `/aeo content unpublish <id>` | Remove a deployed article from its platform (auto-detected; `--target` to force) and reset it to draft | [content-manage.md](references/content-manage.md) |
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
 
 > Default external-agent writing path: draft directly, then use `content import`. Use `content generate` only when the user explicitly wants an Aeolo server-side paid generation job.
 >
-> **Deploy gate**: `content deploy`/`content redeploy` reject with HTTP 422 unless the title is ≤ 60 chars and the meta description is present and 50–160 chars. Check with `content get` and fix with `content update` before deploying.
+> **Deploy targets**: `content deploy --target` picks the destination — `shopify` (default, connected Shopify blog), `blog` (the always-available hosted Aeolo blog, no connection needed), `wordpress`, or `cafe24`. If a target's channel isn't connected, the error names the target and points to aeolo.io → Owned Media.
+>
+> **Deploy gate**: `content deploy`/`content redeploy` reject with HTTP 422 unless the title is ≤ 60 chars and the meta description is present and 50–160 chars. The approved-status gate and this SERP title/meta gate apply to every target. Check with `content get` and fix with `content update` before deploying.
 
 ### aeo post — Channel posts (social media distribution)
 
@@ -167,6 +181,8 @@ Read and write live Aeolo data across the full GEO execution cycle.
 | `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (credit-metered; cost scales with model and `--sweep` count). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8 candidates), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Async — returns job IDs. | [image-thumbnails.md](references/image-thumbnails.md) |
 | `/aeo image poll <jobId...>` | Check status + result URLs of image generation jobs | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image gallery [--type image\|video] [--limit N]` | List generated gallery assets for the domain (default `image`, limit 20) | [image-thumbnails.md](references/image-thumbnails.md) |
+| `/aeo image gallery delete <assetId>` | Delete a generated gallery asset by ID | [image-thumbnails.md](references/image-thumbnails.md) |
 
 ### aeo feedback — Send feedback to the team
 
@@ -266,9 +282,9 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, audit run, reference analyze, video analyze, video generate, image swap, image generate, image upload, brand update, strategy update, strategy visual update, config data-sources update, prompts add, prompts update, prompts delete, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, product add.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, audit run, reference analyze, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, prompts add, prompts update, prompts delete, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, product add.
 
-Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy` change the customer's live site.
+Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy`/`content unpublish` change the customer's live site.
 
 ## Communication Rules
 
