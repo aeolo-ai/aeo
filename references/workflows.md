@@ -112,10 +112,15 @@ This is the core production cycle. Run it daily (or at whatever frequency the st
 Run these in parallel to understand the current state:
 
 ```bash
+aeo topics next          # Ranked candidates + why, already crossing every signal below
 aeo strategy show        # What's the plan?
 aeo visibility show      # Where are the gaps?
 aeo content list --status=published --limit=20   # What already exists?
 ```
+
+`aeo topics next` is free and read-only. It already crosses citation gaps, funnel stage, search demand, conversion outcomes and what was published recently, and it shows the score broken into its terms — so "why this topic" has a reproducible answer instead of a fresh opinion each time. Use the priority queue below to sanity-check or override it, not to redo it by hand.
+
+If it returns nothing, every candidate was filtered (usually "written in the last 14 days"). Run `aeo prompts health` and promote untracked demand rather than forcing a duplicate.
 
 ### Step 2: Decide what to write
 

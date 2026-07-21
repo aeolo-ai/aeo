@@ -8,11 +8,12 @@ Reviews existing content based on GEO domain expertise.
 
 ### Flow
 
-1. **Load context** — Fetch the following 3 items in parallel:
+1. **Load context** — Fetch the following 4 items in parallel:
    ```bash
    aeo content get <id> > /tmp/aeo_review_article.md &
    aeo agent context > /tmp/aeo_review_brand.md &   # /aeo agent context
    aeo domain audit > /tmp/aeo_review_audit.md &    # /aeo domain audit
+   aeo content --status=published --limit=50 > /tmp/aeo_review_published.md &   # for Audit #0b
    wait
    ```
 
@@ -38,6 +39,25 @@ Run this **before** the quality checklist below, and run it **adversarially**: a
 | **Source-to-claim match** | Open the cited sources. Does each one actually support the claim it is attached to, or was a plausible-looking URL pasted next to an unrelated claim? | If the source does not support the claim, the citation is fake — fix the claim or find a real source. |
 
 **How to record the verdict:** the Fabrication & Citation Audit must itemize every quote and every quantified claim with its traceable source URL (or "NO SOURCE → removed/hedged"). "Issues found: none" is only acceptable when you have explicitly walked each quote and each stat and shown its source. A blanket "looks good / deploy-ready" without this itemized trace is itself a review failure.
+
+#### 0b. Cannibalization Audit (BLOCKING — run this second)
+
+A draft can be flawless on every other axis and still be a defect: if the brand already published this topic, the new article splits the brand's own citation signal instead of adding to it. Two pages competing for one query means AI engines see a weaker, more diffuse answer for both.
+
+Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title strings** — the failure mode is two different-sounding headlines covering the same ground:
+
+> "Is K-Beauty Sunscreen Safe for Sensitive Skin?" vs "HAESKN Sunscreen Stick for Sensitive Skin Guide"
+>
+> Different strings. Same article. An exact-title check passes this; a topic check does not.
+
+| Item | Adversarial check | Verdict if it fails |
+|------|-------------------|---------------------|
+| **Recent duplicate** | Does any article published in the **last 14 days** answer the same core question, even under a different headline? Strip brand names and format words ("best", "guide", "review") from both titles and compare what remains. | **BLOCKING.** Do not deploy a second article on a topic covered within two weeks. Recommend updating the existing article instead (`aeo content update <existing-id>`). |
+| **Cluster saturation** | How many published articles already cover this topic cluster? | **3 or more → BLOCKING.** The problem is not coverage, it is that the existing pages are not being cited. Another article will not fix that; strengthening the best existing one might. |
+| **Spoke justification** | If the draft claims to be a "spoke", a "different angle", or to "add new context" on an existing topic — name the specific question it answers that the existing article does **not**. Then check: does the existing article already answer it in a section? | If you cannot name a question the existing article leaves unanswered, this is **not a spoke — it is a duplicate**. "Connects two existing pieces" and "approaches it through a different lens" are rationalizations, not new coverage. |
+| **Hub link** | If it genuinely is a spoke, does the draft link back to the hub article, and does the hub have room to link forward to it? | Add the cross-link before deploy. An unlinked spoke reads to an engine as a competing page, not a supporting one. |
+
+**Why this section exists:** the review pass previously had no cannibalization item at all, so a duplicate published eight days after its twin received a clean "ZERO defects, deploy-ready" verdict. The reviewer was not wrong about what it checked — the check simply did not exist. If you find yourself writing a justification for why a near-duplicate is acceptable, that is the signal to fail it, not to pass it.
 
 #### 1. Structure & Quotability
 
@@ -118,11 +138,14 @@ Based on the target engines in the brand context or visibility gap data:
 - **Overall**: ✅ Good / ⚠️ Needs Work / ❌ Major Issues
 - **Word count**: {n} words
 - **Article type**: {type}
+- **Cannibalization**: ✅ no overlapping published article / ❌ duplicates "{title}" (published {n}d ago)
 
 ### Scores
 
 | Category | Score | Notes |
 |----------|-------|-------|
+| Fabrication & Citation (#0) | ✅ / ❌ | quotes traced: {n}, stats traced: {n} |
+| Cannibalization (#0b) | ✅ / ❌ | closest published article + why it is or is not a duplicate |
 | Structure & Quotability | ✅ / ⚠️ / ❌ | ... |
 | Trust & Authority | ✅ / ⚠️ / ❌ | ... |
 | Freshness | ✅ / ⚠️ / ❌ | ... |

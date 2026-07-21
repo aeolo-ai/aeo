@@ -89,6 +89,38 @@ After displaying:
 
 ---
 
+## /aeo prompts health — Audit the tracked prompt set
+
+```bash
+aeo prompts health
+```
+
+Free, read-only. The topic engine optimises **within** the tracked set, so a wrong set makes it optimise faithfully toward the wrong target — and nothing downstream reports that, because every measurement is taken against the same set. This audits the set itself.
+
+Returns:
+
+| Section | What it answers |
+|---------|-----------------|
+| What is working | Theme-level verdicts (several prompts sharing a word), not per-prompt noise. Stays silent when too little content exists to judge. |
+| Biggest openings | Queries where engines DO recommend a brand and it is not us — with how crowded the answer is and where we rank on Google |
+| Wasted effort | Prompts with several articles and still no citation; brand-name prompts holding tracked slots |
+| Demand you are not tracking | Real search demand with no prompt behind it, phrasings folded together and summed |
+| Every tracked prompt | Status + recommended action |
+
+Statuses:
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| `STUCK_HARD` | Tried repeatedly, never cited — but competitors ARE recommended here | **Change the approach**, do not retire. The seat exists; the format or angle failed |
+| `STUCK_DEAD` | Tried, never cited, and the engines recommend nobody | Retire — there is no list to be on |
+| `UNTRIED` | No article targets it yet | Prioritise. A zero here is untouched, not failed |
+| `RISING` / `WINNING` | Citation climbing or already held | Keep |
+| `HOLDING` / `UNMEASURED` | Not enough evidence yet | Keep, revisit |
+
+The distinction that matters: a prompt at 0% with five articles behind it and one at 0% with none look identical in the numbers and need opposite treatment.
+
+---
+
 ## /aeo prompts add — Add manual prompts
 
 Ask the user for the prompt details, then run:
