@@ -10,9 +10,9 @@
 
 </div>
 
-`aeo` is the official command-line interface for [Aeolo](https://tryaeolo.com), a Generative Engine Optimization platform. Track how your brand shows up in **ChatGPT, Perplexity, Gemini, and Grok**, manage the strategy + content that fixes it, and deploy directly to your channels — all without leaving your terminal.
+`aeo` is the official command-line interface for [Aeolo](https://aeolo.io), a Generative Engine Optimization platform. Track how your brand shows up in **ChatGPT, Perplexity, Gemini, and Grok**, manage the strategy + content that fixes it, and deploy directly to your channels — all without leaving your terminal.
 
-`aeo` 는 [Aeolo](https://tryaeolo.com) 의 공식 CLI 다. **ChatGPT, Perplexity, Gemini, Grok** 이 브랜드를 어떻게 인용하는지 추적하고, 가시성을 끌어올릴 전략·콘텐츠를 관리하고, 채널로 바로 배포하는 — 이 모든 걸 터미널에서.
+`aeo` 는 [Aeolo](https://aeolo.io) 의 공식 CLI 다. **ChatGPT, Perplexity, Gemini, Grok** 이 브랜드를 어떻게 인용하는지 추적하고, 가시성을 끌어올릴 전략·콘텐츠를 관리하고, 채널로 바로 배포하는 — 이 모든 걸 터미널에서.
 
 > Built to be driven by AI coding agents (Claude Code, Cursor, Codex). One install, and your agent gets a full GEO toolchain. → [Use with your coding agent](#use-with-your-coding-agent)
 
@@ -50,7 +50,7 @@ Sample output:
 ```
 $ aeo visibility show
 
-# tryaeolo.com — Visibility Snapshot
+# aeolo.io — Visibility Snapshot
 
 | Engine     | Mentioned | Rate |
 |------------|-----------|------|
@@ -64,7 +64,7 @@ $ aeo visibility show
 - how to optimize for ChatGPT citations
 - ...
 
-_Full report: https://tryaeolo.com/report/.../visibility_
+_Full report: https://www.aeolo.io/report/.../visibility_
 ```
 
 ## What you can do
@@ -95,7 +95,7 @@ Run `aeo --help` for the complete reference, or `aeo <command> --help` for detai
 
 ```
 > 우리 브랜드 가시성 어때?
-> Show me where ChatGPT misses tryaeolo.com.
+> Show me where ChatGPT misses aeolo.io.
 > Write a 1500-word article about GEO best practices and deploy it to Shopify.
 ```
 
@@ -103,7 +103,7 @@ The agent picks the right `aeo` commands, parses results, and chains them into m
 
 ## How auth works
 
-`aeo auth login` opens a browser device-flow against [tryaeolo.com](https://tryaeolo.com). On success, an API key is written to `~/.config/aeo/config.json` and used as a Bearer token on all subsequent calls. No telemetry, no background processes — every command is a single HTTPS request to the Aeolo API.
+`aeo auth login` opens a browser device-flow against [Aeolo](https://www.aeolo.io). On success, an API key is written to `~/.config/aeo/config.json` and used as a Bearer token on all subsequent calls. No telemetry, no background processes — every command is a single HTTPS request to the Aeolo API.
 
 To use a non-default API base (self-hosting, staging):
 

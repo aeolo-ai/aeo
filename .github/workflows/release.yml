@@ -47,7 +47,7 @@ jobs:
           git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/aeolo-ai/homebrew-aeo.git" tap
           bash scripts/update-formula.sh "$VERSION" dist/checksums.txt tap/Formula/aeo.rb
           cd tap
-          git config user.email "bot@tryaeolo.com"
+          git config user.email "bot@aeolo.io"
           git config user.name "aeo-release-bot"
           git add Formula/aeo.rb
           git commit -m "aeo ${VERSION}"

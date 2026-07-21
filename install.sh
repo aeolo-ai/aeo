@@ -2,7 +2,7 @@
 set -e
 
 # aeo CLI installer
-# Usage: curl -fsSL https://skills.tryaeolo.com | sh
+# Usage: curl -fsSL https://skills.aeolo.io | sh
 
 REPO="aeolo-ai/aeo"
 INSTALL_DIR="${AEO_INSTALL_DIR:-/usr/local/bin}"
