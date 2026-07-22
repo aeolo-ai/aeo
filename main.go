@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.0"
+var version = "2.3.4"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -2743,17 +2743,207 @@ func doAPIRequest(url, method string, body []byte, apiKey string) ([]byte, error
 
 // ── Self Update ────────────────────────────────────────────────────────────
 
-func selfUpdate() {
-	fmt.Printf("Current version: %s\n", version)
-	fmt.Println("Downloading latest version...")
+type selfUpdateMethod string
 
-	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/aeolo-ai/aeo/main/install.sh | sh")
+const (
+	selfUpdateDirect   selfUpdateMethod = "direct"
+	selfUpdateHomebrew selfUpdateMethod = "homebrew"
+)
+
+type selfUpdatePlan struct {
+	Method         selfUpdateMethod
+	ExecutablePath string
+	InstallDir     string
+}
+
+func buildSelfUpdatePlan(executablePath string, evalSymlinks func(string) (string, error)) (selfUpdatePlan, error) {
+	if strings.TrimSpace(executablePath) == "" {
+		return selfUpdatePlan{}, fmt.Errorf("could not determine the running aeo executable")
+	}
+	absPath, err := filepath.Abs(executablePath)
+	if err != nil {
+		return selfUpdatePlan{}, fmt.Errorf("resolve executable path: %w", err)
+	}
+	resolvedPath, err := evalSymlinks(absPath)
+	if err != nil {
+		return selfUpdatePlan{}, fmt.Errorf("resolve executable symlink %s: %w", absPath, err)
+	}
+
+	plan := selfUpdatePlan{ExecutablePath: absPath}
+	canonicalPath := filepath.ToSlash(resolvedPath)
+	const cellarMarker = "/Cellar/aeo/"
+	if strings.Contains(canonicalPath, cellarMarker) {
+		plan.Method = selfUpdateHomebrew
+		absSlashPath := filepath.ToSlash(absPath)
+		if idx := strings.Index(absSlashPath, cellarMarker); idx >= 0 {
+			plan.ExecutablePath = filepath.FromSlash(absSlashPath[:idx] + "/opt/aeo/bin/aeo")
+		}
+		return plan, nil
+	}
+
+	plan.Method = selfUpdateDirect
+	plan.InstallDir = filepath.Dir(absPath)
+	return plan, nil
+}
+
+func runningCommandPath() (string, error) {
+	executablePath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Abs(executablePath)
+}
+
+func latestReleaseVersion() (string, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest(http.MethodHead, "https://github.com/aeolo-ai/aeo/releases/latest", nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("resolve latest release: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return "", fmt.Errorf("resolve latest release: HTTP %d", resp.StatusCode)
+	}
+
+	const marker = "/releases/tag/"
+	path := resp.Request.URL.Path
+	idx := strings.LastIndex(path, marker)
+	if idx < 0 {
+		return "", fmt.Errorf("resolve latest release: unexpected URL %s", resp.Request.URL.String())
+	}
+	latest := strings.TrimPrefix(strings.Trim(path[idx+len(marker):], "/"), "v")
+	if latest == "" {
+		return "", fmt.Errorf("resolve latest release: empty version")
+	}
+	return latest, nil
+}
+
+func runUpdateCommand(cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Update failed. Try:\n  curl -fsSL https://skills.aeolo.io | sh\n")
+	return cmd.Run()
+}
+
+func installDirectUpdate(plan selfUpdatePlan, targetVersion string) error {
+	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/aeolo-ai/aeo/main/install.sh | sh")
+	cmd.Env = append(os.Environ(),
+		"AEO_INSTALL_DIR="+plan.InstallDir,
+		"AEO_VERSION="+targetVersion,
+	)
+	return runUpdateCommand(cmd)
+}
+
+func installHomebrewUpdate() error {
+	if _, err := exec.LookPath("brew"); err != nil {
+		return fmt.Errorf("this aeo is managed by Homebrew, but brew is not on PATH")
+	}
+	if err := runUpdateCommand(exec.Command("brew", "update")); err != nil {
+		return fmt.Errorf("brew update: %w", err)
+	}
+	if err := runUpdateCommand(exec.Command("brew", "upgrade", "aeolo-ai/aeo/aeo")); err != nil {
+		return fmt.Errorf("brew upgrade aeolo-ai/aeo/aeo: %w", err)
+	}
+	return nil
+}
+
+func validateInstalledVersion(output, targetVersion string) error {
+	fields := strings.Fields(output)
+	if len(fields) < 2 || fields[0] != "aeo" {
+		return fmt.Errorf("could not read installed version from %q", strings.TrimSpace(output))
+	}
+	installedVersion := strings.TrimPrefix(fields[1], "v")
+	if installedVersion != targetVersion {
+		return fmt.Errorf("installed aeo is still %s; expected %s", installedVersion, targetVersion)
+	}
+	return nil
+}
+
+func verifyInstalledVersion(executablePath, targetVersion string) error {
+	output, err := exec.Command(executablePath, "--version").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("run %s --version: %w", executablePath, err)
+	}
+	return validateInstalledVersion(string(output), targetVersion)
+}
+
+func findAEOCopies(pathEnv string) []string {
+	seen := map[string]bool{}
+	var copies []string
+	for _, dir := range filepath.SplitList(pathEnv) {
+		if dir == "" {
+			continue
+		}
+		candidate := filepath.Clean(filepath.Join(dir, "aeo"))
+		if seen[candidate] {
+			continue
+		}
+		info, err := os.Stat(candidate)
+		if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0o111 == 0 {
+			continue
+		}
+		seen[candidate] = true
+		copies = append(copies, candidate)
+	}
+	return copies
+}
+
+func warnAboutAEOCopies(selectedPath string) {
+	copies := findAEOCopies(os.Getenv("PATH"))
+	if len(copies) < 2 {
+		return
+	}
+	fmt.Fprintln(os.Stderr, "\nWarning: multiple aeo executables are on PATH.")
+	fmt.Fprintf(os.Stderr, "  This shell uses: %s\n", selectedPath)
+	for _, copy := range copies {
+		fmt.Fprintf(os.Stderr, "  - %s\n", copy)
+	}
+	fmt.Fprintln(os.Stderr, "  Remove stale copies or reorder PATH to keep future updates unambiguous.")
+}
+
+func selfUpdate() {
+	fmt.Printf("Current version: %s\n", version)
+
+	executablePath, err := runningCommandPath()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
+		os.Exit(1)
+	}
+	plan, err := buildSelfUpdatePlan(executablePath, filepath.EvalSymlinks)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
+		os.Exit(1)
+	}
+	targetVersion, err := latestReleaseVersion()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("✓ Updated successfully")
+	fmt.Printf("Target version: %s\n", targetVersion)
+	fmt.Printf("Executable: %s\n", plan.ExecutablePath)
+	switch plan.Method {
+	case selfUpdateHomebrew:
+		fmt.Println("Install method: Homebrew")
+		err = installHomebrewUpdate()
+	case selfUpdateDirect:
+		fmt.Printf("Install method: direct (%s)\n", plan.InstallDir)
+		err = installDirectUpdate(plan, targetVersion)
+	default:
+		err = fmt.Errorf("unsupported update method %q", plan.Method)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
+		os.Exit(1)
+	}
+	if err := verifyInstalledVersion(plan.ExecutablePath, targetVersion); err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed verification: %s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("✓ Updated successfully: aeo %s at %s\n", targetVersion, plan.ExecutablePath)
+	warnAboutAEOCopies(plan.ExecutablePath)
 }
