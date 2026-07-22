@@ -31,10 +31,12 @@ Keep these buckets distinct before judging:
 1. **Brand** — offering, category, customer situation, priority CEP, differentiation, negative positioning, allowed claims, language, and market.
 2. **GEO** — active business Topics, Topic-scoped active Prompts, latest visibility gaps, and current date.
 3. **Content** — separate `liveCoverage` from `inFlightContent`.
-   - Count only a verified owned canonical URL or deploy fact as live coverage.
-   - Treat `draft`, `review`, and `approved` as production-collision signals only.
+   - `liveCoverage` is the sole coverage source. Count only a verified owned canonical URL or deploy fact.
+   - `inFlightContent` is never coverage and must not be summarized as the brand's "current content" or content mix.
+   - Treat `review` and `approved` as editorial-intent signals only. Use them to notice a near-exact production collision, not to block a stronger recommendation automatically.
+   - Treat `draft` as a weak, non-blocking signal. Mention it only when a recent draft is a near-exact duplicate worth inspecting; otherwise ignore it because drafts are often abandoned.
    - Do not infer deployment from a status label alone.
-   - PBN publication does not close owned coverage.
+   - PBN publication is public content but does not close owned coverage.
 4. **Demand/outcome** — use GSC and GA only when present.
    - GSC queries and product pages show observed search demand, not AI Prompt volume.
    - Use GA conversion evidence only for verified live article landing pages.
@@ -69,7 +71,9 @@ Return exactly one new article idea for the next production slot.
 **Evidence**
 - [brand] ...
 - [visibility] ...
-- [content] ...
+- [content/live] ...
+- [content/in-flight] ...
+- [content/PBN] ...
 - [GSC] ...
 - [GA] ...
 
@@ -80,4 +84,4 @@ Return exactly one new article idea for the next production slot.
 - ...
 ```
 
-Omit evidence rows that do not exist. Keep the parent Topic distinct from the one-article idea. Do not expose the input UUID in user-facing copy. Stop after the recommendation unless the user separately confirms a mutation.
+Omit evidence rows that do not exist. Omit `[content/in-flight]` unless it materially affects the near-duplicate check. Never use in-flight mix as the reason that a Topic is covered or saturated. Keep the parent Topic distinct from the one-article idea. Do not expose the input UUID in user-facing copy. Stop after the recommendation unless the user separately confirms a mutation.
