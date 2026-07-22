@@ -59,6 +59,7 @@ https://search.google.com/search-console/index/drilldown?resource_id=sc-domain%3
 
 Known `item_key` 값:
 - `CAMYFiAC` = "발견됨 - 현재 색인이 생성되지 않음" (Discovered - currently not indexed)
+- 다른 색인 상태를 처리하려면 유저가 해당 드릴다운으로 이동하게 하거나 대상 상태를 먼저 확인한다.
 
 **JavaScript로 URL 추출** (접근성 트리는 긴 URL을 잘라먹으므로 DOM에서 직접 추출):
 
@@ -77,6 +78,8 @@ for (const el of allEls) {
 JSON.stringify(urls);
 ```
 
+접근성 트리는 긴 URL slug를 잘라낼 수 있지만 DOM의 `textContent`에는 전체 URL이 남으므로, URL 목록은 위 방식으로 추출한다. `/blogs/`가 아닌 사이트라면 현재 GSC property의 도메인으로 `startsWith` 조건을 조정한다.
+
 **페이지네이션 확인**: "총 N행 중 1~10"이 보이면 "페이지당 행 수"를 100+로 변경하거나 모든 페이지를 순회한 후 추출.
 
 **URL 목록을 유저에게 확인받은 후** Phase 2로 진행한다 (CUD Rule 적용).
@@ -94,7 +97,7 @@ key(Return)
 wait(5s)
 ```
 
-`form_input` 후 드롭다운이 나타나고 네비게이트하지 않으면 → 드롭다운 항목 클릭 (검색창 바로 아래, ~y:98).
+`triple_click` + `type`은 페이지 전체를 선택할 수 있어 불안정하므로 `form_input`을 우선한다. 입력 후 드롭다운이 나타나고 네비게이트하지 않으면 screenshot으로 확인한 뒤 URL suggestion 항목을 클릭한다.
 
 #### Step 2 — "색인 생성 요청" 클릭
 
