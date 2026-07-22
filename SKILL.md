@@ -101,6 +101,7 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
+| `/aeo content-idea <domain_id>` | Agent-only, read-only workflow: inspect live Aeolo signals and recommend one next article idea. This is not a bare CLI verb. | [content-idea.md](references/content-idea.md) |
 | `/aeo content list` | List content items (--status, --limit, --offset) | [content-manage.md](references/content-manage.md) |
 | `/aeo content feed` | Content Feed URLs + JSON Feed contract to render Aeolo articles on your own site | [content-manage.md](references/content-manage.md) |
 | `/aeo content get <id>` | Read full article content (markdown) | [content-manage.md](references/content-manage.md) |
@@ -332,7 +333,7 @@ Never call a write API without confirmation. Always show what you're about to do
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Agent writing workflows** (manual article drafting → `aeo content import`, and `post write` → `aeo post import`): These have no bare CLI verb — they require LLM reasoning in the external agent. Draft directly and import; `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.)
+- **Agent workflows** (`/aeo content-idea <domain_id>`, manual article drafting → `aeo content import`, and `post write` → `aeo post import`): These have no bare CLI verb — they require LLM reasoning in the external agent. `content-idea` orchestrates read-only CLI calls and returns one recommendation; drafting workflows write directly and import. `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.)
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
 Before writing or generating any content (manual draft/import or explicit `/aeo content generate`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
