@@ -195,6 +195,7 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
+| `/aeo topics suggest <domain_id>` | Agent-only, read-only workflow: derive 3–5 durable business Topics from live brand, strategy, product, Prompt, visibility, traffic, and owned-content context. This is not a bare CLI verb. | [topic-suggest.md](references/topic-suggest.md) |
 | `/aeo topics list` | List Topics with status, revision, and Prompt counts (`--include-archived`) | [topics.md](references/topics.md) |
 | `/aeo topics create` | Create a Topic (`--name` required, `--description` optional) | [topics.md](references/topics.md) |
 | `/aeo topics update <id>` | Rename or redefine a Topic with required `--revision` | [topics.md](references/topics.md) |
@@ -345,7 +346,7 @@ Never call a write API without confirmation. Always show what you're about to do
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Agent workflows** (`/aeo content idea <domain_id>`, `/aeo prompts audit <domain_id>`, manual article drafting → `aeo content import`, and `post write` → `aeo post import`): These have no bare CLI verb — they require LLM reasoning in the external agent. `content idea` recommends one next article; `prompts audit` judges validity and utility without changing Prompts. Drafting workflows write directly and import. `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.)
+- **Agent workflows** (`/aeo topics suggest <domain_id>`, `/aeo content idea <domain_id>`, `/aeo prompts audit <domain_id>`, manual article drafting → `aeo content import`, and `post write` → `aeo post import`): These have no bare CLI verb — they require LLM reasoning in the external agent. `topics suggest` proposes a durable Topic architecture without saving it; `content idea` recommends one next article; `prompts audit` judges validity and utility without changing Prompts. Drafting workflows write directly and import. `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.)
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
 Before writing or generating any content (manual draft/import or explicit `/aeo content generate`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
