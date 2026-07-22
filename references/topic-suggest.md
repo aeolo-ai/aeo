@@ -23,6 +23,8 @@ aeo measure traffic --days 28 -d <domain_id>
 
 If Topics are unavailable, say so and propose a fresh topology. Do not substitute legacy segment tags for Topics. Do not run a visibility check, generate Prompts, create or change Topics, or write data.
 
+Use the `language` from live brand context as the sole language for the entire user-facing response, including headings, labels, Topic names and definitions, Prompt territories, evidence, guardrails, and allocations. Do not infer the output language from the conversation or hard-code a locale pair. If live brand context has no language, state that limitation and ask the user which language to use before proposing Topics.
+
 ## Judge the whole context
 
 Treat current Topics, segment tags, Prompts, and prior proposals as evidence, never ground truth. Derive the topology afresh from:
@@ -41,35 +43,37 @@ A Topic is a stable business theme or customer situation that can support multip
 For every proposed Topic:
 
 - connect it to a real customer situation and a reason this brand can answer;
-- give it at least two distinct Prompt territories;
+- give it at least two distinct Prompt territories in the live brand language;
 - keep it useful beyond one product launch or calendar year;
 - keep unsupported efficacy, certification, clinical, safety, or regulatory claims out of the definition;
-- keep KO and EN inside the same Topic unless the underlying business situation truly differs by market;
+- keep language or regional variants inside the same Topic unless the underlying business situation truly differs by market;
 - merge overlapping Topics instead of preserving a noisy current taxonomy.
 
 Prefer the smallest coherent topology. A missing evidence source becomes a guardrail, not a fabricated Topic.
 
 ## Output
 
+Use this semantic structure, translating every heading and label into the live brand language. Bracketed text describes a slot; do not copy it literally.
+
 ```markdown
-## Topic Suggestions
+## [Topic Suggestions]
 
-**Topology judgment:** One concise paragraph.
+**[Topology judgment]:** [one concise paragraph]
 
-### 1. Topic name
-**Action:** keep | rename | merge | new
-**Definition:** ...
-**Why this brand:** ...
-**Prompt territories:**
-- KO: ...
-- EN: ...
-**Evidence:** ...
-**Missing / guardrails:** ...
+### 1. [Topic name]
+**[Action]:** [keep | rename | merge | new]
+**[Definition]:** ...
+**[Why this brand]:** ...
+**[Prompt territories]:**
+- ...
+- ...
+**[Evidence]:** ...
+**[Missing / guardrails]:** ...
 
-## Proposed Prompt Allocation
-- Topic name: KO n / EN n
+## [Proposed Prompt Allocation]
+- [Topic name]: [n Prompts]
 
-## Not Topics
+## [Not Topics]
 - ...
 ```
 
