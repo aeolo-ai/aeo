@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var version = "2.1.1"
+var version = "2.1.2"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -699,6 +699,17 @@ func splitCSV(raw string) []string {
 	return out
 }
 
+func buildPromptsListPath(args []string) (string, error) {
+	status := findFlag(args, "--status")
+	if status == "" {
+		return "/prompts", nil
+	}
+	if status != "tracked" && status != "untracked" {
+		return "", fmt.Errorf("--status must be tracked or untracked")
+	}
+	return "/prompts?status=" + url.QueryEscape(status), nil
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 const usage = `aeo — manage your brand visibility from the terminal
@@ -843,7 +854,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 `,
 	"prompts": `aeo prompts <verb>
 
-  list              List prompts grouped by stage
+  list              List prompts grouped by stage (--status tracked|untracked)
   add               Add one prompt (--prompt, --stage, --language, --segment foo,bar)
                     or many at once (--prompts-json='[{"prompt":"...","stage":"comparison"}]', max 30)
   update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked)
@@ -1649,7 +1660,12 @@ func main() {
 		}
 		switch args[1] {
 		case "list":
-			run("/prompts", "GET", nil, domainID)
+			path, err := buildPromptsListPath(args)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error: "+err.Error())
+				os.Exit(1)
+			}
+			run(path, "GET", nil, domainID)
 		case "add":
 			lang := findFlag(args, "--language")
 			if lang == "" {

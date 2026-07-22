@@ -184,8 +184,8 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo prompts audit <domain_id>` | Agent-only, read-only workflow: judge Prompt validity and observed utility together, then recommend content-target, research-sensor, revise, or retire roles. This is not a bare CLI verb. | [prompt-audit.md](references/prompt-audit.md) |
-| `/aeo prompts list` | List prompts grouped by stage | [brand.md](references/brand.md) |
+| `/aeo prompts audit <domain_id>` | Agent-only, read-only workflow: evaluate each tracked Prompt category's validity and whether its live content is working, then give a natural-language operating recommendation. This is not a bare CLI verb. | [prompt-audit.md](references/prompt-audit.md) |
+| `/aeo prompts list` | List prompts grouped by stage; optionally filter with `--status tracked\|untracked` | [brand.md](references/brand.md) |
 | `/aeo prompts add` | Add prompts to brand_prompts — one (`--prompt`) or up to 30 at once (`--prompts-json`); also `--stage`, `--language`, `--segment foo,bar` | [brand.md](references/brand.md) |
 | `/aeo prompts update <id>` | Edit an existing prompt (`--prompt`, `--stage`, `--query-form`, `--segment foo,bar`, `--status tracked\|untracked`) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |

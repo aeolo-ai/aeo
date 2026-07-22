@@ -76,11 +76,14 @@ Suggest this structure when helping a user build it from scratch:
 
 ```bash
 aeo prompts list
+aeo prompts list --status tracked
 ```
 
 > Use the explicit `list` verb. Bare `aeo prompts` prints sub-help in the terminal binary (it only lists via the agent surface), so `aeo prompts list` is the form that works everywhere.
 
 Response: `text/markdown` — table grouped by stage (foundational → comparison → use-case → implementation), showing language, query form, prompt text, visibility score, and last checked date.
+
+Optional filter: `--status tracked|untracked`. Omit it to list both statuses.
 
 After displaying:
 - Note which stages are sparse or have low visibility scores

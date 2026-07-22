@@ -1,6 +1,6 @@
 # Prompt Audit
 
-Use this agent-only workflow for `/aeo prompts audit <domain_id>`. It is not a bare `aeo` CLI verb. Judge Prompt validity and observed utility in one read-only diagnosis; do not collapse them into one score.
+Use this agent-only workflow for `/aeo prompts audit <domain_id>`. It is not a bare `aeo` CLI verb. Evaluate Validity and Utility separately for each tracked Prompt category, then give a natural-language operating recommendation. Do not collapse the judgments into a score or fixed decision enum.
 
 ## Input
 
@@ -13,54 +13,67 @@ Run independent reads in parallel when possible:
 ```bash
 aeo agent context -d <domain_id>
 aeo strategy show -d <domain_id>
-aeo prompts list -d <domain_id>
+aeo prompts list --status tracked -d <domain_id>
 aeo content list --limit 200 -d <domain_id>
 aeo measure visibility -d <domain_id>
 aeo measure traffic --days 28 -d <domain_id>
 aeo measure overview -d <domain_id>
 ```
 
-Use `aeo measure content <content_id> -d <domain_id>` for articles that plausibly target the Prompt. Inspect Topic assignments through an authenticated read surface when available; otherwise state that limitation. Do not run a new visibility check or mutate data.
+Use `aeo measure content <content_id> -d <domain_id>` for live articles that plausibly target a tracked category. Inspect Topic assignments through an authenticated read surface when available. Use actual Topics as the category boundary; use segment tags or a clearly stated semantic grouping only as a fallback.
 
-## Judge two concepts together
+Do not use untracked Prompts in either judgment. If none are tracked, say that the portfolio cannot be audited and stop. Do not run a new visibility check or mutate data.
 
-For each material Prompt or coherent Prompt group, make two separate judgments from the whole context:
+## Build category evidence
 
-- **Validity** — Is this a question the intended audience could genuinely ask, and can this brand credibly answer or be recommended without stretching its positioning or claims? Consider its distinct role within the Topic and whether another Prompt already covers the same intent.
-- **Utility** — What has this Prompt actually helped reveal or cause? Consider visibility observations, competitor/category intelligence, owned-content lineage, GSC demand, GA outcomes, and how long evidence has had to mature.
+Group the tracked Prompts before judging. For each category, collect:
 
-Do not equate validity with current visibility. A valid Prompt can score zero. Do not call a Prompt useful merely because an article exists, or useless because a young article has little traffic. GSC is evidence of search demand, not AI Prompt volume, and correlation is not causation.
+- tracked Prompt count, representative questions, latest visibility, and movement over time when history exists
+- live owned articles that plausibly answer those tracked questions
+- article-level GSC and GA evidence when connected
+- publication age, duplicate/cannibalizing coverage, and measurement gaps
 
-A Prompt may be valuable as a **research sensor** even when it should not drive an article. Preserve this distinction instead of forcing every tracked Prompt into the content queue.
+Treat Prompt-to-article matching as an internal lineage estimate, not the result itself. Count only a verified owned canonical URL or deploy fact as live. Exclude drafts, review/approved-only items, PBN publication, and articles that target only untracked Prompts. If an article lives on a host not covered by the connected GSC/GA property, call it unmeasurable rather than failed.
 
-## Recommend a role
+## Judge two concepts separately
 
-Use best judgment; do not apply universal weights or hard thresholds.
+### Validity
 
-- **content target** — credible brand fit and an actionable unanswered content opportunity
-- **research sensor** — useful for monitoring category language, competitors, or recommendation behavior, but weak as a direct writing target
-- **revise** — underlying intent matters, but the phrasing, scope, Topic placement, or claim burden is wrong
-- **retire** — neither a credible target nor a useful sensor, or redundant with a better Prompt
-- **insufficient evidence** — keep the judgment open when utility cannot yet be observed; say what is missing
+Judge whether the category's tracked Prompts form a credible sensor for this brand: real-question plausibility, brand answerability, Topic fidelity, distinctness, non-leading phrasing, claim safety, and sufficient context. Visibility and article performance do not determine Validity.
+
+### Utility
+
+Judge whether writing for the category appears to be working. Read together:
+
+- AI visibility across only the category's tracked Prompts
+- GSC demand and outcomes for live category articles
+- GA engagement or conversion evidence for those live articles
+- publication age and whether multiple articles confound attribution
+
+Separate the observed outcome by surface. A category may work in Google search while showing no AI visibility movement. Do not call a category successful merely because content exists, or failed because a young article has little traffic.
+
+Without a saved pre-publication baseline, Prompt revision history, and explicit Prompt-to-article lineage, describe current evidence as a qualitative retrospective rather than causal lift. GSC is search demand, not AI Prompt volume.
 
 ## Output
 
-Start with the portfolio-level conclusion, then show only the material groups and actionable exceptions. Do not dump every healthy Prompt.
+Lead with the category-level conclusion. Do not dump every Prompt or foreground the internal article matching.
 
 ```markdown
 ## Prompt Audit
 
-**Portfolio conclusion:** ...
+**Portfolio read:** ...
 
-| Prompt or group | Validity | Observed utility | Recommended role | Why |
-|---|---|---|---|---|
-| ... | ... | ... | ... | ... |
+| Tracked category | Validity | Utility | Decisive evidence |
+|---|---|---|---|
+| ... | ... | ... | ... |
 
-**What to change now**
-- ...
+**Operating recommendation**
+- [Category]: one natural-language recommendation grounded in the two judgments.
 
 **Evidence limits**
 - ...
 ```
 
-Name Prompts in user-facing copy; do not expose UUIDs. Stop after the read-only recommendation. Prompt edits, Topic reassignment, tracking changes, or new visibility checks require separate explicit confirmation under the CUD Rule.
+Do not force recommendations into `working`, `SEO-only`, `research-sensor`, `revise`, `retire`, or any other fixed enum. Use the language the evidence warrants. Name categories, Prompts, and articles in user-facing copy; do not expose UUIDs.
+
+Stop after the read-only recommendation. Prompt edits, Topic reassignment, tracking changes, or new visibility checks require separate explicit confirmation under the CUD Rule.
