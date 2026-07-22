@@ -1,6 +1,6 @@
 # Prompt Audit
 
-Use this agent-only workflow for `/aeo prompt-audit <domain_id>`. It is not a bare `aeo` CLI verb. Judge Prompt validity and observed utility in one read-only diagnosis; do not collapse them into one score.
+Use this agent-only workflow for `/aeo prompts audit <domain_id>`. It is not a bare `aeo` CLI verb. Judge Prompt validity and observed utility in one read-only diagnosis; do not collapse them into one score.
 
 ## Input
 
