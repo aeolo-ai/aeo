@@ -191,6 +191,17 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
 | `/aeo prompts generate` | Generate a CEP-based prompt set from brand context and save it to tracked prompts (free; needs brand analysis first). `--count N`, `--languages en,ko`, `--instruction "..."` | [brand.md](references/brand.md) |
 
+### aeo topics — Stable customer situations
+
+| Command | What it does | Reference |
+|---------|-------------|-----------|
+| `/aeo topics list` | List Topics with status, revision, and Prompt counts (`--include-archived`) | [topics.md](references/topics.md) |
+| `/aeo topics create` | Create a Topic (`--name` required, `--description` optional) | [topics.md](references/topics.md) |
+| `/aeo topics update <id>` | Rename or redefine a Topic with required `--revision` | [topics.md](references/topics.md) |
+| `/aeo topics archive <id>` | Archive an empty Topic with required `--revision`; move Prompts first | [topics.md](references/topics.md) |
+| `/aeo topics restore <id>` | Restore an archived Topic with required `--revision` | [topics.md](references/topics.md) |
+| `/aeo topics assign-prompts <id>` | Atomically reassign Prompts via `--prompt-ids id1,id2` | [topics.md](references/topics.md) |
+
 ### aeo segments — Segment tags
 
 | Command | What it does | Reference |
@@ -327,7 +338,7 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel create, carousel update, carousel delete, audit run, reference analyze, reference delete, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add, products rescan, domain rescan, agency request, integrations google set.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel create, carousel update, carousel delete, audit run, reference analyze, reference delete, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, topics create, topics update, topics archive, topics restore, topics assign-prompts, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add, products rescan, domain rescan, agency request, integrations google set.
 
 Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy`/`content unpublish` change the customer's live site.
 

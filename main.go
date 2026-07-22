@@ -13,11 +13,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var version = "2.1.2"
+var version = "2.3.0"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -728,6 +729,7 @@ COMMANDS:
   strategy      show | update
   content       list | get <id> | review <id> | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | add | update <id> | delete <id>
+  topics        list | create | update <id> | archive <id> | restore <id> | assign-prompts <id>
   segments      list
   measure       overview | content <id> | traffic [--days] | visibility | report --command <cmd>
   metrics       overview | article <id> | traffic [--days]
@@ -859,6 +861,17 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     or many at once (--prompts-json='[{"prompt":"...","stage":"comparison"}]', max 30)
   update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked)
   delete <id>       Delete a prompt
+`,
+	"topics": `aeo topics <verb>
+
+  list                    List active Topics and Prompt counts
+                          Optional: --include-archived
+  create                  Create a Topic (--name required, --description optional)
+  update <id>             Update a Topic (--revision required; --name and/or --description)
+  archive <id>            Archive an empty Topic with required --revision
+  restore <id>            Restore an archived Topic with required --revision
+  assign-prompts <id>     Reassign Prompts atomically to this Topic
+                          Required: --prompt-ids id1,id2
 `,
 	"segments": `aeo segments <verb>
 
@@ -1201,6 +1214,100 @@ func runReportCommand(args []string, domainID string) {
 	}
 	reportJSON, _ := json.Marshal(reportBody)
 	runSilent("/report", "POST", reportJSON, domainID)
+}
+
+func positiveIntFlag(args []string, name string, required bool) (int, bool, error) {
+	raw := findFlag(args, name)
+	if raw == "" {
+		if required {
+			return 0, false, fmt.Errorf("%s is required", name)
+		}
+		return 0, false, nil
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil || value <= 0 {
+		return 0, false, fmt.Errorf("%s must be a positive integer", name)
+	}
+	return value, true, nil
+}
+
+func topicMutationBody(args []string, status string) ([]byte, error) {
+	revision, _, err := positiveIntFlag(args, "--revision", true)
+	if err != nil {
+		return nil, err
+	}
+	body := map[string]any{"revision": revision}
+	if status != "" {
+		body["status"] = status
+	} else {
+		if hasFlag(args, "--name") {
+			name := strings.TrimSpace(findFlag(args, "--name"))
+			if name == "" {
+				return nil, fmt.Errorf("--name cannot be empty")
+			}
+			body["name"] = name
+		}
+		if hasFlag(args, "--description") {
+			body["description"] = findFlag(args, "--description")
+		}
+		if len(body) == 1 {
+			return nil, fmt.Errorf("--name or --description is required")
+		}
+	}
+	data, _ := json.Marshal(body)
+	return data, nil
+}
+
+func runTopicsCommand(args []string, domainID string) {
+	if len(args) < 1 || wantsHelp(args) {
+		printSubUsage("topics")
+		return
+	}
+	switch args[0] {
+	case "list":
+		path := "/topics"
+		if hasFlag(args, "--include-archived") {
+			path += "?includeArchived=true"
+		}
+		run(path, "GET", nil, domainID)
+	case "create":
+		name := strings.TrimSpace(findFlag(args, "--name"))
+		if name == "" {
+			fmt.Fprintln(os.Stderr, "Error: --name is required")
+			os.Exit(1)
+		}
+		body := map[string]any{"name": name}
+		if hasFlag(args, "--description") {
+			body["description"] = findFlag(args, "--description")
+		}
+		data, _ := json.Marshal(body)
+		run("/topics", "POST", data, domainID)
+	case "update", "archive", "restore":
+		requireArg(args, 1, "aeo topics "+args[0]+" <id> --revision N")
+		status := ""
+		if args[0] == "archive" {
+			status = "archived"
+		} else if args[0] == "restore" {
+			status = "active"
+		}
+		body, err := topicMutationBody(args, status)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error: "+err.Error())
+			os.Exit(1)
+		}
+		run("/topics/"+url.PathEscape(args[1]), "PATCH", body, domainID)
+	case "assign-prompts":
+		requireArg(args, 1, "aeo topics assign-prompts <id> --prompt-ids id1,id2")
+		promptIDs := splitCSV(findFlag(args, "--prompt-ids"))
+		if len(promptIDs) == 0 {
+			fmt.Fprintln(os.Stderr, "Error: --prompt-ids is required")
+			os.Exit(1)
+		}
+		data, _ := json.Marshal(map[string]any{"promptIds": promptIDs})
+		run("/topics/"+url.PathEscape(args[1])+"/prompts", "POST", data, domainID)
+	default:
+		printSubUsage("topics")
+	}
 }
 
 func runPublishCommand(args []string, domainID string) {
@@ -1720,6 +1827,10 @@ func main() {
 		default:
 			printSubUsage("prompts")
 		}
+
+	// ── topics ──
+	case "topics":
+		runTopicsCommand(args[1:], domainID)
 
 	// ── segments ──
 	case "segments":
