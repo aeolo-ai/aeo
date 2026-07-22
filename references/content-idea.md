@@ -1,6 +1,6 @@
 # Content Idea
 
-Use this agent-only workflow for `/aeo content-idea <domain_id>`. It is not a bare `aeo` CLI verb: the external agent runs existing read commands and judges the evidence.
+Use this agent-only workflow for `/aeo content idea <domain_id>`. It is not a bare `aeo` CLI verb: the external agent runs existing read commands and judges the evidence.
 
 ## Input
 
