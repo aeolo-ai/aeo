@@ -179,13 +179,15 @@ Accepted flags (all optional, at least one required):
 
 | Flag | Type | Notes |
 |------|------|-------|
-| `--prompt` | string | Prompt text |
+| `--prompt` | string | Single Prompt text used immediately for display, dedupe, writing, and visibility measurement |
 | `--stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | Move to different stage |
 | `--query-form` | `short-tail` \| `long-tail` \| `conversational` | Update query form (kebab-case) |
 | `--segment` | comma-separated tags | Replaces the prompt's tags |
 | `--status` | `tracked` \| `untracked` | Toggle measurement tracking |
 
 Use `/aeo prompts list` first to get the prompt ID. Confirm with user before updating.
+
+After a text update, the response returns the stored Prompt text and its new revision. There is no separate canonical/localized text to update.
 
 ---
 
