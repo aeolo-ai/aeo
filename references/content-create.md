@@ -165,6 +165,38 @@ Search for topic-relevant material in this order:
 
 Extract 1st-party facts: product test results (who, how many, conditions), customer testimonials, internal data.
 
+#### 3.2.1 — Optional inline catalog image
+
+Keep articles text-only by default. Evaluate an inline image only for the manual
+draft/import path and only when the article contains real product or catalog
+copy. For `aeo content generate`, do not add image markup yourself; the
+server-side writing job applies its own deterministic catalog guard.
+
+Qualify one candidate in this order:
+
+1. Read the catalog in `aeo agent context` and capture the exact product title
+   plus its verified first-party PDP URL.
+2. Verify that the PDP belongs to the live brand domain or its subdomain. The
+   image asset itself may live on the brand's commerce CDN; first-party
+   provenance comes from the PDP, not the image host.
+3. Run `aeo products` and require an exact product-title match with a real Image
+   URL. Do not guess that two similarly named products are the same SKU.
+4. Require the final body to name that exact product or link its verified
+   first-party PDP.
+
+When all checks pass, insert at most one inline image immediately after the
+first explanatory paragraph for that product:
+
+```markdown
+![Exact product title](verified-image-url)
+```
+
+If the draft already contains an image, do not add another. Treat the image as
+presentation, never as evidence for a claim or a replacement for an inline
+citation. Do not use `aeo image search`, `aeo image generate`, web-search image
+results, stock images, marketplace PDPs, or arbitrary external URLs for inline
+body images. If any check fails, keep the article text-only.
+
 #### 3.3 — Ask user for gaps
 
 If 1st-party material is insufficient for the topic:
@@ -231,6 +263,7 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
   - Bad: `"Sunscreen is essential for athletes who spend time outdoors..."` (generic intro fallback — no CTR hook)
 - BLUF in first 2–3 sentences
 - Inline citations as `[Source Name](URL)` throughout
+- **Inline product images are catalog-only and optional** — follow Step 3.2.1; otherwise keep the body text-only
 - Brand mentions at 15–25% density, always as part of a list (never solo promo)
 - FAQ section at the end (3–5 questions)
 
