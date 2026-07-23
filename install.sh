@@ -5,7 +5,6 @@ set -e
 # Usage: curl -fsSL https://skills.aeolo.io | sh
 
 REPO="aeolo-ai/aeo"
-INSTALL_DIR="${AEO_INSTALL_DIR:-/usr/local/bin}"
 BINARY="aeo"
 
 # ── Detect OS & Arch ─────────────────────────────────────────────────────────
@@ -38,6 +37,44 @@ if [ -z "$AEO_VERSION" ]; then
   if [ -z "$AEO_VERSION" ] || [ "$AEO_VERSION" = "$LATEST_URL" ]; then
     echo "Error: could not determine latest version"
     exit 1
+  fi
+fi
+
+# ── Preserve existing install location / package manager ─────────────────────
+
+if [ -n "$AEO_INSTALL_DIR" ]; then
+  INSTALL_DIR="$AEO_INSTALL_DIR"
+else
+  EXISTING_AEO=$(command -v "$BINARY" 2>/dev/null || true)
+  if [ -n "$EXISTING_AEO" ]; then
+    LINK_TARGET=""
+    if [ -L "$EXISTING_AEO" ]; then
+      LINK_TARGET=$(readlink "$EXISTING_AEO" 2>/dev/null || true)
+    fi
+
+    case "$LINK_TARGET" in
+      *Cellar/aeo/*)
+        if ! command -v brew >/dev/null 2>&1; then
+          echo "Error: existing aeo is managed by Homebrew, but brew is not on PATH"
+          exit 1
+        fi
+        echo "Updating Homebrew-managed aeo to v${AEO_VERSION}..."
+        brew update
+        brew upgrade aeolo-ai/aeo/aeo
+        INSTALLED_VERSION=$("$EXISTING_AEO" --version | awk '{print $2}' | sed 's/^v//')
+        if [ "$INSTALLED_VERSION" != "$AEO_VERSION" ]; then
+          echo "Error: Homebrew left aeo at v${INSTALLED_VERSION}; expected v${AEO_VERSION}"
+          exit 1
+        fi
+        echo ""
+        echo "✓ aeo v${AEO_VERSION} updated through Homebrew"
+        exit 0
+        ;;
+    esac
+
+    INSTALL_DIR=$(dirname "$EXISTING_AEO")
+  else
+    INSTALL_DIR="/usr/local/bin"
   fi
 fi
 
