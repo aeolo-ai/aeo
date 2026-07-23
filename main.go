@@ -629,15 +629,15 @@ func buildPromptsBatchJSON(raw string, defaults map[string]string, tags []string
 
 		switch v := entry.(type) {
 		case string:
-			item["canonical"] = strings.TrimSpace(v)
+			item["prompt"] = strings.TrimSpace(v)
 		case map[string]any:
-			for _, key := range []string{"canonical", "prompt"} {
+			for _, key := range []string{"prompt", "localized_prompt", "canonical"} {
 				if s, ok := v[key].(string); ok && strings.TrimSpace(s) != "" {
-					item["canonical"] = strings.TrimSpace(s)
+					item["prompt"] = strings.TrimSpace(s)
 					break
 				}
 			}
-			for _, key := range []string{"localized_prompt", "stage", "language", "query_form"} {
+			for _, key := range []string{"stage", "language", "query_form"} {
 				if s, ok := v[key].(string); ok && strings.TrimSpace(s) != "" {
 					item[key] = strings.TrimSpace(s)
 				}
@@ -655,7 +655,7 @@ func buildPromptsBatchJSON(raw string, defaults map[string]string, tags []string
 			return nil, fmt.Errorf("--prompts-json[%d] must be a string or an object", i)
 		}
 
-		if s, ok := item["canonical"].(string); !ok || s == "" {
+		if s, ok := item["prompt"].(string); !ok || s == "" {
 			return nil, fmt.Errorf(`--prompts-json[%d] is missing "prompt"`, i)
 		}
 
@@ -1801,7 +1801,7 @@ func main() {
 				os.Exit(1)
 			}
 			body := buildPromptJSON(map[string]string{
-				"canonical":  prompt,
+				"prompt":     prompt,
 				"language":   lang,
 				"stage":      findFlag(args, "--stage"),
 				"query_form": findFlag(args, "--query-form"),
@@ -1815,7 +1815,7 @@ func main() {
 				os.Exit(1)
 			}
 			body := buildPromptJSON(map[string]string{
-				"canonical":  findFlag(args, "--prompt"),
+				"prompt":     findFlag(args, "--prompt"),
 				"stage":      findFlag(args, "--stage"),
 				"query_form": findFlag(args, "--query-form"),
 				"status":     status,
