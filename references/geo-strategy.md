@@ -53,6 +53,25 @@ What to check in the visibility report:
 | `foundational` | Concept/need exploration | "what is CRM", "why use CRM" | **3rd priority** | Brand awareness building. Long-term effect |
 | `implementation` | Post-purchase / pre-purchase verification | "HubSpot pricing", "how to use [BrandName]" | **Skip** | Brand name already in the query → not a GEO target |
 
+### Discovery Prompts vs. Branded Diagnostics
+
+The default tracked Prompt portfolio measures **unaided discovery**: would an AI
+engine recommend the customer brand when the user did not name it first?
+
+- Do not generate or retain the customer brand name, domain, product name, or a
+  recognizable variant in the default visibility/SOV Prompt portfolio.
+- Treat self-included Prompts such as "Is [Brand] good for sensitive skin?" as
+  branded diagnostics, not discovery sensors. They may test answer accuracy or
+  brand understanding, but they do not prove discoverability, Share of Voice,
+  or competitive preference.
+- Create branded diagnostics only when the user explicitly asks for a separate
+  diagnostic set. Label and report that set separately from discovery Prompts.
+- Never average branded-diagnostic results into discovery visibility, SOV, gap
+  prioritization, or content-opportunity judgments.
+- If an existing tracked portfolio mixes both surfaces, call out the
+  contamination and recommend removing or untracking self-included Prompts from
+  the discovery portfolio before interpreting the aggregate.
+
 ### Engine Priority
 
 Unless otherwise specified: **ChatGPT > Gemini > Perplexity > Grok**

@@ -33,6 +33,16 @@ Group the tracked Prompts before judging. For each category, collect:
 - article-level GSC and GA evidence when connected
 - publication age, duplicate/cannibalizing coverage, and measurement gaps
 
+Before category judgment, split the portfolio into discovery Prompts and branded
+diagnostics. A Prompt is self-included when it contains the customer brand name,
+domain, product name, or a recognizable variant. The default tracked portfolio
+is a discovery sensor, so treat self-included Prompts as misplaced even when
+they sound natural or would produce a useful answer. Do not use their results as
+evidence of discoverability, Share of Voice, competitive preference, category
+validity, or content utility. Report the contamination explicitly and recommend
+removing or untracking those Prompts. Only evaluate them as a separate branded
+diagnostic surface when the user explicitly says that such a set was intended.
+
 Treat Prompt-to-article matching as an internal lineage estimate, not the result itself. Count only a verified owned canonical URL or deploy fact as live. Exclude drafts, review/approved-only items, PBN publication, and articles that target only untracked Prompts. If an article lives on a host not covered by the connected GSC/GA property, call it unmeasurable rather than failed.
 
 ## Judge two concepts separately
