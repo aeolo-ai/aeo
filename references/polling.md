@@ -13,7 +13,7 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 | Site audit | `aeo audit run` | 3–8 min |
 | Content generation | `aeo content generate` | 2–8 min |
 | Reference analysis | `aeo reference analyze` | 2–6 min |
-| Video generation | `aeo video generate` → `aeo video poll <jobId> [jobId...]` (multiple IDs OK) | 2–8 min |
+| ~~Video generation~~ | **RETIRED 2026-07-27** — `aeo video generate` / `aeo video poll` are sunset (shortform output is no longer a supported channel). Do not start new jobs. | — |
 
 ---
 

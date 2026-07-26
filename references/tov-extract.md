@@ -121,7 +121,7 @@ Extract these dimensions from the crawled posts:
 
 ### Step 4 — Select Example Posts
 
-From the crawled posts, select the **top 3-5 by engagement** as task-selected references. These are candidates for task-specific few-shot context; `post write` should use only reviewed examples relevant to the current platform, language, and task.
+From the crawled posts, select the **top 3-5 by engagement** as task-selected references. These are candidates for task-specific few-shot context; the writing task should use only reviewed examples relevant to the current language and task.
 
 For each selected post, record:
 - Original text (verbatim)
@@ -211,4 +211,4 @@ only durable, brand-wide rules into `brand_context` after explicit review.
 ---
 
 *For channel-specific writing rules, see [channel-washing.md](channel-washing.md).*
-*For post generation workflow, see [post-create.md](post-create.md).*
+*Post generation itself is retired (2026-07-27) — [post-create.md](post-create.md) is reference only. This analysis feeds blog-article briefs.*

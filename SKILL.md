@@ -2,9 +2,10 @@
 name: aeo
 description: |
   Aeolo is an organic content engine: turn deep brand understanding into marketing
-  content that compounds without ad spend. Two channels — articles cited in AI search
-  (GEO: ChatGPT, Perplexity, Gemini) and short-form video (analyze Reels/TikToks to
-  brief content). Start from the brand, then write, deploy, and measure. It loads real
+  content that compounds without ad spend. One supported output channel — blog articles
+  cited in AI search (GEO: ChatGPT, Perplexity, Gemini). Reels/TikToks and competitor
+  posts stay in scope as reference input you analyze to brief those articles, never as
+  output. Start from the brand, then write, deploy, and measure. It loads real
   Aeolo brand data and writes back changes (brand updates, article generation, Shopify
   deployment) to run the full organic content cycle autonomously.
   Use whenever the user mentions brand understanding, organic content, content strategy,
@@ -31,6 +32,20 @@ Read and write live Aeolo data across the full GEO execution cycle.
 > **Noun.verb aliases**: the connector accepts noun-first aliases for many commands. `diagnose` is the canonical visibility/audit noun (`diagnose visibility`/`visibility run`/`visibility poll <jobId>`, `diagnose audit`/`audit run`/`audit poll <jobId>`) and `visibility`/`audit` are the friendly aliases. `measure` is canonical and `metrics` is the alias (`metrics overview` = `measure overview`). `account` is the canonical billing noun and `billing`/`whoami` are aliases (`billing subscription` = `account subscription`, `whoami` = `account whoami`). `aeo publish` is its own binary group (`publish preview|deploy|redeploy`) that mirrors `content deploy|redeploy|preview`. `posts`/`channels` noun forms also route. The CLI image/thumbnail nouns are `image` and `video` (the `content thumbnail`/`media` forms are connector-internal). Both forms route to the same endpoint — use whichever reads better.
 >
 > **Terminal vs agent surface**: the noun-first plural (`posts`, `channels`) and legacy-verb (`brand update`) aliases are normalized by the connector command registry, so they resolve on the **dashboard-chat and MCP agent surfaces**. The raw `aeo` terminal binary only ships the canonical forms — in shell examples prefer `post` (not `posts`) and `domain brand update` (not `brand update`).
+
+### Retired surfaces — TBD (2026-07-27)
+
+Three channels are sunset. **Do not offer them to the user, and do not call their output commands.**
+
+| Retired | Commands | Instead |
+|---------|----------|---------|
+| Card news | `carousel create`, `carousel update` | blog article |
+| Channel posts / Threads | `post write`, `post import`, `post preview`, `post approve`, `post publish` | blog article |
+| Shortform video output | `video generate`, `video poll` | blog article |
+
+The loop never closed for any of the three: Threads publishing was gated on a Meta app review that never landed, and reels drive Google SERP discovery but not chatbot citations. Blog articles are the only channel where diagnose → write → deploy → index → citation closes inside the product, so route every content request to `content generate` (or draft directly + `create import`) → `publish deploy`.
+
+> **Only output generation is retired — reference input is fully live.** Analyzing someone else's Reel, TikTok, or post as *reference* to brief a blog article is unaffected: `diagnose references analyze`, `diagnose video analyze`, `reference style`, `channel voice`, and `post analyze` all stay. So do reads and cleanup on rows that already exist (`carousel list`/`get`/`delete`, `post list`/`get`/`delete`).
 
 ### aeo domain — Domain selection & brand metadata
 
@@ -117,14 +132,16 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 | `/aeo content job cancel <jobId>` | Delete a finished writing job + its events (blocked while pending/running — let active jobs finish or fail) | [polling.md](references/polling.md) |
 | `/aeo content review <id>` | GEO content review (structure, trust, freshness, brand, engine fit) | [content-review.md](references/content-review.md) |
 
-### aeo carousel — Instagram carousel decks
+### aeo carousel — Instagram carousel decks — RETIRED
+
+> **Retired 2026-07-27 — card news is no longer a supported channel.** Do not offer it. Generation is closed server-side (HTTP 410, no credits charged); the read/cleanup verbs stay so existing decks remain visible and removable.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo carousel list [--limit N]` | List recent carousel decks for the domain | [content-manage.md](references/content-manage.md) |
-| `/aeo carousel get <jobId>` | Get a deck (slides + caption) by job ID | [content-manage.md](references/content-manage.md) |
-| `/aeo carousel create [--topic "..."]` | Generate a carousel deck (10 credits). Give `--topic`, or omit it for recommendation mode; optional `--language`, `--slides N`. Async — returns a job ID. | [content-create.md](references/content-create.md), [polling.md](references/polling.md) |
-| `/aeo carousel update <jobId> --caption "..."` | Edit the caption of a completed deck (plain text, ≤2200 chars) | [content-manage.md](references/content-manage.md) |
+| `/aeo carousel list [--limit N]` | List carousel decks that already exist for the domain | [content-manage.md](references/content-manage.md) |
+| `/aeo carousel get <jobId>` | Get an existing deck (slides + caption) by job ID | [content-manage.md](references/content-manage.md) |
+| `/aeo carousel create [--topic "..."]` | **RETIRED** — card news generation is closed (returns 410). Write a blog article instead. | — |
+| `/aeo carousel update <jobId> --caption "..."` | **RETIRED** — do not edit card news captions; the channel is sunset | — |
 | `/aeo carousel delete <jobId>` | Soft-delete a deck (cancels active work; assets stay recoverable) | [content-manage.md](references/content-manage.md) |
 
 > Default external-agent writing path: draft directly, then use `content import`. Use `content generate` only when the user explicitly wants an Aeolo server-side paid generation job.
@@ -133,31 +150,37 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 >
 > **Deploy gate**: `content deploy`/`content redeploy` reject with HTTP 422 unless the title is ≤ 60 chars and the meta description is present and 50–160 chars. The approved-status gate and this SERP title/meta gate apply to every target. Check with `content get` and fix with `content update` before deploying.
 
-### aeo post — Channel posts (social media distribution)
+### aeo post — Channel posts (social media distribution) — RETIRED (output only)
+
+> **Retired 2026-07-27 — channel-post publishing is no longer a supported channel.** Threads led this surface and its publishing was gated on a Meta app review that never landed, so the loop never closed. The `post` group is platform-agnostic, so the retirement covers every platform it served (threads / linkedin / reddit / instagram / x). Do not draft, import, approve, or publish channel posts — take the request to a blog article instead.
+>
+> `post analyze` is **not** retired: it reads an owned or competitor post as reference voice evidence for an article brief. `post list`/`get`/`delete` stay for reading and cleaning up rows that already exist.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo post analyze --url <URL>` | Analyze one channel/reference URL and propose task-specific voice evidence (`--provider blog\|threads\|tiktok\|instagram`, `--mode owned\|reference`, `--limit`) | [tov-extract.md](references/tov-extract.md) |
-| `post write` | Write a channel post — agent writing workflow, ends in `aeo post import` (no bare CLI command) | [post-create.md](references/post-create.md) |
-| `/aeo post list` | List channel posts (--platform, --status, --limit, --offset) | [channel-washing.md](references/channel-washing.md) |
-| `/aeo post get <id>` | Get a channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
-| `/aeo post import` | Import a channel post draft (--platform, --body required) | [channel-washing.md](references/channel-washing.md) |
-| `/aeo post preview <id>` | Generate a preview link for a channel post | [channel-washing.md](references/channel-washing.md) |
-| `/aeo post approve <id>` | Approve a draft post for publishing | [channel-washing.md](references/channel-washing.md) |
-| `/aeo post publish <id>` | Publish an approved post to its platform | [channel-washing.md](references/channel-washing.md) |
-| `/aeo post delete <id>` | Delete a channel post | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post analyze --url <URL>` | **LIVE** (reference input) — analyze one channel/reference URL and propose task-specific voice evidence (`--provider blog\|threads\|tiktok\|instagram`, `--mode owned\|reference`, `--limit`) | [tov-extract.md](references/tov-extract.md) |
+| `post write` | **RETIRED** — the channel-post writing workflow is sunset. Draft a blog article instead. | [post-create.md](references/post-create.md) |
+| `/aeo post list` | List channel posts that already exist (--platform, --status, --limit, --offset) | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post get <id>` | Get an existing channel post (full body + metadata) | [channel-washing.md](references/channel-washing.md) |
+| `/aeo post import` | **RETIRED** — do not import new channel-post drafts | — |
+| `/aeo post preview <id>` | **RETIRED** — with the post pipeline | — |
+| `/aeo post approve <id>` | **RETIRED** — with the post pipeline | — |
+| `/aeo post publish <id>` | **RETIRED** — publishing to social platforms is closed | — |
+| `/aeo post delete <id>` | Delete a channel post (cleanup on existing rows) | [channel-washing.md](references/channel-washing.md) |
 
-### aeo reference / video — Analysis & generation
+### aeo reference / video — Analysis (live) & generation (retired)
+
+> **Analysis in, generation out.** Every command that *reads* an external Reel, TikTok, or post to brief an article is live. Only `video generate` (and its `video poll`) is retired — shortform video output is no longer a supported channel because reels drive Google SERP discovery, not chatbot citations.
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo reference analyze --url <url> --media <type>` | Analyze a reference URL as a background job (credit cost varies by media type). `--media linkedin_post\|threads_post\|visual_asset\|instagram_reels\|tiktok_reels`, `--language` optional | [tov-extract.md](references/tov-extract.md) |
-| `/aeo reference style --url <url>` | Read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
+| `/aeo reference analyze --url <url> --media <type>` | **LIVE** (reference input) — analyze a reference URL as a background job (credit cost varies by media type). `--media linkedin_post\|threads_post\|visual_asset\|instagram_reels\|tiktok_reels`, `--language` optional. The reels/post media types stay supported: they are input, not output. | [tov-extract.md](references/tov-extract.md) |
+| `/aeo reference style --url <url>` | **LIVE** (reference input) — read selected reference style evidence (--provider blog\|threads\|linkedin\|instagram\|tiktok) | [tov-extract.md](references/tov-extract.md) |
 | `/aeo reference poll <jobId>` | Poll a reference analysis job | [polling.md](references/polling.md) |
 | `/aeo reference delete <jobId>` | Delete a reference analysis job (or a reference-style/channel-voice job — auto-detected). Soft-delete; cancels active work first. | [tov-extract.md](references/tov-extract.md) |
-| `/aeo video analyze --url <url>` | Analyze a short-form video URL synchronously (15 credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
-| `/aeo video generate --prompt <text>` | Generate short-form video(s) for Reels/TikTok (credit-metered; cost scales with model and `--sweep` count). `--model seedance-2-fast\|seedance-2\|kling-3\|grok-video`, `--sweep N` (1-8 candidate variations), `--aspect`, `--duration`, `--ref`, `--audio`, `--wait`. Async — returns job IDs. | this file |
-| `/aeo video poll <jobId...>` | Check status + result URLs of video generation jobs | this file |
+| `/aeo video analyze --url <url>` | **LIVE** (reference input) — analyze a short-form video URL synchronously (15 credits). `--media instagram_reels\|tiktok_reels`, `--mime-type` optional | this file |
+| `/aeo video generate --prompt <text>` | **RETIRED 2026-07-27** — shortform video output is sunset. Do not offer it; brief a blog article instead. | — |
+| `/aeo video poll <jobId...>` | **RETIRED** with `video generate` — only reaches jobs created before the sunset | — |
 
 ### aeo measure / metrics — Article & site performance
 
@@ -308,7 +331,7 @@ These workflows enable you to run a full GEO optimization cycle — from brand s
 | Workflow | When | What |
 |----------|------|------|
 | **Onboarding** | New brand, first setup | Assess setup → auto-fill what you can → guide user for OAuth/permissions → verify 5/5 |
-| **Daily Content** | Every day (cron or manual) | Pick topic from priority queue → write → deploy → distribute to channels |
+| **Daily Content** | Every day (cron or manual) | Pick topic from priority queue → write → deploy → request indexing (channel-post distribution is retired) |
 | **Weekly Report** | Every week (cron or manual) | Visibility check → performance analysis → strategy adjustment → report to user |
 
 Start with `aeo domain setup` to see where you are.
@@ -339,14 +362,16 @@ Read the relevant reference file before executing any command.
 
 **Always get explicit user confirmation before any Create / Update / Delete operation.**
 
-Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel create, carousel update, carousel delete, audit run, reference analyze, reference delete, video analyze, video generate, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, topics create, topics update, topics archive, topics restore, topics assign-prompts, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post import, post approve, post publish, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add, products rescan, domain rescan, agency request, integrations google set.
+Applies to: visibility check run, content generate, content import, content update, content deploy, content redeploy, content unpublish, content delete, content job cancel, carousel delete, audit run, reference analyze, reference delete, video analyze, image swap, image generate, image upload, image gallery delete, brand update, strategy update, strategy visual update, config data-sources update, automation schedule set, topics create, topics update, topics archive, topics restore, topics assign-prompts, prompts add, prompts update, prompts delete, prompts generate, report snapshot, post analyze, post delete, channel add, channel update, channel delete, channel connect, channel disconnect, channel indexing, product add, products rescan, domain rescan, agency request, integrations google set.
 
-Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `post publish` pushes live to an external social platform, and `content deploy`/`content redeploy`/`content unpublish` change the customer's live site.
+Never call a write API without confirmation. Always show what you're about to do and ask "Proceed?" first. Be extra explicit for the irreversible ones: `content deploy`/`content redeploy`/`content unpublish` change the customer's live site.
+
+Retired writes (`carousel create`, `carousel update`, `post import`, `post preview`, `post approve`, `post publish`, `video generate`) are **not** on this list because confirmation is not the gate — do not offer or call them at all. See [Retired surfaces](#retired-surfaces--tbd-2026-07-27).
 
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Agent workflows** (`/aeo topics suggest <domain_id>`, `/aeo content idea <domain_id>`, `/aeo prompts audit <domain_id>`, manual article drafting → `aeo content import`, and `post write` → `aeo post import`): These have no bare CLI verb — they require LLM reasoning in the external agent. `topics suggest` proposes a durable Topic architecture without saving it; `content idea` recommends one next article; `prompts audit` judges validity and utility without changing Prompts. Drafting workflows write directly and import. `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.)
+- **Agent workflows** (`/aeo topics suggest <domain_id>`, `/aeo content idea <domain_id>`, `/aeo prompts audit <domain_id>`, and manual article drafting → `aeo content import`): These have no bare CLI verb — they require LLM reasoning in the external agent. `topics suggest` proposes a durable Topic architecture without saving it; `content idea` recommends one next article; `prompts audit` judges validity and utility without changing Prompts. Drafting workflows write directly and import. `aeo content generate` is only for explicit server-side generation jobs and spends production credits. (`aeo content review <id>` is a real wired command, not a workflow.) The `post write` → `post import` workflow is **retired** — see [Retired surfaces](#retired-surfaces--tbd-2026-07-27).
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, `aeo strategy show`, etc. Running `aeo <command>` without a verb shows sub-help. Exception: `aeo content --limit 5` (bare flags = implicit list).
 
 Before writing or generating any content (manual draft/import or explicit `/aeo content generate`), always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.

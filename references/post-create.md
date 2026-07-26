@@ -1,4 +1,15 @@
-# Channel Post Creation
+# Channel Post Creation — RETIRED (2026-07-27)
+
+> **This workflow is retired. Do not run it and do not offer channel posts to the user.**
+> Channel-post publishing (Threads and the rest of the `post` pipeline) is no longer a
+> supported channel — Threads publishing was gated on a Meta app review that never landed,
+> so the loop never closed. Blog articles are the only channel where diagnose → write →
+> deploy → index → citation closes inside the product: use `content generate` (or draft
+> directly + `create import`) → `publish deploy` instead.
+>
+> The platform craft below is kept for reference only. What is still live from this area is
+> **reference input**: `post analyze` reads an owned or competitor post as voice evidence for
+> an article brief (see [tov-extract.md](tov-extract.md)).
 
 Write platform-native social media posts optimized for both human engagement and AI engine citation.
 

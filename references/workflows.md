@@ -151,7 +151,7 @@ This is the most important decision you make each day. Use this priority queue:
 - Write timely content that connects the trend to the brand's expertise
 - Why: Captures temporal search intent before competitors do
 
-**No match → skip today.** Not every day needs new content. Quality over quantity. If nothing from A-D fits, use the day for channel post distribution or content review instead.
+**No match → skip today.** Not every day needs new content. Quality over quantity. If nothing from A-D fits, use the day for content review (`aeo content review <id>`) or refreshing an existing article instead.
 
 ### Step 3: Write the article
 
@@ -190,29 +190,24 @@ Check the article against this list. If any item fails, fix it before deploying.
 aeo content deploy <id>
 ```
 
-Verify deployment succeeded. Note the published URL — you'll need it for channel distribution.
+Verify deployment succeeded. Note the published URL.
 
-### Step 6: Distribute to channels
+### Step 6: Distribute to channels — RETIRED (2026-07-27)
 
-Timing matters. Don't post everything on the same day — AI engines detect duplicate cross-posting.
+**Skip this step.** Channel-post distribution (Threads, card news, shortform video) is retired —
+the loop never closed for those channels, and the blog article is now the whole deliverable. Do
+not draft, import, approve, or publish channel posts; see [post-create.md](post-create.md).
 
-| Day | Channel | Tone | Brand Density |
-|-----|---------|------|---------------|
-| D+0 | Blog (canonical) | Full article | 15-25% |
-| D+0-1 | Reddit | TL;DR + numbered findings, "I tested" framing | 5-10% |
-| D+1-2 | LinkedIn | Professional insight, data-driven | 10-20% |
-| D+2-3 | Threads | Casual thread chain, conversational | <5% |
-
-For each channel post, follow the post writing workflow in [post-create.md](post-create.md) (draft the post directly in the agent loop, then import with `aeo post import --platform <platform> --body "..."`). There is no bare `aeo post write` command — `post write` is an agent-only writing workflow, and `--platform` is an `import` flag.
-
-Every spoke MUST link back to the canonical blog URL. This cross-linking is how AI engines build authority graphs.
+Instead, finish the cycle on the article itself: get it indexed — `aeo channel indexing <id> --enabled true`
+for IndexNow, or the GSC flow in [gsc-indexing.md](gsc-indexing.md) — then let the weekly loop
+measure whether it earned citations.
 
 ### Step 7: Log what you did
 
 After each cycle, you should be able to answer:
 - What topic did I cover and why? (which gap/spoke/refresh?)
 - What article type did I use?
-- Which channels did I distribute to?
+- Is the article indexed?
 - What's the next topic in the queue?
 
 ---
@@ -276,7 +271,7 @@ Based on analysis, decide if the strategy needs updating:
 **Update strategy** when:
 - Consistent gaps in a new topic cluster → add to priority queue
 - One article type dramatically outperforms others → shift content balance
-- A channel is driving disproportionate citations → increase posting frequency there
+- One engine or query cluster is driving disproportionate citations → publish more there
 
 If updating:
 ```bash
@@ -376,7 +371,7 @@ Don't escalate for routine issues you can handle yourself. The user trusts you t
 
 2. **Every piece is an AI-citable unit.** Write self-contained blocks of 2-3 sentences that directly answer a query. AI engines extract these as citations.
 
-3. **Links are the most important signal.** Inline citations, cross-links between hub and spokes, links from channel posts to canonical — this is how AI engines build authority graphs.
+3. **Links are the most important signal.** Inline citations and cross-links between hub and spoke articles — this is how AI engines build authority graphs.
 
 4. **Consistency beats intensity.** 3 articles/week for 6 months beats 20 articles in one week then nothing. AI engines reward sustained publishing.
 

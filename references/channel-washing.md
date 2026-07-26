@@ -1,5 +1,13 @@
 # Channel Washing — Multi-Channel Content Adaptation
 
+> **Channel-post output is RETIRED (2026-07-27).** Do not offer channel posts, and do not run
+> the `post import`/`approve`/`publish` pipeline — see [post-create.md](post-create.md). Blog
+> articles are the one supported channel. This document stays as **platform research**: the
+> per-platform engagement mechanics, format data, and GEO crawl behaviour below are still the
+> best reference for how AI engines treat each surface, and they inform article briefs. The
+> live commands from this area are reads and cleanup (`post list`/`get`/`delete`) plus
+> `post analyze` for reference voice evidence.
+
 Transform hub articles, original ideas, or data insights into channel-native format that AI engines crawl and cite. This is the "washing layer" — same core claim, different voice per platform, optimized for both human engagement and AI extraction.
 
 ---
