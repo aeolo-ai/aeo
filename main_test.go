@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,6 +40,91 @@ func TestBuildPromptsListPath(t *testing.T) {
 				t.Fatalf("got %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestBuildPromptsGenerateBody(t *testing.T) {
+	body, err := buildPromptsGenerateBody([]string{
+		"prompts", "generate",
+		"--count", "12",
+		"--languages", "en, ko,en",
+		"--instruction", "Prioritize comparison prompts.",
+	}, "domain-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	if got["domainId"] != "domain-1" {
+		t.Fatalf("got domainId %#v", got["domainId"])
+	}
+	languages, ok := got["languages"].([]any)
+	if !ok || len(languages) != 2 || languages[0] != "en" || languages[1] != "ko" {
+		t.Fatalf("got languages %#v", got["languages"])
+	}
+	if got["instruction"] != "Prioritize comparison prompts. Aim for about 12 prompts." {
+		t.Fatalf("got instruction %#v", got["instruction"])
+	}
+}
+
+func TestBuildPromptsGenerateBodyRejectsInvalidInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		domainID string
+	}{
+		{name: "missing domain", args: []string{"prompts", "generate"}},
+		{name: "zero count", args: []string{"prompts", "generate", "--count", "0"}, domainID: "domain-1"},
+		{name: "invalid count", args: []string{"prompts", "generate", "--count", "many"}, domainID: "domain-1"},
+		{name: "empty languages", args: []string{"prompts", "generate", "--languages", ",,"}, domainID: "domain-1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := buildPromptsGenerateBody(tt.args, tt.domainID); err == nil {
+				t.Fatal("expected an error")
+			}
+		})
+	}
+}
+
+func TestCallAPIOnceUsesDirectScoreEndpoint(t *testing.T) {
+	var gotPath string
+	var gotAuthorization string
+	var gotClientVersion string
+	var gotBody []byte
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotAuthorization = r.Header.Get("Authorization")
+		gotClientVersion = r.Header.Get("X-Client-Version")
+		gotBody, _ = io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"promptCount":1,"persisted":true}`))
+	}))
+	defer server.Close()
+
+	t.Setenv("AEOLO_API_BASE", server.URL)
+	t.Setenv("AEOLO_API_KEY", "test-token")
+
+	body := []byte(`{"domainId":"domain-1"}`)
+	if _, err := callAPIOnce("/score/prompts", http.MethodPost, body); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if gotPath != "/score/prompts" {
+		t.Fatalf("got path %q, want /score/prompts", gotPath)
+	}
+	if gotAuthorization != "Bearer test-token" {
+		t.Fatalf("got authorization %q", gotAuthorization)
+	}
+	if gotClientVersion != version {
+		t.Fatalf("got client version %q, want %q", gotClientVersion, version)
+	}
+	if string(gotBody) != string(body) {
+		t.Fatalf("got body %s, want %s", gotBody, body)
 	}
 }
 

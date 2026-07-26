@@ -92,6 +92,29 @@ After displaying:
 
 ---
 
+## /aeo prompts generate — Generate and save a prompt set
+
+```bash
+aeo prompts generate
+aeo prompts generate --count 12 --languages en,ko --instruction "Prioritize comparison prompts."
+```
+
+Generates a stage-balanced CEP prompt set from the active domain's saved brand context and immediately persists the result as tracked Prompts. This is free, but it is still a write action: show the requested languages/count/instruction and get explicit confirmation before running it.
+
+Accepted flags:
+
+| Flag | Type | Notes |
+|------|------|-------|
+| `--count` | positive integer | Generation hint, not a hard cap; the server keeps the set stage-balanced |
+| `--languages` | comma-separated language codes | Omit to use the domain's primary language |
+| `--instruction` | string | Extra generation guidance |
+
+The terminal binary calls the dashboard's authenticated `POST /score/prompts` REST endpoint directly. The agent command uses the connector surface; both reach the same server-side generation and persistence implementation.
+
+If the command reports `Run brand analysis first`, complete Brand Understanding before retrying. After success, review the generated set with `aeo prompts list` before starting a visibility check.
+
+---
+
 ## /aeo prompts health — Audit the tracked prompt set
 
 ```bash

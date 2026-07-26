@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.7"
+var version = "2.3.8"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -196,6 +196,36 @@ func callConnectorOnce(path, method string, body []byte, domainOverride string) 
 		reqURL = creds.APIBase + "/v2/connector/domains/" + did + path
 	}
 
+	return callAuthenticatedJSON(reqURL, method, body, creds.APIKey)
+}
+
+// callAPI targets the authenticated dashboard REST surface instead of the
+// connector namespace. Use this only when a CLI command intentionally shares
+// the dashboard contract (for example POST /score/prompts).
+func callAPI(path, method string, body []byte) (string, error) {
+	out, err := callAPIOnce(path, method, body)
+	if err != nil && strings.Contains(err.Error(), "Invalid or expired access token") {
+		cfg := readConfig()
+		if cfg.RefreshToken != "" {
+			cfg.AccessToken = ""
+			apiBase := envOr("AEOLO_API_BASE", strOr(cfg.APIBase, "https://api.aeolo.io"))
+			if ensureFreshAccessToken(apiBase, &cfg) != "" {
+				return callAPIOnce(path, method, body)
+			}
+		}
+	}
+	return out, err
+}
+
+func callAPIOnce(path, method string, body []byte) (string, error) {
+	creds := resolveCredentials()
+	if creds.APIKey == "" {
+		return "", fmt.Errorf("not authenticated. Run: aeo auth login")
+	}
+	return callAuthenticatedJSON(creds.APIBase+path, method, body, creds.APIKey)
+}
+
+func callAuthenticatedJSON(reqURL, method string, body []byte, apiKey string) (string, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		bodyReader = bytes.NewReader(body)
@@ -205,7 +235,7 @@ func callConnectorOnce(path, method string, body []byte, domainOverride string) 
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Authorization", "Bearer "+creds.APIKey)
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Client-Version", version)
 
@@ -385,6 +415,15 @@ func humanBytes(n int64) string {
 
 func run(path, method string, body []byte, domainID string) {
 	result, err := callConnector(path, method, body, domainID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Println(result)
+}
+
+func runAPI(path, method string, body []byte) {
+	result, err := callAPI(path, method, body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
@@ -711,6 +750,35 @@ func buildPromptsListPath(args []string) (string, error) {
 	return "/prompts?status=" + url.QueryEscape(status), nil
 }
 
+func buildPromptsGenerateBody(args []string, domainID string) ([]byte, error) {
+	if domainID == "" {
+		return nil, fmt.Errorf("domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
+	}
+
+	body := map[string]any{"domainId": domainID}
+	if raw := findFlag(args, "--languages"); raw != "" {
+		languages := splitCSV(raw)
+		if len(languages) == 0 {
+			return nil, fmt.Errorf("--languages must contain at least one language")
+		}
+		body["languages"] = languages
+	}
+
+	instruction := strings.TrimSpace(findFlag(args, "--instruction"))
+	if raw := findFlag(args, "--count"); raw != "" {
+		count, err := strconv.Atoi(raw)
+		if err != nil || count <= 0 {
+			return nil, fmt.Errorf("--count must be a positive integer")
+		}
+		instruction = strings.TrimSpace(fmt.Sprintf("%s Aim for about %d prompts.", instruction, count))
+	}
+	if instruction != "" {
+		body["instruction"] = instruction
+	}
+
+	return json.Marshal(body)
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 const usage = `aeo — manage your brand visibility from the terminal
@@ -728,7 +796,7 @@ COMMANDS:
   audit         run | poll <jobId>
   strategy      show | update
   content       list | get <id> | review <id> | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
-  prompts       list | add | update <id> | delete <id>
+  prompts       list | generate | add | update <id> | delete <id>
   topics        list | create | update <id> | archive <id> | restore <id> | assign-prompts <id>
   segments      list
   measure       overview | content <id> | traffic [--days] | visibility | report --command <cmd>
@@ -857,6 +925,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 	"prompts": `aeo prompts <verb>
 
   list              List prompts grouped by stage (--status tracked|untracked)
+  generate          Generate and save a CEP-based prompt set
+                    Optional: --count, --languages en,ko, --instruction "..."
   add               Add one prompt (--prompt, --stage, --language, --segment foo,bar)
                     or many at once (--prompts-json='[{"prompt":"...","stage":"comparison"}]', max 30)
   update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked)
@@ -1773,6 +1843,17 @@ func main() {
 				os.Exit(1)
 			}
 			run(path, "GET", nil, domainID)
+		case "generate":
+			activeDomainID := domainID
+			if activeDomainID == "" {
+				activeDomainID = resolveCredentials().DomainID
+			}
+			body, err := buildPromptsGenerateBody(args, activeDomainID)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error: "+err.Error())
+				os.Exit(1)
+			}
+			runAPI("/score/prompts", "POST", body)
 		case "add":
 			lang := findFlag(args, "--language")
 			if lang == "" {
