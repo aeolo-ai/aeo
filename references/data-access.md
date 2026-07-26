@@ -10,7 +10,6 @@ These are available to all aeo users without configuration:
 | Brand Context | `aeo agent context` | Value proposition, key features, competitors |
 | Published Content | `aeo content list --status=published` | Existing articles (avoid overlap, find cross-link targets) |
 | Visibility Data | `aeo visibility show` | Gap queries, competitor mentions |
-| Topic decision | `aeo topics next` | What to write next and the arithmetic behind it (free, read-only) |
 | Prompt set health | `aeo prompts health` | Whether the tracked prompts are the right target at all |
 
 ## Custom sources (per-domain)
