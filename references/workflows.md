@@ -112,14 +112,24 @@ This is the core production cycle. Run it daily (or at whatever frequency the st
 Run these in parallel to understand the current state:
 
 ```bash
+aeo topics next          # One suggested angle + why (same picker the writing cron uses)
 aeo strategy show        # What's the plan?
 aeo visibility show      # Where are the gaps?
 aeo content list --status=published --limit=20   # What already exists?
 ```
 
-Use the priority queue below to decide. A ranked topic read that crosses citation
-gaps, funnel stage, search demand, conversion outcomes and recency exists in the
-product, but it is NOT reachable as an `aeo` command yet — do not invent one.
+`aeo topics next` is free and read-only. It crosses the content strategy, the last
+40 published titles (so it will not hand you a near-duplicate), and the tracked
+queries the brand is not winning yet, then names one angle and why.
+
+Treat it as a **suggestion, not a ranking**: it is a single model pick, so
+re-running can surface a different topic and there is no score to audit. Use the
+priority queue below to sanity-check or override it. If its rationale starts with
+"Fallback pick", the strategy-aware path failed and it merely took the first
+uncovered tracked query — decide for yourself in that case.
+
+It returns nothing only when the domain has no tracked prompts at all; add some
+with `aeo prompts add` or `aeo prompts generate`.
 
 ### Step 2: Decide what to write
 

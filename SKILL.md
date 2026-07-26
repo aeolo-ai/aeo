@@ -216,8 +216,13 @@ Drives the Automation page (`/deployment-calendar`): the two tracks Aeolo runs o
 
 ### aeo topics — Stable customer situations
 
+Two different senses of "topic" live on this noun. `topics list/create/update/…`
+manage durable Topic **entities**. `topics next` suggests the next **article
+angle** to write and saves nothing.
+
 | Command | What it does | Reference |
 |---------|-------------|-----------|
+| `/aeo topics next` | Suggest one next article angle + why, crossing the content strategy, the last 40 published titles (no near-duplicates), and unwon tracked queries. Free, read-only. A single model pick — a suggestion, not a ranking, so re-running can differ and there is no score to audit. Same picker the autonomous writing cron uses. | [workflows.md](references/workflows.md) |
 | `/aeo topics suggest <domain_id>` | Agent-only, read-only workflow: derive 3–5 durable business Topics from live brand, strategy, product, Prompt, visibility, traffic, and owned-content context. This is not a bare CLI verb. | [topic-suggest.md](references/topic-suggest.md) |
 | `/aeo topics list` | List Topics with status, revision, and Prompt counts (`--include-archived`) | [topics.md](references/topics.md) |
 | `/aeo topics create` | Create a Topic (`--name` required, `--description` optional) | [topics.md](references/topics.md) |
