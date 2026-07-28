@@ -84,18 +84,22 @@ Ask the user (or infer from context):
 - **Article type** — choose from format matrix below; `blog` is default
 - **Target keywords** (required, 1–20)
 - **Language** — `en` (default) | `ko` | `ja` | `zh` | `ar`
-- **Word count** — default 1500
+- **Word count** — default about 1,500 words unless the user supplies a different target
 
 If brand context isn't loaded yet, fetch it first (`/aeo agent context`) — brand context shapes the entire article.
 
 ### Step 1.5 — Task Tone / Reference Guidance
 
-Do not read deprecated voice-example stores by default. The base agent context does not include tone/reference evidence; use only task-specific evidence that the user has selected or explicitly provided.
+Do not read deprecated voice-example stores by default. Apply the content
+strategy's `Editorial Voice` and language-specific guidance as the default.
+When the user selects a task-specific reference, use it to refine that default
+without overriding verified brand facts or claim boundaries.
 
 Look for:
 
 - explicit reference-analysis output attached to this task;
 - concrete sample copy or URLs supplied by the user;
+- language-specific `Editorial Voice` guidance in the content strategy;
 - broad tone notes inside `brand_context`, only as fallback context.
 
 #### If task-specific tone/reference evidence exists
@@ -211,10 +215,18 @@ If the user has nothing, note the gap and proceed — but flag it in Step 4.5 au
 #### 3.4 — External authority research
 
 After 1st-party is exhausted, gather external sources:
-- Recent statistics (.edu/.gov preferred)
+- Primary research, official regulators, and professional institutions for
+  scientific, medical, safety, or regulatory claims
+- Recent statistics from authoritative sources
 - Expert quotes (name + title + affiliation)
 - Industry reports and reviews
 - Competitor specs (for comparison/ranked_list types)
+
+Commercial explainers, ingredient suppliers, and brand blogs may help discover
+terms or primary sources, but they are not sufficient evidence for scientific,
+medical, safety, or regulatory claims when an authoritative source is
+available. Use reputable secondary media for industry context only within the
+scope it directly supports.
 
 Collect `{ name, url, description }` for each source — these become inline citations.
 
@@ -360,10 +372,15 @@ When in doubt, **default to ranked_list** — 53% of AI citations come from list
 | "best X", "top X", "X recommendations" | `ranked_list` | 32% | 2,000–4,000 words |
 | "X vs Y", "compare X and Y" | `comparison` | 18% | 1,200–2,500 words |
 | "how to X", "step by step X" | `how_to` | 15% | 1,500–3,000 words |
-| "what is X", "why X", "X explained" | `guide` | — | 800–1,500 words |
+| "what is X", "why X", "X explained" | `guide` | — | about 1,500 words |
 | Complex questions, multiple questions at once | `faq` | 11% | 1,500–2,500 words |
 | Industry trends, expert perspectives | `thought_leadership` | — | 1,500–3,000 words |
 | Customer stories, adoption results | `case_study` | — | 1,200–2,000 words |
+
+Treat these as writing targets, not mechanical validators. Reach the target by
+adding supported mechanisms, standards, study conditions, practical
+consequences, or relevant industry context. If the available evidence cannot
+support the target, end shorter rather than repeat, speculate, or pad.
 
 ### GEO Writing 10 Commandments
 
