@@ -229,3 +229,33 @@ Response: `{ success: true, deleted: { id, canonical } }`
 - Soft delete — sets `deleted_at`, data is preserved
 - `404` if prompt not found or already deleted
 - For bulk deletion (multiple prompts), confirm the full list once then loop calls sequentially
+
+---
+
+## Domain selection & audit
+
+### /aeo domain list
+
+```bash
+aeo domain list
+```
+
+Shows all domains the user has access to (owner + member). Useful for multi-domain setups.
+
+### /aeo domain switch
+
+```bash
+aeo domain switch [id]
+```
+
+Requires a domain ID. Run `aeo domain list` first to find the ID. The selected
+domain is persisted in `~/.config/aeo/config.json`.
+
+### /aeo domain audit
+
+```bash
+aeo domain audit
+```
+
+Response: `text/markdown` — audit scores and recommendations. See
+[geo-strategy.md](geo-strategy.md) for how to interpret audit data.

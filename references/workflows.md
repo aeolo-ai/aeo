@@ -385,3 +385,41 @@ Don't escalate for routine issues you can handle yourself. The user trusts you t
 4. **Consistency beats intensity.** 3 articles/week for 6 months beats 20 articles in one week then nothing. AI engines reward sustained publishing.
 
 5. **Measure before you optimize.** Run visibility checks and read metrics before deciding what to write. Data-driven decisions compound.
+
+---
+
+## /aeo — Load GEO context
+
+Fetch agent context, audit report, and visibility data in parallel:
+
+```bash
+aeo agent context  > /tmp/aeo_brand.md &
+aeo domain audit  > /tmp/aeo_audit.md &
+aeo visibility show > /tmp/aeo_visibility.md &
+wait
+```
+
+If any file is empty or starts with `{` (JSON error), show a helpful message and stop.
+
+Present as a unified briefing:
+
+```
+## Aeolo GEO Briefing — {domain}
+
+{agent-context content}
+
+---
+
+{audit-report content}
+
+---
+
+{visibility content}
+
+---
+> Data loaded from Aeolo. Ready for GEO work.
+```
+
+After presenting, note 1-2 sentences on the highest-leverage opportunity (critical
+audit item, visibility gap cluster, or brand mismatch). Then ask what the user
+wants to work on.
