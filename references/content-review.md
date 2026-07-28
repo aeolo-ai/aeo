@@ -36,7 +36,7 @@ Run this **before** the quality checklist below, and run it **adversarially**: a
 | **Quote traceability** | For EVERY direct quotation (anything in quotation marks attributed to a person, study, or organization), name the exact source URL — gathered during research — that contains those words. Can you point to the URL? Do those words actually appear there? | If a quote has no traceable source URL, it is a **FABRICATION**. Remove it, or convert it to an unquoted paraphrase of a real cited source. Never pass a draft with an unverifiable quote. |
 | **Named-person check** | For every named expert / advisor / customer, does a real citable source establish that this person said this? An invented name (e.g. "advisor Julio Pina") with no source is a fabrication. | Cut the name and quote, or replace with a real, cited expert. |
 | **Quantified-claim sourcing** | For EVERY number, percentage, "#1" / "best" / "most" superlative, "studies show", or factual/spec claim — is there an inline `[Source Name](URL)` link next to it that traces to a real source? | If a quantified or superlative claim has no inline source, **cut it or hedge it** (drop the specific number / soften to a non-quantified statement). Do not ship unsourced stats. |
-| **Source-to-claim match** | Open the cited sources. Does each one actually support the claim it is attached to, or was a plausible-looking URL pasted next to an unrelated claim? | If the source does not support the claim, the citation is fake — fix the claim or find a real source. |
+| **Source-to-claim match** | Open the cited sources. Does each source directly support the attached claim at the same strength and scope? Check every mechanism, practical recommendation, causal inference, and generalized conclusion — not only quotes and numbers. | If the evidence is narrower than the claim, narrow or remove the claim. If the source does not support it, fix the claim or find a real source. |
 
 **How to record the verdict:** the Fabrication & Citation Audit must itemize every quote and every quantified claim with its traceable source URL (or "NO SOURCE → removed/hedged"). "Issues found: none" is only acceptable when you have explicitly walked each quote and each stat and shown its source. A blanket "looks good / deploy-ready" without this itemized trace is itself a review failure.
 
@@ -68,7 +68,7 @@ Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title str
 | **H2/H3 hierarchy** | Can each section be independently quoted? | 10 Commandments #3 |
 | **Markdown headings** (blog articles only) | Is every section heading a real markdown `## `/`### ` heading — not bold text (`**Section**`) or a bare numbered line? Not applicable to social posts. | 10 Commandments #3 |
 | **Comparison tables** | If comparison data exists, is it structured as a table? | 10 Commandments #4 |
-| **FAQ section** | Are there 3–5 FAQs at the bottom of the article? | 10 Commandments #7 |
+| **FAQ section** | Are there 3–5 supported adjacent questions at the bottom that the main body has not already answered? | Replace or remove any FAQ that merely restates a body conclusion, or whose answer introduces unsupported advice. |
 | **FAQ is a `## ` H2** (blog articles only) | Is the FAQ section under a real markdown `## FAQ` / `## 자주 묻는 질문` H2 (not a bold "FAQ" line)? Deploy-time FAQPage schema only fires when it is. Not applicable to social posts. | 10 Commandments #7 |
 | **Schema hints** | Is the recommended schema type specified? | 10 Commandments #8 |
 
@@ -78,7 +78,7 @@ Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title str
 |------|----------|-----------|
 | **Inline citations** | Are there enough `[Source Name](URL)` inline citations? (1–2 per section) Does every quantified/factual claim carry one? (see Audit #0) | 10 Commandments #5 |
 | **Expert quotes** | Are they in "real name + title + quote" format, and does each quote trace to a real source URL? (see Audit #0 — any untraceable quote is a fabrication and must be removed) | 10 Commandments #6 |
-| **Authority sources** | Are high-authority sources included (.edu/.gov/research/statistics)? | 10 Commandments #5 |
+| **Authority sources** | For scientific, medical, safety, or regulatory claims, are primary research, official regulators, or professional institutions used instead of commercial explainers or ingredient suppliers? | 10 Commandments #5 |
 | **Internal + external links** | Are both internal content links and external authority source links present? | 10 Commandments #10 |
 
 #### 3. Freshness
