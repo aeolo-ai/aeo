@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.10"
+var version = "2.3.11"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -166,6 +166,30 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 	return out, err
 }
 
+// proxyCommand forwards a command this binary does not implement to the server's
+// command router, which is the same one the chat agent and MCP use.
+//
+// The CLI carries its own dispatch table, and the registry it mirrors lives on
+// the server — so a command could be added there, work in chat, and print a
+// usage banner here. Rather than keep the table in sync by hand, anything this
+// binary does not recognise is handed to the router that does.
+//
+// argv goes over as an ARRAY. The shell already tokenized; joining it into one
+// string and re-splitting server-side would drop the quoting the user typed,
+// turning --title "two words" into two arguments.
+func proxyCommand(args []string, domainID string) {
+	payload := map[string]interface{}{"argv": args}
+	if domainID != "" {
+		payload["domainId"] = domainID
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
+	run("/execute", "POST", body, domainID)
+}
+
 func callConnectorOnce(path, method string, body []byte, domainOverride string) (string, error) {
 	creds := resolveCredentials()
 	if creds.APIKey == "" {
@@ -184,6 +208,9 @@ func callConnectorOnce(path, method string, body []byte, domainOverride string) 
 		reqURL = creds.APIBase + "/v2/connector/whoami"
 	} else if path == "/feedback" {
 		reqURL = creds.APIBase + "/v2/connector/feedback"
+	} else if path == "/execute" {
+		// The generic command router. Domain rides in the body, not the path.
+		reqURL = creds.APIBase + "/v2/connector/execute"
 	} else if strings.HasPrefix(path, "/account/") {
 		reqURL = creds.APIBase + "/v2/connector" + path
 	} else if path == "/image/search" || strings.HasPrefix(path, "/image/search?") {
@@ -1131,7 +1158,10 @@ func runAccountCommand(args []string) {
 	case "ledger":
 		run(accountLedgerPath(args), "GET", nil, "")
 	default:
-		printSubUsage("account")
+		// Unknown verb for a noun this binary knows. The command registry lives
+		// on the server and can grow without this table; hand it to the router
+		// that has the whole list instead of guessing it is a typo.
+		proxyCommand(append([]string{"account"}, args...), "")
 	}
 }
 
@@ -1178,7 +1208,10 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 			os.Exit(1)
 		}
 	default:
-		printSubUsage("visibility")
+		// Unknown verb for a noun this binary knows. The command registry lives
+		// on the server and can grow without this table; hand it to the router
+		// that has the whole list instead of guessing it is a typo.
+		proxyCommand(append([]string{"visibility"}, args...), domainID)
 	}
 }
 
@@ -1240,7 +1273,10 @@ func runAuditCommand(args []string, domainID string, defaultReport bool) {
 		requireArg(args, 1, "aeo audit poll <jobId>")
 		run("/jobs/"+args[1], "GET", nil, domainID)
 	default:
-		printSubUsage("audit")
+		// Unknown verb for a noun this binary knows. The command registry lives
+		// on the server and can grow without this table; hand it to the router
+		// that has the whole list instead of guessing it is a typo.
+		proxyCommand(append([]string{"audit"}, args...), domainID)
 	}
 }
 
@@ -1263,7 +1299,10 @@ func runMetricsCommand(args []string, domainID string) {
 		}
 		run(path, "GET", nil, domainID)
 	default:
-		printSubUsage("metrics")
+		// Unknown verb for a noun this binary knows. The command registry lives
+		// on the server and can grow without this table; hand it to the router
+		// that has the whole list instead of guessing it is a typo.
+		proxyCommand(append([]string{"metrics"}, args...), domainID)
 	}
 }
 
@@ -1383,7 +1422,10 @@ func runTopicsCommand(args []string, domainID string) {
 		data, _ := json.Marshal(map[string]any{"promptIds": promptIDs})
 		run("/topics/"+url.PathEscape(args[1])+"/prompts", "POST", data, domainID)
 	default:
-		printSubUsage("topics")
+		// Unknown verb for a noun this binary knows. The command registry lives
+		// on the server and can grow without this table; hand it to the router
+		// that has the whole list instead of guessing it is a typo.
+		proxyCommand(append([]string{"topics"}, args...), domainID)
 	}
 }
 
@@ -1405,7 +1447,10 @@ func runPublishCommand(args []string, domainID string) {
 		requireArg(args, 1, "aeo publish redeploy <id>")
 		run("/content/"+args[1]+"/redeploy", "PUT", nil, domainID)
 	default:
-		printSubUsage("publish")
+		// Unknown verb for a noun this binary knows. The command registry lives
+		// on the server and can grow without this table; hand it to the router
+		// that has the whole list instead of guessing it is a typo.
+		proxyCommand(append([]string{"publish"}, args...), domainID)
 	}
 }
 
@@ -1440,7 +1485,10 @@ func main() {
 		case "context":
 			run("/brand-profile", "GET", nil, domainID)
 		default:
-			printSubUsage("agent")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── domain ──
@@ -1481,7 +1529,10 @@ func main() {
 			writeConfig(cfg)
 			fmt.Printf("✓ Switched to domain %s\n", args[2])
 		default:
-			printSubUsage("domain")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── channel ──
@@ -1541,7 +1592,10 @@ func main() {
 			requireArg(args, 2, "aeo channel connect <id>")
 			connectChannel(args[2], domainID)
 		default:
-			printSubUsage("channel")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── diagnose ──
@@ -1556,7 +1610,10 @@ func main() {
 		case "audit":
 			runAuditCommand(args[2:], domainID, true)
 		default:
-			printSubUsage("diagnose")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── visibility ──
@@ -1614,7 +1671,10 @@ func main() {
 			data, _ := json.Marshal(body)
 			run("/strategy", "PUT", data, domainID)
 		default:
-			printSubUsage("strategy")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── content ──
@@ -1913,7 +1973,10 @@ func main() {
 			requireArg(args, 2, "aeo prompts delete <id>")
 			run("/prompts/"+args[2], "DELETE", nil, domainID)
 		default:
-			printSubUsage("prompts")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── topics ──
@@ -1933,7 +1996,10 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Error: "+segmentPauseDeprecatedMessage)
 			os.Exit(1)
 		default:
-			printSubUsage("segments")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── metrics ──
@@ -1954,7 +2020,10 @@ func main() {
 		case "report":
 			runReportCommand(args[2:], domainID)
 		default:
-			printSubUsage("measure")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── billing / credits ──
@@ -1975,7 +2044,10 @@ func main() {
 		case "ledger":
 			run(accountLedgerPath(args), "GET", nil, "")
 		default:
-			printSubUsage("billing")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── reference analysis ──
@@ -2013,7 +2085,10 @@ func main() {
 			requireArg(args, 2, "aeo reference poll <jobId>")
 			run("/jobs/"+args[2], "GET", nil, domainID)
 		default:
-			printSubUsage("reference")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── video analysis ──
@@ -2098,7 +2173,10 @@ func main() {
 			b, _ := json.Marshal(map[string]any{"ids": ids})
 			run("/video-generation/status", "POST", b, domainID)
 		default:
-			printSubUsage("video")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── whoami ──
@@ -2379,7 +2457,10 @@ func main() {
 			requireArg(args, 2, "aeo post publish <id>")
 			run("/channel-posts/"+args[2]+"/publish", "POST", nil, domainID)
 		default:
-			printSubUsage("post")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── drive ──
@@ -2420,7 +2501,10 @@ func main() {
 			outputPath := findFlag(args, "-o", "--output")
 			downloadFile("/drive/"+fileID+"/download", outputPath, domainID)
 		default:
-			printSubUsage("drive")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── products / product (catalog used by image swap) ──
@@ -2444,7 +2528,10 @@ func main() {
 			body, _ := json.Marshal(map[string]string{"pdpUrl": pdp})
 			run("/products", "POST", body, domainID)
 		default:
-			printSubUsage("product")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── image (Pexels reference search + product-swap thumbnail) ──
@@ -2589,7 +2676,10 @@ func main() {
 			b, _ := json.Marshal(map[string]any{"ids": ids})
 			run("/video-generation/status", "POST", b, domainID)
 		default:
-			printSubUsage("image")
+			// Unknown verb for a noun this binary knows. The command registry lives
+			// on the server and can grow without this table; hand it to the router
+			// that has the whole list instead of guessing it is a typo.
+			proxyCommand(args, domainID)
 		}
 
 	// ── update ──
@@ -2611,8 +2701,9 @@ func main() {
 		connectChannel(args[1], domainID)
 
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", cmd)
-		fmt.Print(usage)
+		// Not in this binary's table — let the server's router decide. It knows
+		// the whole registry; an unknown name comes back as its error, not ours.
+		proxyCommand(args, domainID)
 		os.Exit(1)
 	}
 }
