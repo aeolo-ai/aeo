@@ -79,6 +79,7 @@ Three output channels are sunset. **Do not offer them or call their output comma
 | Command | What it does | Reference |
 |---------|-------------|-----------|
 | `/aeo visibility show` | Show the last visibility snapshot | [visibility.md](references/visibility.md) |
+| `/aeo visibility history` | Score over time, one row per check — use for trends (`--limit <n>`) | [visibility.md](references/visibility.md) |
 | `/aeo visibility check run` | Run a credit-metered visibility check (`--engines <list>`, `--location KR\|US\|EU\|JP`, `--limit <n>`, `--prompt-ids <id,id>`). Unknown engines error out with the valid set; unsupported `--location` is rejected. | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 | `/aeo visibility check poll <jobId>` | Poll check status | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
 

@@ -55,3 +55,25 @@ aeo visibility show
 Response: `text/markdown` — **overall composite score + per-engine scores**, mention rate by engine (with avg position), stage breakdown, **Share of Voice** (which brands AI recommends, incl. competitors — populated even at 0% mentions), **citation-type distribution**, visibility gaps, cited sources, top queries, competitors. Enough to narrate the full score breakdown ("X% of AI recommendations go to CeraVe, Pure'AM 0%").
 
 If the response is empty or shows no check has been run, ask whether to run `/aeo visibility check run`.
+
+## Visibility over time
+
+`aeo visibility history [--limit N]` (default 10, max 50)
+
+One row per check: date, the stored overall score, and each engine's mention
+rate. Use it whenever the question is about a trend — "is it improving", "how
+has it changed", "compare to last month" — instead of reading `visibility`
+repeatedly, which only ever returns the latest check.
+
+It reads the same server-side aggregate the dashboard chart and the ChatGPT
+widget draw from, so the numbers you quote match the ones the user sees.
+
+Two readings the table makes explicit:
+
+- An engine shows `—` when it was not run in that check and `0%` when it ran and
+  earned nothing. A newly added engine is not a regression.
+- When the tracked prompt set changed inside the window, the output says so.
+  Part of any step is then composition, not improvement.
+
+Not included: individual result rows. A single report carrying them was 1.5 MB;
+nothing about a trend needs them. Use `visibility` for the latest check's detail.

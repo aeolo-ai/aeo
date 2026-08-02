@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.8"
+var version = "2.3.10"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -864,6 +864,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 	"visibility": `aeo visibility <verb>
 
   show              Show last visibility snapshot
+  history           Score over time, one row per check (--limit, default 10)
   check run         Trigger a credit-metered visibility check
                     Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
                            also available: google-ai-mode, google-aio, amazon),
@@ -1150,6 +1151,12 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 	switch args[0] {
 	case "show":
 		run("/visibility", "GET", nil, domainID)
+	case "history":
+		path := "/visibility/history"
+		if limit := findFlag(args, "--limit"); limit != "" {
+			path += "?limit=" + limit
+		}
+		run(path, "GET", nil, domainID)
 	case "run":
 		runVisibilityCheck(args, domainID)
 	case "poll":
