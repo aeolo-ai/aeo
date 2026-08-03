@@ -196,7 +196,7 @@ Topic **entities**; `topics next` suggests the next **article angle** and saves 
 
 | Command | What it does | Reference |
 |---------|-------------|-----------|
-| `/aeo topics next` | Suggest one next article angle + why — crosses strategy, the last 40 titles (no near-dupes), and unwon tracked queries. Free, read-only. A single model pick (not a ranking); same picker the autonomous writing cron uses. | [workflows.md](references/workflows.md) |
+| `/aeo topics next` | One next article angle + the evidence for it. Serves an unwritten research brief, else ranks tracked queries by citation gap, demand, intent, coverage. Free, read-only, deterministic; same picker the writing cron uses. | [workflows.md](references/workflows.md) |
 | `/aeo topics suggest <domain_id>` | Agent-only, read-only workflow: derive 3–5 durable business Topics from live brand, strategy, product, Prompt, visibility, traffic, and owned-content context. This is not a bare CLI verb. | [topic-suggest.md](references/topic-suggest.md) |
 | `/aeo topics list` | List Topics with status, revision, and Prompt counts (`--include-archived`) | [topics.md](references/topics.md) |
 | `/aeo topics create` | Create a Topic (`--name` required, `--description` optional) | [topics.md](references/topics.md) |

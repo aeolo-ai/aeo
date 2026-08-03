@@ -11,7 +11,7 @@ These are available to all aeo users without configuration:
 | Published Content | `aeo content list --status=published` | Existing articles (avoid overlap, find cross-link targets) |
 | Visibility Data | `aeo visibility show` | Gap queries, competitor mentions |
 | Prompt set health | `aeo prompts health` | Whether the tracked prompts are the right target at all |
-| Next topic | `aeo topics next` | One suggested article angle, with why it was chosen (free, read-only) |
+| Next topic | `aeo topics next` | One article angle ranked by citation gap, with the evidence behind it (free, read-only, deterministic) |
 
 ## Custom sources (per-domain)
 
