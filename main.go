@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.11"
+var version = "2.3.13"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -178,11 +178,10 @@ func callConnector(path, method string, body []byte, domainOverride string) (str
 // string and re-splitting server-side would drop the quoting the user typed,
 // turning --title "two words" into two arguments.
 func proxyCommand(args []string, domainID string) {
-	payload := map[string]interface{}{"argv": args}
-	if domainID != "" {
-		payload["domainId"] = domainID
-	}
-	body, err := json.Marshal(payload)
+	// Only argv here. The domain is filled in by callConnectorOnce, which is
+	// where --domain, AEOLO_DOMAIN_ID and the saved config are reconciled;
+	// deciding it twice would give this path its own idea of "current domain".
+	body, err := json.Marshal(map[string]interface{}{"argv": args})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
@@ -209,8 +208,21 @@ func callConnectorOnce(path, method string, body []byte, domainOverride string) 
 	} else if path == "/feedback" {
 		reqURL = creds.APIBase + "/v2/connector/feedback"
 	} else if path == "/execute" {
-		// The generic command router. Domain rides in the body, not the path.
+		// The generic command router. Domain rides in the body, not the path —
+		// injected here so it is the same `did` every other call is scoped to.
+		// proxyCommand only sees the --domain flag; the config/env fallback that
+		// every other command gets is resolved above, and the body must carry
+		// that same value or a plain `aeo topics next` runs against nothing.
 		reqURL = creds.APIBase + "/v2/connector/execute"
+		if did != "" && len(body) > 0 {
+			var payload map[string]interface{}
+			if json.Unmarshal(body, &payload) == nil {
+				payload["domainId"] = did
+				if patched, err := json.Marshal(payload); err == nil {
+					body = patched
+				}
+			}
+		}
 	} else if strings.HasPrefix(path, "/account/") {
 		reqURL = creds.APIBase + "/v2/connector" + path
 	} else if path == "/image/search" || strings.HasPrefix(path, "/image/search?") {
@@ -858,6 +870,8 @@ var subUsage = map[string]string{
   credits           Show current credit balance
   ledger            Show credit ledger entries
                     Flags: --days (default 30), --limit (default 50)
+  # from the command registry — generated, do not edit by hand
+  feedback          Send feedback to the Aeolo team (bug reports, ideas, anything)
 `,
 	"agent": `aeo agent <verb>
 
@@ -873,6 +887,8 @@ var subUsage = map[string]string{
                     Flags: --name, --industry, --category, --value-proposition, --brand-context
   audit             Show latest audit report
   channels          List connected channels
+  # from the command registry — generated, do not edit by hand
+  rescan            Re-crawl the domain and refresh its brand snapshot (name, category, value prop, typography/colors)
 `,
 	"channel": `aeo channel <verb>
 
@@ -887,6 +903,9 @@ Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website, custom
 
 --type custom connects your own site as a Content Feed pull-channel: returns a
 read API key + authed feed URL (with ?base) to render Aeolo articles on your domain.
+  # from the command registry — generated, do not edit by hand
+  indexing          Toggle IndexNow auto-indexing on a channel (--backfill submits existing articles)
+  voice             Read selected channel-voice / reference-style evidence (same surface as 'reference style')
 `,
 	"visibility": `aeo visibility <verb>
 
@@ -918,12 +937,20 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Flags: --max-pages (default 5, costs 3 credits per 5 pages), --channel-id
   audit poll <jobId>
                     Poll a background audit job
+  # from the command registry — generated, do not edit by hand
+  traffic             Site-level GSC traffic: top queries, pages, country, device
+  references analyze  Start reference analysis for a URL (uses production credits)
+  references poll     Poll a reference analysis job
+  video analyze       Analyze a short-form video URL (uses production credits)
+  video poll          Check status and result URLs of previously queued video jobs (one or more IDs; reads only — no new video jobs are created)
 `,
 	"strategy": `aeo strategy <verb>
 
   show              Show content strategy
   update            Update content strategy
                     Flags: --manifest
+  # from the command registry — generated, do not edit by hand
+  visual update     Update the visual style guide steering image generation (--description "...", --keywords "a,b,c")
 `,
 	"content": `aeo content <verb>
 
@@ -949,6 +976,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   preview <id>      Generate preview link
   deploy <id>       Deploy to Shopify (--channel)
   redeploy <id>     Redeploy to Shopify
+  # from the command registry — generated, do not edit by hand
+  unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24, auto-detected; --target to force) and reset it to draft
+  delete            Soft-delete an article (drops out of lists; restorable)
+  job cancel        Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
 `,
 	"prompts": `aeo prompts <verb>
 
@@ -970,6 +1001,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   restore <id>            Restore an archived Topic with required --revision
   assign-prompts <id>     Reassign Prompts atomically to this Topic
                           Required: --prompt-ids id1,id2
+  # from the command registry — generated, do not edit by hand
+  next              Suggest the next article topic to write
 `,
 	"segments": `aeo segments <verb>
 
@@ -995,6 +1028,8 @@ Notes:
   visibility        Show last visibility snapshot
   report            Submit command execution diagnostics
                     Flags: --command (required), --status-code, --response-body, --context
+  # from the command registry — generated, do not edit by hand
+  attribution       First-touch AI attribution (Traffic/Attribution page): attributed sessions, revenue, CVR, AOV, and sessions by AI source (ChatGPT/Perplexity/Gemini...)
 `,
 	"publish": `aeo publish <verb>
 
@@ -1025,6 +1060,8 @@ Notes:
                     Required: --url
                     Optional: --provider blog|threads|linkedin|instagram|tiktok
   poll <jobId>      Poll a reference analysis job
+  # from the command registry — generated, do not edit by hand
+  delete            Delete a reference analysis job (or a reference-style/channel-voice job — auto-detected)
 `,
 	"video": `aeo video <verb>
 
@@ -1045,6 +1082,9 @@ Notes:
 	"products": `aeo products
 
   List domain products with IDs (catalog source for 'aeo image swap').
+  # from the command registry — generated, do not edit by hand
+  discover          Crawl the domain sitemap for candidate PDP URLs to add (read-only; flags URLs already in the catalog)
+  rescan            Re-scrape every product PDP (up to 30) to backfill/refresh media, title, image, price
 `,
 	"product": `aeo product <verb>
 
@@ -1072,6 +1112,9 @@ Notes:
                     Async — returns job IDs; poll with 'aeo image poll'
   poll              Check status + result URLs of image generation jobs
                     Usage: aeo image poll <jobId> [jobId...]
+  # from the command registry — generated, do not edit by hand
+  gallery           List generated gallery assets for the domain (--type image|video, default image; --limit N, default 20)
+  gallery delete    Delete a generated gallery asset by ID
 `,
 	"post": `aeo post <verb>
 
@@ -1099,11 +1142,16 @@ Notes:
 
   data-sources         Show configured data sources
   data-sources update  Update data sources (--data-sources)
+  # from the command registry — generated, do not edit by hand
+  reference-policy         Show how published articles render external evidence (standard = inline source links required; first_party = prose attribution, no outbound links)
+  reference-policy update  Set the reference policy (--policy standard|first_party)
 `,
 	"report": `aeo report
 
   Report command execution to the server.
   Flags: --command (required), --status-code, --response-body, --context
+  # from the command registry — generated, do not edit by hand
+  snapshot          Create a shareable report link — freeze a rendered report (--type audit|visibility|traffic|prompts|performance, --html required) and mint a secret/password share URL (--access-mode, --password, --expires 7|30|90|never, --locale)
 `,
 	"feedback": `aeo feedback [<message>]
 
