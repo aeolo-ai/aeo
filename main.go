@@ -977,6 +977,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   deploy <id>       Deploy to Shopify (--channel)
   redeploy <id>     Redeploy to Shopify
   # from the command registry — generated, do not edit by hand
+  editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans required; uses production credits)
   unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24, auto-detected; --target to force) and reset it to draft
   delete            Soft-delete an article (drops out of lists; restorable)
   job cancel        Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
