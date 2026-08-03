@@ -1143,6 +1143,8 @@ Notes:
   data-sources         Show configured data sources
   data-sources update  Update data sources (--data-sources)
   # from the command registry — generated, do not edit by hand
+  glossary                 Show the brand's approved per-locale term renderings (e.g
+  glossary update          Replace the terminology glossary (--glossary '<json>')
   reference-policy         Show how published articles render external evidence (standard = inline source links required; first_party = prose attribution, no outbound links)
   reference-policy update  Set the reference policy (--policy standard|first_party)
 `,

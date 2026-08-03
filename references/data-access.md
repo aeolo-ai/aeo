@@ -28,6 +28,61 @@ Turn their answer into a Source Policy patch.
 - Background writing job or chat flow: do not write product memory directly.
   Return the `domains.data_sources` patch for review.
 
+## Reference policy — how evidence gets rendered
+
+`aeo config reference-policy` shows whether this brand publishes with outbound
+citation links.
+
+| Policy | Body renders evidence as | Import validator |
+|--------|--------------------------|------------------|
+| `standard` (default) | inline `[Source](URL)` markdown links | requires >= 3 external source URLs |
+| `first_party` | prose attribution ("according to the CDC") with no link | source minimum waived; external links stripped to plain text |
+
+**Grounding is identical under both.** You still research, still trace every
+quote and number to a real source, still cut what you cannot source. Only the
+rendered hyperlink differs. Links to the brand's own domain always survive.
+
+`standard` does not merely allow links — it **requires** them, and an import
+with fewer than 3 will be rejected. So a brand that should not link out (a
+clinic, a law firm, anyone publishing as the sole authority) must be moved to
+`first_party` explicitly; leaving it on the default produces the opposite of
+what they want.
+
+After explicit approval (CUD Rule), apply with
+`aeo config reference-policy update --policy first_party`.
+
+Flipping the policy affects **articles written from then on**. Already-published
+bodies keep their links — the strip runs at import time only.
+
+## Terminology glossary — the brand's approved name per market
+
+`aeo config glossary` shows the renderings this brand requires in each locale.
+
+A locale edition is not a script conversion. 써마지 is `热玛吉` in the mainland
+and `鳳凰電波` in Taiwan — different **names**, not different characters, so no
+converter produces one from the other. The mapping is data the brand supplies.
+
+```
+aeo config glossary update --glossary '{"version":1,"terms":[
+  {"id":"thermage","renderings":{"ko":["써마지"],"zh-Hans":["热玛吉"],"zh-Hant":["鳳凰電波"]}}
+]}'
+```
+
+Renderings are most-preferred first; the rest are accepted synonyms. **Omit a
+locale when the brand has no special name there** — for an ordinary noun where
+translation or script conversion is correct, omitting it keeps the term out of
+the writer's prompt and out of the post-write check.
+
+When a locale edition is written, the job injects only the terms its source
+article actually uses, then verifies each approved rendering is present in the
+finished body and refuses to complete while one is missing. Writing a term's
+generic category word instead of the approved name does not satisfy it.
+
+Ask for a glossary when a brand publishes in more than one locale and sells
+named products, treatments, or packages. After explicit approval (CUD Rule),
+apply with the command above — the update REPLACES the whole document, so send
+the full term list, not a delta.
+
 ## Research order
 
 When researching for an article:
