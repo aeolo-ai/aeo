@@ -73,6 +73,26 @@ locale when the brand has no special name there** — for an ordinary noun where
 translation or script conversion is correct, omitting it keeps the term out of
 the writer's prompt and out of the post-write check.
 
+Optional `matchKeys` changes what counts as the term OCCURRING in a locale
+without changing what gets written. Reach for it when a name is a homonym of an
+ordinary word:
+
+```json
+{ "id": "onda",
+  "renderings": { "ko": ["온다"], "zh-Hant": ["Onda"] },
+  "matchKeys": { "ko": ["온다(Onda)", "Onda"] } }
+```
+
+The device 온다 is spelled exactly like the verb 온다 ("comes"), so without this
+every article containing 나온다 or 돌아온다 would be told to name a treatment it
+never mentioned. matchKeys are matched literally; renderings also match with a
+trailing parenthetical dropped.
+
+**If a term cannot be matched honestly in any form, leave it out.** A demand the
+article can never satisfy either corrupts the text or fails the job — worse than
+not checking. Symptom to listen for: "it keeps telling us to add a word we
+didn't use." That is a glossary edit, never a code change.
+
 When a locale edition is written, the job injects only the terms its source
 article actually uses, then verifies each approved rendering is present in the
 finished body and refuses to complete while one is missing. Writing a term's
