@@ -241,3 +241,66 @@ func TestFindAEOCopiesPreservesPathOrder(t *testing.T) {
 		}
 	}
 }
+
+// The deploy body is the wire. `--target` was accepted by the shell, documented
+// in SKILL.md, and never serialized — so a WordPress deploy arrived at the
+// server looking exactly like a bare one, and the server read the silence as
+// "Shopify". These cases assert the flag is on the wire, in both spellings and
+// from both command surfaces, and that an unspecified target stays unspecified
+// rather than being filled in here.
+func TestBuildDeployBodyCarriesTarget(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want map[string]any
+	}{
+		{
+			name: "content deploy with target and channel",
+			args: []string{"content", "deploy", "c-1", "--target", "wordpress", "--channel", "chan-wp"},
+			want: map[string]any{"target": "wordpress", "channel_id": "chan-wp"},
+		},
+		{
+			name: "equals form is the same request",
+			args: []string{"content", "deploy", "c-1", "--target=wordpress"},
+			want: map[string]any{"target": "wordpress"},
+		},
+		{
+			// `publish deploy` is an alias for the same endpoint and lost the flag
+			// the same way. One helper, so it cannot be fixed on one side only.
+			name: "publish deploy alias",
+			args: []string{"publish", "deploy", "c-1", "--target", "pangolingo"},
+			want: map[string]any{"target": "pangolingo"},
+		},
+		{
+			// Absent must stay absent. Sending "shopify" here would recreate the
+			// bug on the client: the server can no longer tell an unanswered
+			// destination from a deliberate Shopify one, and the named channel
+			// would stop deciding.
+			name: "bare deploy asserts no destination",
+			args: []string{"content", "deploy", "c-1"},
+			want: map[string]any{},
+		},
+		{
+			name: "channel alone, no target",
+			args: []string{"content", "deploy", "c-1", "--channel", "chan-wp"},
+			want: map[string]any{"channel_id": "chan-wp"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got map[string]any
+			if err := json.Unmarshal(buildDeployBody(tt.args), &got); err != nil {
+				t.Fatalf("invalid JSON: %v", err)
+			}
+			if len(got) != len(tt.want) {
+				t.Fatalf("got %#v, want %#v", got, tt.want)
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Fatalf("field %q: got %#v, want %#v (full body %#v)", k, got[k], v, got)
+				}
+			}
+		})
+	}
+}

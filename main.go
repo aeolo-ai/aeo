@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.13"
+var version = "2.3.14"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -672,6 +672,30 @@ func buildJSON(fields map[string]string) []byte {
 	return data
 }
 
+// buildDeployBody assembles the POST /content/<id>/deploy payload.
+//
+// --target has to travel. This body carried channel_id ONLY until 2026-08-03,
+// so `aeo content deploy <id> --target wordpress --channel <wp-id>` reached the
+// server indistinguishable from a bare deploy — and the server read the missing
+// flag as a request for Shopify. That is not a failure anyone sees: on a brand
+// that also has a Shopify store the article publishes, to a site nobody chose,
+// and the command prints success. The flag was in SKILL.md the whole time; only
+// the wire was missing it.
+//
+// Empty stays empty (buildJSON drops "" fields). "not typed" and "typed
+// shopify" are different questions on the server: absent lets the named
+// channel's own type decide the destination, `shopify` asserts one.
+//
+// Shared by `content deploy` and `publish deploy` because those two are the
+// same request — they dropped the same flag together, and one body cannot
+// drift from itself.
+func buildDeployBody(args []string) []byte {
+	return buildJSON(map[string]string{
+		"channel_id": findFlag(args, "--channel"),
+		"target":     findFlag(args, "--target"),
+	})
+}
+
 // buildPromptJSON merges plain string fields with an optional segment_tags
 // array. Empty tag slice is omitted; a non-nil slice replaces tags on update.
 func buildPromptJSON(fields map[string]string, tags []string) []byte {
@@ -974,8 +998,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --thumbnail-url <url> (pin image directly, skip swap),
                            --clear-thumbnail (drop existing thumbnail)
   preview <id>      Generate preview link
-  deploy <id>       Deploy to Shopify (--channel)
-  redeploy <id>     Redeploy to Shopify
+  deploy <id>       Deploy an approved article to a publish destination
+                    Flags: --target shopify|blog|wordpress|cafe24|pangolingo,
+                           --channel <id> (its type decides the target when --target is omitted)
+  redeploy <id>     Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
   editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans required; uses production credits)
   unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24, auto-detected; --target to force) and reset it to draft
@@ -1035,8 +1061,10 @@ Notes:
 	"publish": `aeo publish <verb>
 
   preview <id>      Generate preview link
-  deploy <id>       Deploy to Shopify (--channel)
-  redeploy <id>     Redeploy to Shopify
+  deploy <id>       Deploy an approved article to a publish destination
+                    Flags: --target shopify|blog|wordpress|cafe24|pangolingo,
+                           --channel <id> (its type decides the target when --target is omitted)
+  redeploy <id>     Push the current article back in place (destination auto-detected)
 `,
 	"billing": `aeo billing <verb>
 
@@ -1490,10 +1518,8 @@ func runPublishCommand(args []string, domainID string) {
 		requireArg(args, 1, "aeo publish preview <id>")
 		run("/content/"+args[1]+"/preview-link", "POST", nil, domainID)
 	case "deploy":
-		requireArg(args, 1, "aeo publish deploy <id>")
-		run("/content/"+args[1]+"/deploy", "POST", buildJSON(map[string]string{
-			"channel_id": findFlag(args, "--channel"),
-		}), domainID)
+		requireArg(args, 1, "aeo publish deploy <id> [--target shopify|blog|wordpress|cafe24|pangolingo] [--channel <id>]")
+		run("/content/"+args[1]+"/deploy", "POST", buildDeployBody(args), domainID)
 	case "redeploy":
 		requireArg(args, 1, "aeo publish redeploy <id>")
 		run("/content/"+args[1]+"/redeploy", "PUT", nil, domainID)
@@ -1881,10 +1907,8 @@ func main() {
 			requireArg(args, 2, "aeo content preview <id>")
 			run("/content/"+args[2]+"/preview-link", "POST", nil, domainID)
 		case "deploy":
-			requireArg(args, 2, "aeo content deploy <id>")
-			run("/content/"+args[2]+"/deploy", "POST", buildJSON(map[string]string{
-				"channel_id": findFlag(args, "--channel"),
-			}), domainID)
+			requireArg(args, 2, "aeo content deploy <id> [--target shopify|blog|wordpress|cafe24|pangolingo] [--channel <id>]")
+			run("/content/"+args[2]+"/deploy", "POST", buildDeployBody(args), domainID)
 		case "redeploy":
 			requireArg(args, 2, "aeo content redeploy <id>")
 			run("/content/"+args[2]+"/redeploy", "PUT", nil, domainID)
