@@ -30,11 +30,30 @@ Accepted fields:
 | `value_proposition` | string (max 2000) | Core positioning statement |
 | `key_features` | string[] (max 20) | Feature list for brand mentions |
 | `primary_language` | ISO 639-1 | e.g. `"en"`, `"ko"`, `"ja"` |
+| `target_region` | `--region` | Measured market: `KR`, `US`, `JP`, `TW`, `HK`, `CN`. Rejected if outside that list |
 | `brand_context` | string (max 50000) | Free-form brand positioning and durable notes (see template below) |
 
 ```bash
 aeo domain brand update --name="..." --category="..." --value-proposition="..."
+aeo domain brand update --region=KR
 ```
+
+### --region: the market prompts are measured in
+
+`prompts add` refuses to insert anything while `target_region` is null
+("Set the domain target region before creating prompts"). `--region` is the
+only way to clear that block from the CLI/agent surface — `domain rescan` does
+**not** set it, and onboarding only fills it when the crawled site states a
+market it recognizes (KR/JP/US), so TW/HK/CN brands and market-silent sites are
+born blocked.
+
+The value is handed to the measurement exit, so a wrong code does not error —
+it measures the wrong market. Confirm the market with the user before writing,
+and read the current value from `aeo agent context` (Identity → Measured
+Market) first.
+
+`aeo diagnose visibility run --location <code>` overrides the region for a
+single run without changing the stored value.
 
 > Canonical form is `aeo domain brand update` (matches `aeo domain` help). Bare `aeo brand update` routes only on the **dashboard-chat / MCP agent surface** (the connector registry normalizes it to `domain brand update`); the raw `aeo` terminal binary does not accept it, so always use `aeo domain brand update` in shell examples.
 

@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.14"
+var version = "2.3.15"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -908,7 +908,8 @@ var subUsage = map[string]string{
   switch <id>       Switch active domain
   brand             Deprecated alias for 'aeo agent context'
   brand update      Update brand context
-                    Flags: --name, --industry, --category, --value-proposition, --brand-context
+                    Flags: --name, --industry, --category, --value-proposition, --brand-context,
+                           --region KR|US|JP|TW|HK|CN (measured market; required before 'prompts add')
   audit             Show latest audit report
   channels          List connected channels
   # from the command registry — generated, do not edit by hand
@@ -923,7 +924,7 @@ var subUsage = map[string]string{
   connect <id>      Generate OAuth URL to connect a social channel
   disconnect <id>   Disconnect OAuth integration from a channel
 
-Types: shopify, vercel, linkedin, threads, reddit, instagram, x, website, custom
+Types: shopify, cafe24, wordpress, vercel, linkedin, threads, reddit, instagram, x, website, custom
 
 --type custom connects your own site as a Content Feed pull-channel: returns a
 read API key + authed feed URL (with ?base) to render Aeolo articles on your domain.
@@ -1587,6 +1588,10 @@ func main() {
 					"category":          findFlag(args, "--category"),
 					"value_proposition": findFlag(args, "--value-proposition"),
 					"brand_context":     findFlag(args, "--brand-context"),
+					// Measured market. The server validates the code against the
+					// dialable region list and rejects anything else; `prompts add`
+					// stays blocked until this is set.
+					"target_region": findFlag(args, "--region"),
 				}), domainID)
 			} else {
 				run("/brand-profile", "GET", nil, domainID)
