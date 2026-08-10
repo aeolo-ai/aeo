@@ -1,0 +1,96 @@
+name: Update Homebrew tap
+
+# Recovery path for a release whose Homebrew step failed.
+#
+# The release workflow is NOT re-runnable: GoReleaser cannot re-upload assets to
+# a tag it already published (422 already_exists), so a re-run dies before it
+# reaches the tap step. That left the tap stranded at 2.3.5 while v2.3.6 and
+# v2.3.7 shipped — the only recovery was a human cloning the tap by hand.
+#
+# This workflow rebuilds the formula from the checksums.txt ALREADY attached to
+# the release, so it never rebuilds a binary and never mutates a published
+# artifact. That matters: the formula pins each asset's sha256, so replacing
+# assets on an existing tag (GoReleaser `release.mode: replace`) could silently
+# invalidate a formula that is already published.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish to the tap (e.g. v2.3.7)"
+        required: true
+        type: string
+
+jobs:
+  tap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # `inputs.tag` is attacker-shaped text: never interpolate it into a shell
+      # line. It arrives via env and is pinned to an exact release-tag pattern
+      # before any command sees it. The pattern also rejects prerelease tags
+      # (`v1.2.3-rc.1`), matching the release workflow's `!contains(ref, '-')`
+      # rule — brew tracks stable versions only.
+      - name: Validate tag
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+        run: |
+          # `[[ =~ ]]`, NOT `grep -Eq`. grep anchors per LINE, so it accepts
+          # $'v2.3.7\nmalicious' on the strength of its first line — and that
+          # value is about to be written into $GITHUB_ENV, where a second line
+          # injects an arbitrary variable. Bash's ERE anchors the whole string,
+          # so an embedded newline cannot satisfy the trailing `$`.
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Refusing the supplied tag — expected a stable release tag like v2.3.7."
+            exit 1
+          fi
+          # Safe to persist only because the pattern above admits no newline.
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Download checksums from the published release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist
+          gh release download "$TAG_NAME" --pattern checksums.txt --dir dist --clobber
+          # An empty or truncated checksums file would produce a formula with
+          # blank sha256 fields, which installs nothing and is hard to spot.
+          test -s dist/checksums.txt
+
+      - name: Update tap formula
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          # A missing or misnamed secret expands to an EMPTY STRING rather than
+          # failing. A 2026-07-19 rotation typo (HOMEBREW_TAPA_TOKEN) is exactly
+          # how this went unnoticed across two releases, surfacing only as a 403
+          # that read like a permissions problem.
+          if [ -z "${HOMEBREW_TAP_TOKEN}" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN is empty — the secret is missing or misnamed on this repo."
+            exit 1
+          fi
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/aeolo-ai/homebrew-aeo.git" tap
+          bash scripts/update-formula.sh "$VERSION" dist/checksums.txt tap/Formula/aeo.rb
+
+          # Written as an `if`, not `grep && { ... }`: under the default `bash -e`
+          # a non-matching grep inside a `&&` list has surprising status
+          # semantics, and this check must be unambiguous.
+          if grep -q 'sha256 ""' tap/Formula/aeo.rb; then
+            echo "::error::Generated formula has an empty sha256 — checksums.txt did not match the expected asset names."
+            exit 1
+          fi
+
+          cd tap
+          git config user.email "bot@aeolo.io"
+          git config user.name "aeo-release-bot"
+          git add Formula/aeo.rb
+          # Re-running for a tag already in the tap is a no-op, not a failure.
+          if git diff --cached --quiet; then
+            echo "Formula already at ${VERSION} — nothing to push."
+            exit 0
+          fi
+          git commit -m "aeo ${VERSION}"
+          git push

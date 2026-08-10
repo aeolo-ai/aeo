@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "v2.8.2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload install script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release upload "$TAG_NAME" install.sh --clobber
+
+      # Keep the Homebrew tap in sync (secondary, vendor-agnostic channel).
+      # The landing page only advertises the sh installer; brew stays available
+      # via `brew tap aeolo-ai/aeo && brew install aeo`.
+      #
+      # If this step fails, do NOT re-run this workflow: GoReleaser cannot
+      # re-upload assets to a tag it already published (422 already_exists), so
+      # the re-run dies before reaching here. Run the `Update Homebrew tap`
+      # workflow instead — it rebuilds the formula from the released
+      # checksums.txt without touching any published artifact.
+      - name: Update Homebrew tap formula
+        if: "!contains(github.ref, '-')"
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          # A missing/renamed secret expands to an EMPTY STRING, not an error.
+          # That is how a 2026-07-19 rotation typo (HOMEBREW_TAPA_TOKEN) left
+          # this step pushing with a stale token for two releases while looking
+          # like a permissions problem. Fail loudly on absence instead.
+          if [ -z "${HOMEBREW_TAP_TOKEN}" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN is empty — the secret is missing or misnamed on this repo."
+            exit 1
+          fi
+          VERSION="${TAG_NAME#v}"
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/aeolo-ai/homebrew-aeo.git" tap
+          bash scripts/update-formula.sh "$VERSION" dist/checksums.txt tap/Formula/aeo.rb
+          cd tap
+          git config user.email "bot@aeolo.io"
+          git config user.name "aeo-release-bot"
+          git add Formula/aeo.rb
+          git commit -m "aeo ${VERSION}"
+          git push
