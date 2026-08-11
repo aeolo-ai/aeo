@@ -189,7 +189,7 @@ judged prompt candidates — read [market-map.md](references/market-map.md) firs
 | `/aeo market-map` | Show the map (`--market KR\|US\|JP\|TW\|HK\|CN\|GB\|ES\|MX`, latest when omitted) |
 | `/aeo market-map run` | Build (~3 min job); needs snapshot products + `identity.exclusions` |
 | `/aeo market-map poll <jobId>` | Poll the build job |
-| `/aeo market-map populate` | Rail → Topics + tracked prompts. `--topics "<name>,<name>"` (default: every non-held topic) |
+| `/aeo market-map populate` | Rail → Topics; prompts follow via a background job. `--topics "<name>,<name>"` (default: every non-held topic) |
 
 ### aeo prompts — Tracked prompts
 

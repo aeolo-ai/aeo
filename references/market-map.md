@@ -46,19 +46,27 @@ proposals landed outside qualification without the boundary).
 
 ## Populate flow
 
-`aeo market-map populate` takes topic **names**, not question text — the server
-re-reads the stored map and decides which questions are trackable, so `⏸ 보류`
-topics and `violates` questions cannot be smuggled in. Omit `--topics` to take
-every non-held topic (the dashboard's default).
+`aeo market-map populate` takes topic **names** and creates only **Topics**.
+Omit `--topics` to take every non-held topic (the dashboard's default).
 
-It creates the **Topic first** and hangs the prompts under it. Topics are
-**shared across markets** (`topics.market` stays NULL): the market axis already
-lives on each prompt (`brand_prompts.region`), and a Topic per market would
-multiply one business theme into five — measured 2026-08-11, 40 of 164 live
-Topics already carried prompts from several markets.
+The prompts under them are written afterwards by a background job, through the
+same generator + validator the rest of the product uses. **The map's own
+questions are never tracked prompts** — they stay in the map as the evidence
+for each topic's rank. Letting the map write prompts made it a second prompt
+author, and the two diverged: measured 2026-08-11 over 153 map questions vs
+1000 live prompts, p50 length 136 vs 43 chars and em-dash rate 62.7% vs 5.1%,
+because none of the generator's rules were written twice. The count was stuck
+too — whatever the map produced is what you got, regardless of the plan.
 
-Tracked prompts are what the plan sells, so a populate that would exceed the
-pool takes the highest-priority ones and reports what it left out.
+What the map DOES contribute is its evidence: the terrain it already paid for
+becomes the generator's market vocabulary (homeground terms the brand reaches
+vs open ones it does not), and the qualification boundary becomes its
+instruction. Re-running prompt generation never re-spends the map's budget.
+
+Topics are **shared across markets** (`topics.market` stays NULL): the market
+axis already lives on each prompt (`brand_prompts.region`), and a Topic per
+market would multiply one business theme into five — measured 2026-08-11, 40 of
+164 live Topics already carried prompts from several markets.
 
 Then run a visibility check — the first check both scores the map's surface
 prediction and starts filling the mindshare view the map's topics become the
