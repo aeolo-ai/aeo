@@ -13,19 +13,20 @@ Built at onboarding time from two inputs, in this order:
 ## Commands
 
 ```
-aeo market-map [--market KR|US|JP|TW|HK|CN]   # show (latest map when --market omitted)
-aeo market-map run [--market US]               # build/refresh — background job, ~2-3 min
-aeo market-map poll <jobId>                    # poll the build job
+aeo market-map [--market KR|US|JP|TW|HK|CN|GB|ES|MX]   # show (latest map when --market omitted)
+aeo market-map run [--market US]                        # build/refresh — background job, ~2-3 min
+aeo market-map poll <jobId>                             # poll the build job
+aeo market-map populate [--topics "<name>,<name>"]      # rail → Topics + tracked prompts
 ```
 
-`run` refuses (with the reason) when the snapshot is missing either gate field:
+`run` refuses (with the reason) only when `services.items` is empty — the map
+cannot know what the brand sells. On one measured clinic this gate alone was
+the difference between 6 and 12 usable proposals.
 
-- `services.items` empty → the map cannot know what the brand sells. On one
-  measured clinic this gate alone was the difference between 6 and 12 usable
-  proposals.
-- `identity.exclusions` absent → no qualification boundary. On one measured
-  brand 23% of proposals landed outside qualification without it. An **empty
-  array passes** — "nothing to exclude" is an answer; absence is not.
+`identity.exclusions` is NOT gated: an old snapshot without it builds with an
+empty qualification boundary (questions cannot be flagged out-of-qualification
+until the snapshot is refreshed — worth doing: on one measured brand 23% of
+proposals landed outside qualification without the boundary).
 
 ## Reading the map
 
@@ -43,10 +44,22 @@ aeo market-map poll <jobId>                    # poll the build job
 - **fingerprint** — same fingerprint on a rerun = same market. A changed
   fingerprint is a finding (the market moved), not a bug.
 
-## Populate flow (v1)
+## Populate flow
 
-Pick prompts from priority topics and register them with
-`aeo prompts add --prompts-json '[...]'` (use each candidate's `q` and `stage`).
+`aeo market-map populate` takes topic **names**, not question text — the server
+re-reads the stored map and decides which questions are trackable, so `⏸ 보류`
+topics and `violates` questions cannot be smuggled in. Omit `--topics` to take
+every non-held topic (the dashboard's default).
+
+It creates the **Topic first** and hangs the prompts under it. Topics are
+**shared across markets** (`topics.market` stays NULL): the market axis already
+lives on each prompt (`brand_prompts.region`), and a Topic per market would
+multiply one business theme into five — measured 2026-08-11, 40 of 164 live
+Topics already carried prompts from several markets.
+
+Tracked prompts are what the plan sells, so a populate that would exceed the
+pool takes the highest-priority ones and reports what it left out.
+
 Then run a visibility check — the first check both scores the map's surface
 prediction and starts filling the mindshare view the map's topics become the
 axes of.

@@ -158,18 +158,20 @@ Channel-post publishing is sunset. `post analyze` (reference voice evidence) and
 
 ### aeo measure / metrics — Article & site performance
 
+Reference: [metrics.md](references/metrics.md)
+
 > `measure` is canonical; `metrics` is the alias (`metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`). `measure visibility` = same data as `aeo visibility show`.
 >
 > **Two "report" commands:** `diag report` (alias `measure report`) submits command-failure diagnostics to the team; `report snapshot` creates a shareable customer report link (see `aeo report` below).
 
-| Command | What it does | Reference |
-|---------|-------------|-----------|
-| `/aeo measure overview` (alias `metrics overview`) | Show deployed articles with GA4 + GSC stats (last 30 days) | [metrics.md](references/metrics.md) |
-| `/aeo measure content <id>` (alias `metrics article <id>`) | Detailed per-article stats (traffic sources, top queries) | [metrics.md](references/metrics.md) |
-| `/aeo measure traffic` (alias `metrics traffic`) | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) | [metrics.md](references/metrics.md) |
-| `/aeo measure visibility` | Show last visibility snapshot (same data as `aeo visibility show`) | [metrics.md](references/metrics.md) |
-| `/aeo measure attribution` | First-touch AI attribution (Traffic/Attribution page): attributed sessions, revenue, CVR, AOV + sessions by AI source (`--days 7\|30\|90`, default 30) | [metrics.md](references/metrics.md) |
-| `/aeo diag report --command <cmd>` (alias `measure report`) | Submit command-failure diagnostics (`--status-code`, `--response-body`, `--context`) | [metrics.md](references/metrics.md) |
+| Command | What it does |
+| --------- | ------------- |
+| `/aeo measure overview` (alias `metrics overview`) | Show deployed articles with GA4 + GSC stats (last 30 days) |
+| `/aeo measure content <id>` (alias `metrics article <id>`) | Detailed per-article stats (traffic sources, top queries) |
+| `/aeo measure traffic` (alias `metrics traffic`) | Site-level GSC traffic: top queries, pages, country, device (--days=7\|14\|30\|90) |
+| `/aeo measure visibility` | Show last visibility snapshot (same data as `aeo visibility show`) |
+| `/aeo measure attribution` | First-touch AI attribution (Traffic/Attribution page): attributed sessions, revenue, CVR, AOV + sessions by AI source (`--days 7\|30\|90`, default 30) |
+| `/aeo diag report --command <cmd>` (alias `measure report`) | Submit command-failure diagnostics (`--status-code`, `--response-body`, `--context`) |
 
 ### aeo report — Shareable report links
 
@@ -184,9 +186,10 @@ judged prompt candidates — read [market-map.md](references/market-map.md) firs
 
 | Command | What it does |
 |---------|-------------|
-| `/aeo market-map` | Show the map (`--market KR\|US\|JP\|TW\|HK\|CN`, latest when omitted) |
+| `/aeo market-map` | Show the map (`--market KR\|US\|JP\|TW\|HK\|CN\|GB\|ES\|MX`, latest when omitted) |
 | `/aeo market-map run` | Build (~3 min job); needs snapshot products + `identity.exclusions` |
 | `/aeo market-map poll <jobId>` | Poll the build job |
+| `/aeo market-map populate` | Rail → Topics + tracked prompts. `--topics "<name>,<name>"` (default: every non-held topic) |
 
 ### aeo prompts — Tracked prompts
 
@@ -224,19 +227,21 @@ Topic **entities**; `topics next` suggests the next **article angle** and saves 
 
 ### aeo products / image — Thumbnail pipeline (Pexels + product swap)
 
-| Command | What it does | Reference |
-|---------|-------------|-----------|
-| `/aeo products` (or `/aeo product list`) | List the product catalog (IDs + image status) used as swap sources | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo product add --pdp <url>` | Add a product by PDP URL (scrapes title/image/price) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo products discover` | Crawl the domain sitemap for candidate PDP URLs to add (read-only; flags URLs already in the catalog) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo products rescan` | Re-scrape every product PDP (up to 30) to backfill/refresh media, title, image, price | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image search <query>` | Search Pexels for reference scenes (--per-page, --page) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene (5 credits) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (credit-metered; cost scales with model + `--sweep`). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Async. | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image poll <jobId...>` | Check status + result URLs of image generation jobs | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image gallery [--type image\|video] [--limit N]` | List generated gallery assets for the domain (default `image`, limit 20) | [image-thumbnails.md](references/image-thumbnails.md) |
-| `/aeo image gallery delete <assetId>` | Delete a generated gallery asset by ID | [image-thumbnails.md](references/image-thumbnails.md) |
+Reference: [image-thumbnails.md](references/image-thumbnails.md)
+
+| Command | What it does |
+| --------- | ------------- |
+| `/aeo products` (or `/aeo product list`) | List the product catalog (IDs + image status) used as swap sources |
+| `/aeo product add --pdp <url>` | Add a product by PDP URL (scrapes title/image/price) |
+| `/aeo products discover` | Crawl the domain sitemap for candidate PDP URLs to add (read-only; flags URLs already in the catalog) |
+| `/aeo products rescan` | Re-scrape every product PDP (up to 30) to backfill/refresh media, title, image, price |
+| `/aeo image search <query>` | Search Pexels for reference scenes (--per-page, --page) |
+| `/aeo image swap --content <id> --product <id> --reference <url>` | Generate a thumbnail by swapping a product into a reference scene (5 credits) |
+| `/aeo image upload --file <path>` | Upload a local image (≤25 MP) to the thumbnail bucket (--content to pin) |
+| `/aeo image generate --prompt <text>` | Generate image(s) from a text prompt for thumbnails/gallery (credit-metered; cost scales with model + `--sweep`). `--model nano-banana-pro\|gpt-image-2\|grok-image`, `--sweep N` (1-8), `--aspect`, `--resolution`, `--ref`, `--brand-style`. Async. |
+| `/aeo image poll <jobId...>` | Check status + result URLs of image generation jobs |
+| `/aeo image gallery [--type image\|video] [--limit N]` | List generated gallery assets for the domain (default `image`, limit 20) |
+| `/aeo image gallery delete <assetId>` | Delete a generated gallery asset by ID |
 
 ### aeo feedback — Send feedback to the team
 
@@ -246,22 +251,26 @@ Topic **entities**; `topics next` suggests the next **article angle** and saves 
 
 ### aeo drive — Google Drive files
 
-| Command | What it does | Reference |
-|---------|-------------|-----------|
-| `/aeo drive list` | List files in connected Google Drive folder (--folder) | [drive.md](references/drive.md) |
-| `/aeo drive read <file_id>` | Read a file from Google Drive | [drive.md](references/drive.md) |
-| `/aeo drive download <file_id>` | Stream raw bytes to disk (pptx, large/binary files); `-o <path>` to set output | [drive.md](references/drive.md) |
+Reference: [drive.md](references/drive.md)
+
+| Command | What it does |
+| --------- | ------------- |
+| `/aeo drive list` | List files in connected Google Drive folder (--folder) |
+| `/aeo drive read <file_id>` | Read a file from Google Drive |
+| `/aeo drive download <file_id>` | Stream raw bytes to disk (pptx, large/binary files); `-o <path>` to set output |
 
 > **Supported types**: Google Docs/Sheets, txt/json/md/csv, **PDF**, **XLSX/XLS** (all sheets, 200-row cap each), **DOCX**, images (≤5MB base64). Not supported: `.doc`, `.pptx`, `.pages`, `.numbers`, `.key` — see [drive.md](references/drive.md).
 
 ### aeo integrations google — GA4 / GSC selection
 
-| Command | What it does | Reference |
-|---------|-------------|-----------|
-| `/aeo integrations google status` | Is Google usable here? `ready` means a property/site is **selected**, not merely connected — connected-with-nothing-selected loads no data. | [metrics.md](references/metrics.md) |
-| `/aeo integrations google properties` | List GA4 properties accessible to the connected Google account (for selection) | [metrics.md](references/metrics.md) |
-| `/aeo integrations google sites` | List Search Console sites accessible to the connected Google account (for selection) | [metrics.md](references/metrics.md) |
-| `/aeo integrations google set [--ga4-property <id>] [--gsc-site <url>]` | Select the GA4 property and/or GSC site for this domain (powers `measure overview`/`measure traffic`) | [metrics.md](references/metrics.md) |
+Reference: [metrics.md](references/metrics.md)
+
+| Command | What it does |
+| --------- | ------------- |
+| `/aeo integrations google status` | Is Google usable here? `ready` means a property/site is **selected**, not merely connected — connected-with-nothing-selected loads no data. |
+| `/aeo integrations google properties` | List GA4 properties accessible to the connected Google account (for selection) |
+| `/aeo integrations google sites` | List Search Console sites accessible to the connected Google account (for selection) |
+| `/aeo integrations google set [--ga4-property <id>] [--gsc-site <url>]` | Select the GA4 property and/or GSC site for this domain (powers `measure overview`/`measure traffic`) |
 
 > Connecting Google is a browser sign-in (**Settings → domain integrations**), not a CLI command. If not connected, these return a pointer to Settings — connect first, then pick a property/site.
 
@@ -289,22 +298,24 @@ Topic **entities**; `topics next` suggests the next **article angle** and saves 
 
 ### aeo auth — Authentication
 
-| Command | What it does | Reference |
-|---------|-------------|-----------|
-| `/aeo auth login` | Authenticate via browser (device flow) | [setup.md](references/setup.md) |
-| `/aeo auth status` | Show current stored credentials | [setup.md](references/setup.md) |
-| `/aeo auth logout` | Clear stored credentials | [setup.md](references/setup.md) |
+Reference: [setup.md](references/setup.md)
+
+| Command | What it does |
+| --------- | ------------- |
+| `/aeo auth login` | Authenticate via browser (device flow) |
+| `/aeo auth status` | Show current stored credentials |
+| `/aeo auth logout` | Clear stored credentials |
 
 ### aeo account — Account & subscription
 
 > `account` is canonical; `billing`/`whoami` are aliases (`aeo billing subscription` = `aeo account subscription`, bare `aeo whoami` = `aeo account whoami`).
 
-| Command | What it does | Reference |
-|---------|-------------|-----------|
-| `/aeo account whoami` (or `/aeo whoami`) | Show current user (email, tier, trial days) | this file |
-| `/aeo account subscription` | Show current subscription, tier, and credit summary | this file |
-| `/aeo account credits` | Show current credit balance | this file |
-| `/aeo account ledger` | Show credit ledger entries (`--days` default 30, `--limit` default 50) | this file |
+| Command | What it does |
+| --------- | ------------- |
+| `/aeo account whoami` (or `/aeo whoami`) | Show current user (email, tier, trial days) |
+| `/aeo account subscription` | Show current subscription, tier, and credit summary |
+| `/aeo account credits` | Show current credit balance |
+| `/aeo account ledger` | Show credit ledger entries (`--days` default 30, `--limit` default 50) |
 
 ### Utilities
 
