@@ -38,7 +38,7 @@ aeo content feed
 
 Returns your published articles as a delivery contract you can render on the customer's **own domain** (Tier A — the GEO-correct owned-media path). Response: `text/markdown` with:
 
-- **Feed URLs** — authed (`GET /v1/connector/domains/:id/feed.json`, keyed to your account; append `?base=https://yourdomain.com/blog` so canonical points at your domain) and, if a blog subdomain is set, a keyless public feed.
+- **Feed URL** — one route, no id in the path: `GET /v1/connector/feed.json`. The key names the channel it may read, so an unbound key is refused (`TOKEN_NOT_CHANNEL_BOUND`) rather than served the wrong slice. Append `?base=https://yourdomain.com/blog` — canonical is built as `<base>/<slug>`, so the base must be the path the articles actually live at. Connecting the channel mints a bound key; more via `POST /domains/:id/api-keys` with `channel_id`.
 - **Item shape** — standard **JSON Feed 1.1** + `_geo` extension: `content_html` (server-rendered body), `title`/`summary`/`image`/`date_published`/`tags`, `_geo.slug`, `_geo.schema_jsonld` (inline-ready schema.org Article), `_geo.canonical`.
 - **How to consume** — fetch server-side (SSR/SSG), render `content_html` in your layout, inline the JSON-LD, set the page canonical to your own URL. A client-only widget defeats GEO; the body must be in server HTML on your origin. Incremental pulls: `?limit=&since=`.
 
