@@ -16,7 +16,7 @@ Built at onboarding time from two inputs, in this order:
 aeo market-map [--market KR|US|JP|TW|HK|CN|GB|ES|MX]   # show (latest map when --market omitted)
 aeo market-map run [--market US]                        # build/refresh — background job, ~2-3 min
 aeo market-map poll <jobId>                             # poll the build job
-aeo market-map populate [--topics "<name>,<name>"]      # rail → Topics + tracked prompts
+aeo market-map populate [--topics "…"] [--prompts N]    # rail → Topics; prompts follow via a job
 ```
 
 `run` refuses (with the reason) only when `services.items` is empty — the map
@@ -47,7 +47,15 @@ proposals landed outside qualification without the boundary).
 ## Populate flow
 
 `aeo market-map populate` takes topic **names** and creates only **Topics**.
-Omit `--topics` to take every non-held topic (the dashboard's default).
+Omit `--topics` to take every non-held topic (the dashboard's default). Each
+created Topic keeps `source_map_id` + `source_rail_name` — a pointer back to the
+map that proposed it, so the evidence survives a rename on either side. The
+numbers are never copied onto the Topic: they live in `market_maps` and a copy
+would go stale on the next rebuild.
+
+`--prompts N` caps how many prompts the follow-up job may write. The plan's free
+slots are still the ceiling; this only narrows it, which is how you fill one
+market at a time instead of letting a single map consume every free slot.
 
 The prompts under them are written afterwards by a background job, through the
 same generator + validator the rest of the product uses. **The map's own
