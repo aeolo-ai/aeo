@@ -226,6 +226,7 @@ Accepted flags (all optional, at least one required):
 | `--query-form` | `short-tail` \| `long-tail` \| `conversational` | Update query form (kebab-case) |
 | `--segment` | comma-separated tags | Replaces the prompt's tags |
 | `--status` | `tracked` \| `untracked` | Toggle measurement tracking |
+| `--regions` | comma-separated market codes (`US,GB`) | Standing target markets: the prompt is asked once **per market** on every check (one slot, credits = measurements). Replaces the whole list; the single-market spelling `--region US` also works |
 
 Use `/aeo prompts list` first to get the prompt ID. Confirm with user before updating.
 

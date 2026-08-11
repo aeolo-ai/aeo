@@ -199,7 +199,7 @@ judged prompt candidates — read [market-map.md](references/market-map.md) firs
 | `/aeo prompts audit <domain_id>` | Agent-only, read-only workflow: evaluate each tracked Prompt category's validity and whether its live content is working, then give a natural-language operating recommendation. This is not a bare CLI verb. | [prompt-audit.md](references/prompt-audit.md) |
 | `/aeo prompts list` | List prompts grouped by stage; optionally filter with `--status tracked\|untracked` | [brand.md](references/brand.md) |
 | `/aeo prompts add` | Add prompts to brand_prompts — one (`--prompt`) or up to 30 at once (`--prompts-json`); also `--stage`, `--language`, `--segment foo,bar` | [brand.md](references/brand.md) |
-| `/aeo prompts update <id>` | Edit an existing prompt (`--prompt`, `--stage`, `--query-form`, `--segment foo,bar`, `--status tracked\|untracked`) | [brand.md](references/brand.md) |
+| `/aeo prompts update <id>` | Edit an existing prompt (`--prompt`, `--stage`, `--query-form`, `--segment foo,bar`, `--status tracked\|untracked`, `--regions US,GB`) | [brand.md](references/brand.md) |
 | `/aeo prompts delete <id>` | Soft-delete a prompt by ID | [brand.md](references/brand.md) |
 | `/aeo prompts generate` | Generate a CEP-based prompt set from brand context (free; needs brand analysis). `--count N`, `--languages en,ko`, `--instruction "..."`. **Not exact-count; saves straight to `tracked`. Never use it to restructure a live portfolio (can shrink 30→14) — use `prompts portfolio`. Safe only to seed an empty one.** | [prompt-portfolio.md](references/prompt-portfolio.md) |
 
