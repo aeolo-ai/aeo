@@ -1007,7 +1007,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --channel <id> (its type decides the target when --target is omitted)
   redeploy <id>     Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
-  editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans required; uses production credits)
+  editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans|es required; uses production credits)
   unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24, auto-detected; --target to force) and reset it to draft
   delete            Soft-delete an article (drops out of lists; restorable)
   job cancel        Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
