@@ -990,7 +990,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                               --meta-description, --sources (JSON array)
   generate          Explicit-only Aeolo server-side generation job (costs 5 credits)
                     Required: --prompt (or --prompt-file)
-                    Optional: --media, --language
+                    Optional: --media, --language,
+                              --target-channel <id> (destination; required when the domain
+                              has several publish channels — ids from 'aeo channel list'.
+                              Omitted: the sole publish surface is adopted; none = refused)
   jobs              List active writing jobs
                     Optional: --all
   update <id>       Update content item

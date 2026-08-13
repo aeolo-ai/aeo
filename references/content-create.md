@@ -12,6 +12,21 @@ Aeolo to generate the article server-side; confirm topic, keywords, language,
 article type, and any task-specific reference/tone inputs first. Track progress
 with `/aeo content jobs`.
 
+**Writing requires a destination (AEO-531).** The destination decides wording,
+locale set, and reference policy, so it cannot be picked after the text exists:
+
+- Pass `--target-channel <channelId>` (ids from `aeo channels list`). If the
+  domain has exactly ONE publish surface, omitting it is fine — that surface is
+  adopted automatically.
+- **Several channels + no flag → refused** (`CHANNEL_CHOICE_REQUIRED`). Ask the
+  user which surface the article is for and retry with `--target-channel`. Do
+  not guess and do not retry blind — the refusal costs nothing (it fires before
+  credits are reserved).
+- **No publish surface at all → refused** (`NO_ACTIVE_CHANNEL`). The fix is a
+  channel: guide the user to connect one (or activate the hosted blog — an
+  explicit user action in the dashboard). Never work around this by importing a
+  channel-less draft instead; that just moves the dead end to deploy time.
+
 The background job must treat reference material, voice examples, and broad
 tone notes as task context. Do not silently update brand memory from a
 generation pass.
@@ -23,6 +38,12 @@ generation pass.
 This is the default external-agent writing path. Draft the article locally in the agent reasoning loop; after writing, save the draft and import via `aeo content import`.
 
 Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job.
+
+> **Destination note:** `content import` binds no channel, so an imported draft
+> must be deployed with an explicit destination (`content deploy <id> --channel
+> <id>` or `--target`). Know where the article will be published BEFORE you
+> draft it — the destination decides wording and locales, and there is no API
+> to retro-assign a channel afterwards.
 
 ---
 
