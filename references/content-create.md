@@ -419,17 +419,11 @@ It is the most recognisable tell of machine-written text, and a reader who
 notices it discounts everything around it. Numeric ranges keep a plain hyphen
 (`2020-2024`). This governs what you publish, not these reference docs.
 
-**B. Never rank your own brand first.** In a ranked list or "best/top X" article
-that includes the brand, the brand does not take the top slot. A list published
-by the brand that crowns itself reads as an advertisement, and the citation value
-of a ranked list comes entirely from looking independent. Two things follow:
-place the brand where its real fit puts it, and state the ranking criteria
-explicitly so the placement is defensible. Forbidding only the top slot just
-moves the same advertisement to number two.
-
-Why B matters more the better our strategy works: ranked lists earn the majority
-of AI citations, so `ranked_list` is the recommended default format. The format
-we reach for first is exactly the one where self-crowning is available.
+**B. Rank transparently.** In a ranked list or "best/top X" article, state the
+ranking criteria explicitly and rank every entry according to the evidence. The
+brand may rank first when it genuinely meets those criteria. Do not manipulate a
+ranking to flatter the brand; make every placement defensible on the stated
+criteria.
 
 ### Platform-Specific Tone Guide
 
