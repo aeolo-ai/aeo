@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.19"
+var version = "2.3.20"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -1981,8 +1981,16 @@ func main() {
 			importJSON, _ := json.Marshal(importBody)
 			run("/content/import", "POST", importJSON, domainID)
 		default:
-			// Might be a content ID: aeo content <uuid>
-			run("/content/"+sub, "GET", nil, domainID)
+			// A UUID is the `aeo content <id>` shortcut. Anything else is a
+			// registry verb this binary does not implement (unpublish, job
+			// cancel, …) — hand it to the server router that has the whole
+			// list. Guessing "it must be an ID" turned `content unpublish <id>`
+			// into GET /content/unpublish and a masquerading 404 (AEO-554).
+			if len(sub) == 36 && strings.Count(sub, "-") == 4 {
+				run("/content/"+sub, "GET", nil, domainID)
+			} else {
+				proxyCommand(args, domainID)
+			}
 		}
 
 	// ── prompts ──
