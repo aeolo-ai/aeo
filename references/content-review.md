@@ -100,6 +100,7 @@ Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title str
 | **Competitors mentioned together** | Are competitors mentioned alongside for naturalness? | Brand mention principles |
 | **Fact-based** | Is only verifiable information used (specs, pricing, review summaries)? | Brand mention principles |
 | **Tone consistency** | Is it consistent with the approved task-specific task-specific reference evidence and relevant voice examples? | content-create Step 1.5 |
+| **Eligibility (self-defeat)** | Does any criterion, checklist item, or verification method this article teaches readers disqualify THIS brand? Check the brand context's constraint sections (what the brand is NOT). A criterion the brand cannot pass must not be taught — flag as ❌, not reworded. | Brand constraint sections (AEO-554) |
 
 #### 5. Semantic Authenticity
 
