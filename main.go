@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.15"
+var version = "2.3.19"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -1829,6 +1829,12 @@ func main() {
 			}
 			if v := findFlag(args, "--channel-voice-reference"); v != "" {
 				body["channelVoiceReference"] = v
+			}
+			// Writing requires a destination (AEO-531). v2.3.18 documented this
+			// flag but never sent it — the server adopts a sole publish surface
+			// and refuses an ambiguous one, so forward the choice.
+			if v := findFlag(args, "--target-channel", "--channel"); v != "" {
+				body["targetChannelId"] = v
 			}
 			b, _ := json.Marshal(body)
 			run("/content/writing-jobs", "POST", b, domainID)
