@@ -28,6 +28,63 @@ aeo strategy update \
 
 ---
 
+## Visual Style Guide
+
+The style guide steers **image generation** — it is applied whenever "apply brand style" is on. Three things ride along:
+
+- **description + keywords** → appended to the prompt as text.
+- **board images** → attached to the generation as reference images.
+- **definitions** → one `IMAGE N — …` line per attached image, in the order the provider receives them. Without a definition an image arrives as an anonymous attachment, so the model has to guess what it is looking at.
+
+There are two kinds of board. The **brand board** applies to every generation. A **product board** applies only when that product is the subject, and it outranks the brand board for that product. Each board holds up to **24** images (a candidate pool, not the per-generation payload — the model's reference budget picks from it).
+
+### `/aeo strategy visual`
+
+```bash
+aeo strategy visual
+```
+
+Read this **before** any board edit. Boards are keyed by image URL, so the read is the only way to learn the arguments for `--remove-images` and `--definitions`. It returns the description, keywords, the brand board (each image's URL and its definition), one row per product board, and how many definitions are stored.
+
+### `/aeo strategy visual update`
+
+```bash
+# text half
+aeo strategy visual update \
+  --description "Clean clinical photography, warm neutral background" \
+  --keywords "minimal,clinical,warm"
+
+# brand board
+aeo strategy visual update --add-images "https://…/1.jpg,https://…/2.jpg"
+aeo strategy visual update --remove-images "https://…/1.jpg"
+
+# one product's board
+aeo strategy visual update --product <productId> --add-images "https://…/3.jpg"
+
+# per-image definitions (merge; "" deletes one)
+aeo strategy visual update \
+  --definitions '{"https://…/1.jpg":"product front, white seamless","https://…/2.jpg":""}'
+```
+
+**Flags:**
+| Flag | Type | Description |
+|------|------|-------------|
+| `--description` | string | Style directive, ≤2000 chars. Replaces. |
+| `--keywords` | csv | Up to 20 keywords of ≤60 chars. Replaces; `--keywords ""` clears. |
+| `--add-images` | csv of URLs | Appended to the end of the target board, duplicates dropped |
+| `--remove-images` | csv of URLs | Removed from the target board |
+| `--product` | product ID (UUID) | Targets that product's board instead of the brand board. Only valid alongside an image flag; get IDs from `aeo brand products` |
+| `--definitions` | JSON object | `{"image url": "definition"}`, ≤50 images per update, ≤500 chars each |
+
+**Semantics that differ between flags:**
+
+- **Boards replace, definitions merge.** `--definitions` only touches the keys it names: an absent key keeps its definition, and an empty string (`""`) deletes it. There is no way to clear the whole map in one call, deliberately — the dashboard's annotator sends one image at a time and a replace would wipe the rest.
+- **Board edits preserve definitions and vice versa.** Removing an image leaves its definition behind (harmless, and it comes back if the image returns); `aeo strategy visual` reports how many definitions no longer point at any board.
+- **The 24-image cap is refused, not truncated.** If an `--add-images` would overflow a board the whole update is rejected and nothing is written. A `--remove-images` in the same call frees its slots first.
+- One flag per command: repeated `--add-images` flags do **not** accumulate (the last wins). Pass one comma-separated list.
+
+---
+
 ## Manifest Template
 
 A good manifest has these sections:
