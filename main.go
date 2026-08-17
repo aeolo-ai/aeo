@@ -913,6 +913,8 @@ var subUsage = map[string]string{
   audit             Show latest audit report
   channels          List connected channels
   # from the command registry — generated, do not edit by hand
+  add               Onboard a new brand: crawl the site and build its brand understanding (runs in the background; check with 'domain setup')
+  brand aliases     Show the brand-family roster plus fresh alias candidates for the selected markets (suggests only; write with 'brand update --family-json')
   rescan            Re-crawl the domain and refresh its brand snapshot (name, category, value prop, typography/colors)
 `,
 	"channel": `aeo channel <verb>
@@ -975,7 +977,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   update            Update content strategy
                     Flags: --manifest
   # from the command registry — generated, do not edit by hand
-  visual update     Update the visual style guide steering image generation (--description "...", --keywords "a,b,c")
+  visual            Show the visual style guide: description, keywords, the brand mood board (image URLs + per-image definitions), and each product board's size
+  visual update     Update the visual style guide steering image generation
 `,
 	"content": `aeo content <verb>
 
@@ -1008,7 +1011,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   redeploy <id>     Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
   editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans|es required; uses production credits)
-  unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24, auto-detected; --target to force) and reset it to draft
+  thumbnail         Pin an external thumbnail URL after validating image size
+  unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo, auto-detected; --target to force) and reset it to draft
   delete            Soft-delete an article (drops out of lists; restorable)
   job cancel        Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
 `,
@@ -1033,6 +1037,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   assign-prompts <id>     Reassign Prompts atomically to this Topic
                           Required: --prompt-ids id1,id2
   # from the command registry — generated, do not edit by hand
+  candidates        Start the demand-priced Topic candidate job (generate → price → rank, ~2-3 min)
+  candidates poll   Poll a Topic candidate job; returns each candidate with its evidence and a --demand-token to create it with
+  prompts           Write tracked Prompts for every active Topic that has none yet (~20-30 per run, capped by the plan's remaining slots)
+  prompts poll      Poll a Topic prompt-generation job
   next              Suggest the next article topic to write
 `,
 	"segments": `aeo segments <verb>
@@ -1478,6 +1486,13 @@ func runTopicsCommand(args []string, domainID string) {
 		body := map[string]any{"name": name}
 		if hasFlag(args, "--description") {
 			body["description"] = findFlag(args, "--description")
+		}
+		// Carries the signed demand `topics candidates poll` measured, so the
+		// Topic is priced at birth instead of triggering a second, billed
+		// sweep. This case builds its own body, so a flag missing from here is
+		// dropped in silence — the failure mode `--family-json` had for months.
+		if hasFlag(args, "--demand-token") {
+			body["demandToken"] = findFlag(args, "--demand-token")
 		}
 		data, _ := json.Marshal(body)
 		run("/topics", "POST", data, domainID)

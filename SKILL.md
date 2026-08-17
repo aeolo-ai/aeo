@@ -37,7 +37,7 @@ Names only, on purpose: flags, credit costs, sharp edges, and output contracts l
 
 | Area | Commands | Reference |
 |------|----------|-----------|
-| `domain` | `list` · `add <url>` (new brands only — never re-analyzes; existing ones use `rescan`) · `switch [id]` · `brand update` · `audit` · `channels` · `setup` (onboarding checklist) · `rescan` | [brand.md](references/brand.md), [setup.md](references/setup.md) |
+| `domain` | `list` · `add <url>` (new brands only — never re-analyzes; existing ones use `rescan`) · `switch [id]` · `brand update` (`--markets ko-KR,en-US` sets the whole reach; `--family-json` replaces the brand-family roster) · `brand aliases` (roster + alias candidates; suggests only) · `audit` · `channels` · `setup` (onboarding checklist) · `rescan` | [brand.md](references/brand.md), [setup.md](references/setup.md) |
 | `agent` | `context` | [brand.md](references/brand.md) |
 | `channel` | `list` · `add` · `update <id>` · `indexing <id>` · `delete <id>` · `connect <id>` · `disconnect <id>` · `voice` · `blog bind <host>` / `blog unbind` | [channels.md](references/channels.md), [tov-extract.md](references/tov-extract.md) |
 | `visibility` | `show` · `history` · `check run` · `check poll <jobId>` | [visibility.md](references/visibility.md), [polling.md](references/polling.md) |
@@ -51,7 +51,7 @@ Names only, on purpose: flags, credit costs, sharp edges, and output contracts l
 | `report` | `snapshot` — freeze a rendered report into a secret/password share link (requires the rendered `--html`; the connector does not render server-side) | this file |
 | `market-map` | bare `market-map` (show) · `run` · `poll <jobId>` · `populate` (rail → Topics; prompts follow via a background job) | [market-map.md](references/market-map.md) |
 | `prompts` | `portfolio <domain_id>`† (the **only** safe way to restructure a live tracked set) · `audit <domain_id>`† · `list` · `add` · `update <id>` (`--regions US,GB` = standing target markets, measured once per market per check) · `delete <id>` · `prompts generate` (seeds an **empty** set only — previews nothing, saves straight to tracked, and has shrunk a live portfolio 30→14; restructuring goes through `prompts portfolio`) | [brand.md](references/brand.md), [prompt-portfolio.md](references/prompt-portfolio.md), [prompt-audit.md](references/prompt-audit.md) |
-| `topics` | `next` (one article angle; saves nothing) · `suggest <domain_id>`† · `list` · `create` · `update <id>` · `archive <id>` / `restore <id>` (both need `--revision`) · `assign-prompts <id>` | [topics.md](references/topics.md), [topic-suggest.md](references/topic-suggest.md), [workflows.md](references/workflows.md) |
+| `topics` | `next` (one article angle; saves nothing) · `suggest <domain_id>`† (agent judges an architecture) · `candidates` / `candidates poll <jobId>` (server job: demand-priced candidates + a `--demand-token`) · `prompts` / `prompts poll [jobId]` (writes tracked Prompts into empty Topics — **use this, not `prompts generate`**) · `list` · `create` (pass `--demand-token` to keep measured demand) · `update <id>` · `archive <id>` / `restore <id>` (both need `--revision`) · `assign-prompts <id>` | [topics.md](references/topics.md), [topic-suggest.md](references/topic-suggest.md), [setup.md](references/setup.md) |
 | `segments` | `list` (tags are metadata/filtering only) | [brand.md](references/brand.md) |
 | `products` / `image` | `products` · `product add --pdp <url>` · `products discover` · `products rescan` · `image search` · `image swap` (5 credits) · `image upload` · `image generate` (credit-metered, async) · `image poll <jobId…>` · `image gallery [delete <assetId>]` · `media set-thumbnail <id> --url` | [image-thumbnails.md](references/image-thumbnails.md) |
 | `feedback` | `feedback [<message>]` (bare form opens `$EDITOR`) | this file |
@@ -72,11 +72,11 @@ Run the full GEO cycle — brand setup → daily content → weekly review. See 
 
 | Workflow | When | What |
 |----------|------|------|
-| **Onboarding** | New brand, first setup | Assess setup → auto-fill what you can → guide user for OAuth/permissions → verify 5/5 |
+| **Onboarding** | New brand, first setup | Assess setup → auto-fill what you can → guide user for OAuth/permissions → verify 7/7 |
 | **Daily Content** | Every day (cron or manual) | Pick topic from priority queue → write → deploy → request indexing (channel-post distribution is retired) |
 | **Weekly Report** | Every week (cron or manual) | Visibility check → performance analysis → strategy adjustment → report to user |
 
-Start with `aeo domain setup` — a 5-item integration checklist (Brand, Shopify, GA4+GSC, Drive, Strategy). Install/auth detail in [setup.md](references/setup.md); don't start the loops until all 5 are complete.
+Start with `aeo domain setup` — a 7-item checklist (family & aliases, market, topics, prompts, first check, Google, somewhere to publish) plus a "Next" section that does NOT count toward completion. Every ⬜ row carries the exact command that clears it; run the hint, then re-read the list. Install/auth and the per-step walkthrough are in [setup.md](references/setup.md); don't start the loops until all 7 are done.
 
 ---
 
@@ -95,7 +95,7 @@ Retired writes (`carousel create/update`, `post import/preview/approve/publish`,
 ## Communication Rules
 
 - **UUID is internal only.** User-facing messages must use `title`, `name`, `domain`, `canonical`, etc. Example: `"bc2ef290-..." updated` → `"Best Project Management Tools for Startups" updated`
-- **Agent-only workflows** (no bare CLI verb — they need external-agent reasoning): `/aeo topics suggest <domain_id>` proposes a durable Topic architecture without saving; `/aeo content idea <domain_id>` recommends one next article; `/aeo prompts audit <domain_id>` judges Prompt validity/utility read-only; `/aeo prompts portfolio <domain_id>` safely restructures the tracked Prompt set (preview → confirm → atomic write → verify). Manual drafting writes directly then `aeo content import`. `aeo content generate` is the explicit paid server-side job; `aeo content review <id>` is a real wired command. The `post write` → `post import` workflow is retired.
+- **Agent-only workflows** (no bare CLI verb — they need external-agent reasoning): `/aeo topics suggest <domain_id>` proposes a durable Topic architecture without saving (distinct from `aeo topics candidates`, the server job that generates and demand-prices candidates); `/aeo content idea <domain_id>` recommends one next article; `/aeo prompts audit <domain_id>` judges Prompt validity/utility read-only; `/aeo prompts portfolio <domain_id>` safely restructures the tracked Prompt set (preview → confirm → atomic write → verify). Manual drafting writes directly then `aeo content import`. `aeo content generate` is the explicit paid server-side job; `aeo content review <id>` is a real wired command. The `post write` → `post import` workflow is retired.
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, etc. Bare `aeo <command>` shows sub-help (exception: `aeo content --limit 5` = implicit list).
 
 Before writing/generating content, always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
