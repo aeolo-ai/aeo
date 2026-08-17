@@ -74,7 +74,15 @@ else
 
     INSTALL_DIR=$(dirname "$EXISTING_AEO")
   else
-    INSTALL_DIR="/usr/local/bin"
+    # User-owned, sudo-free default (same convention as uv/rustup/deno) — not
+    # a system directory like /usr/local/bin, which is root-owned on most
+    # fresh installs and turns every first-time install into a sudo prompt.
+    if [ -z "$HOME" ]; then
+      echo "Error: \$HOME is not set; cannot determine a default install directory."
+      echo "Set AEO_INSTALL_DIR explicitly and re-run."
+      exit 1
+    fi
+    INSTALL_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
   fi
 fi
 
@@ -122,10 +130,11 @@ tar xzf "${TMPDIR}/${TARBALL}" -C "$TMPDIR"
 
 # ── Install ──────────────────────────────────────────────────────────────────
 
-if [ -w "$INSTALL_DIR" ]; then
+if mkdir -p "$INSTALL_DIR" 2>/dev/null && [ -w "$INSTALL_DIR" ]; then
   mv "${TMPDIR}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
 else
   echo "Need sudo to install to ${INSTALL_DIR}"
+  sudo mkdir -p "$INSTALL_DIR"
   sudo mv "${TMPDIR}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
 fi
 
@@ -134,6 +143,17 @@ chmod +x "${INSTALL_DIR}/${BINARY}"
 echo ""
 echo "✓ aeo v${AEO_VERSION} installed to ${INSTALL_DIR}/${BINARY}"
 echo ""
+
+case ":${PATH}:" in
+  *":${INSTALL_DIR}:"*) ;;
+  *)
+    echo "Note: ${INSTALL_DIR} is not on your PATH."
+    echo "Add this to your shell profile (~/.zshrc, ~/.bashrc, etc.):"
+    echo "  export PATH=\"${INSTALL_DIR}:\$PATH\""
+    echo ""
+    ;;
+esac
+
 echo "Get started:"
 echo "  aeo auth login"
 echo ""

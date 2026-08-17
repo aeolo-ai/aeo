@@ -45,34 +45,35 @@ exit 1
 	writeExecutable(t, path, script)
 }
 
-func TestInstallerReusesActiveAEODirectory(t *testing.T) {
-	root := t.TempDir()
-	activeDir := filepath.Join(root, "active")
-	fallbackDir := filepath.Join(root, "fallback")
-	toolDir := filepath.Join(root, "tools")
-	for _, dir := range []string{activeDir, fallbackDir, toolDir} {
-		if err := os.Mkdir(dir, 0o755); err != nil {
-			t.Fatal(err)
-		}
+// writeMatchingFixtures writes a tarball fixture plus a checksums.txt fixture
+// whose entry actually matches it, for the darwin/arm64 target the fake
+// `uname` in these tests reports.
+func writeMatchingFixtures(t *testing.T, root string) (tarballFixture, checksumsFixture string) {
+	t.Helper()
+	tarballFixture = filepath.Join(root, "fixture-tarball")
+	if err := os.WriteFile(tarballFixture, []byte(fakeTarballContent), 0o644); err != nil {
+		t.Fatal(err)
 	}
+	checksumsFixture = filepath.Join(root, "fixture-checksums.txt")
+	checksumsContent := fmt.Sprintf("%s  aeo_darwin_arm64.tar.gz\n", fakeTarballChecksum())
+	if err := os.WriteFile(checksumsFixture, []byte(checksumsContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return tarballFixture, checksumsFixture
+}
 
-	writeExecutable(t, filepath.Join(activeDir, "aeo"), "#!/bin/sh\necho 'aeo 2.3.4 (native)'\n")
+func writeFakeUname(t *testing.T, toolDir string) {
+	t.Helper()
 	writeExecutable(t, filepath.Join(toolDir, "uname"), `#!/bin/sh
 case "$1" in
   -s) echo Darwin ;;
   -m) echo arm64 ;;
 esac
 `)
-	tarballFixture := filepath.Join(root, "fixture-tarball")
-	if err := os.WriteFile(tarballFixture, []byte(fakeTarballContent), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	checksumsFixture := filepath.Join(root, "fixture-checksums.txt")
-	checksumsContent := fmt.Sprintf("%s  aeo_darwin_arm64.tar.gz\n", fakeTarballChecksum())
-	if err := os.WriteFile(checksumsFixture, []byte(checksumsContent), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	writeFakeCurl(t, filepath.Join(toolDir, "curl"), tarballFixture, checksumsFixture)
+}
+
+func writeFakeTar(t *testing.T, toolDir string) {
+	t.Helper()
 	writeExecutable(t, filepath.Join(toolDir, "tar"), `#!/bin/sh
 while [ "$#" -gt 0 ]; do
   if [ "$1" = "-C" ]; then
@@ -88,25 +89,29 @@ EOF
 done
 exit 1
 `)
+}
 
-	installer, err := os.ReadFile("install.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
-	safeInstaller := strings.Replace(
-		string(installer),
-		"/usr/local/bin",
-		fallbackDir,
-		1,
-	)
-	installerPath := filepath.Join(root, "install.sh")
-	if err := os.WriteFile(installerPath, []byte(safeInstaller), 0o755); err != nil {
-		t.Fatal(err)
+func TestInstallerReusesActiveAEODirectory(t *testing.T) {
+	root := t.TempDir()
+	activeDir := filepath.Join(root, "active")
+	homeDir := filepath.Join(root, "home")
+	toolDir := filepath.Join(root, "tools")
+	for _, dir := range []string{activeDir, homeDir, toolDir} {
+		if err := os.Mkdir(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	cmd := exec.Command("sh", installerPath)
+	writeExecutable(t, filepath.Join(activeDir, "aeo"), "#!/bin/sh\necho 'aeo 2.3.4 (native)'\n")
+	writeFakeUname(t, toolDir)
+	tarballFixture, checksumsFixture := writeMatchingFixtures(t, root)
+	writeFakeCurl(t, filepath.Join(toolDir, "curl"), tarballFixture, checksumsFixture)
+	writeFakeTar(t, toolDir)
+
+	cmd := exec.Command("sh", "install.sh")
 	cmd.Env = []string{
 		"AEO_VERSION=2.3.5",
+		"HOME=" + homeDir,
 		"PATH=" + strings.Join([]string{toolDir, activeDir, "/usr/bin", "/bin"}, string(os.PathListSeparator)),
 	}
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -120,27 +125,22 @@ exit 1
 	if got := strings.TrimSpace(string(output)); got != "aeo 2.3.5 (native)" {
 		t.Fatalf("active aeo was not replaced: %q", got)
 	}
-	if _, err := os.Stat(filepath.Join(fallbackDir, "aeo")); !os.IsNotExist(err) {
-		t.Fatalf("installer unexpectedly wrote to fallback directory: %v", err)
+	if _, err := os.Stat(filepath.Join(homeDir, ".local", "bin", "aeo")); !os.IsNotExist(err) {
+		t.Fatalf("installer wrote to the default install dir instead of reusing the active one: %v", err)
 	}
 }
 
 func TestInstallerRejectsChecksumMismatch(t *testing.T) {
 	root := t.TempDir()
-	fallbackDir := filepath.Join(root, "fallback")
+	homeDir := filepath.Join(root, "home")
 	toolDir := filepath.Join(root, "tools")
-	for _, dir := range []string{fallbackDir, toolDir} {
+	for _, dir := range []string{homeDir, toolDir} {
 		if err := os.Mkdir(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	writeExecutable(t, filepath.Join(toolDir, "uname"), `#!/bin/sh
-case "$1" in
-  -s) echo Darwin ;;
-  -m) echo arm64 ;;
-esac
-`)
+	writeFakeUname(t, toolDir)
 	tarballFixture := filepath.Join(root, "fixture-tarball")
 	if err := os.WriteFile(tarballFixture, []byte(fakeTarballContent), 0o644); err != nil {
 		t.Fatal(err)
@@ -156,19 +156,10 @@ esac
 	// check, the failure mode should still be "never extracted", not a
 	// coincidentally-successful extraction.
 
-	installer, err := os.ReadFile("install.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
-	safeInstaller := strings.Replace(string(installer), "/usr/local/bin", fallbackDir, 1)
-	installerPath := filepath.Join(root, "install.sh")
-	if err := os.WriteFile(installerPath, []byte(safeInstaller), 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := exec.Command("sh", installerPath)
+	cmd := exec.Command("sh", "install.sh")
 	cmd.Env = []string{
 		"AEO_VERSION=2.3.5",
+		"HOME=" + homeDir,
 		"PATH=" + strings.Join([]string{toolDir, "/usr/bin", "/bin"}, string(os.PathListSeparator)),
 	}
 	output, err := cmd.CombinedOutput()
@@ -178,8 +169,86 @@ esac
 	if !strings.Contains(string(output), "checksum mismatch") {
 		t.Fatalf("expected a checksum mismatch error, got:\n%s", output)
 	}
-	if _, err := os.Stat(filepath.Join(fallbackDir, "aeo")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(homeDir, ".local", "bin", "aeo")); !os.IsNotExist(err) {
 		t.Fatalf("installer wrote a binary despite the checksum mismatch: %v", err)
+	}
+}
+
+func TestInstallerDefaultsToUserLocalBin(t *testing.T) {
+	root := t.TempDir()
+	homeDir := filepath.Join(root, "home")
+	toolDir := filepath.Join(root, "tools")
+	for _, dir := range []string{homeDir, toolDir} {
+		if err := os.Mkdir(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// $HOME/.local/bin is deliberately not pre-created — the installer must
+	// mkdir -p it, and PATH deliberately excludes it so the "not on PATH"
+	// hint is exercised too.
+
+	writeFakeUname(t, toolDir)
+	tarballFixture, checksumsFixture := writeMatchingFixtures(t, root)
+	writeFakeCurl(t, filepath.Join(toolDir, "curl"), tarballFixture, checksumsFixture)
+	writeFakeTar(t, toolDir)
+
+	cmd := exec.Command("sh", "install.sh")
+	cmd.Env = []string{
+		"AEO_VERSION=2.3.5",
+		"HOME=" + homeDir,
+		"PATH=" + strings.Join([]string{toolDir, "/usr/bin", "/bin"}, string(os.PathListSeparator)),
+	}
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("installer failed: %v\n%s", err, output)
+	}
+
+	installedBinary := filepath.Join(homeDir, ".local", "bin", "aeo")
+	versionOutput, err := exec.Command(installedBinary, "--version").CombinedOutput()
+	if err != nil {
+		t.Fatalf("expected aeo installed at %s: %v", installedBinary, err)
+	}
+	if got := strings.TrimSpace(string(versionOutput)); got != "aeo 2.3.5 (native)" {
+		t.Fatalf("unexpected version: %q", got)
+	}
+	if !strings.Contains(string(output), "not on your PATH") {
+		t.Fatalf("expected a PATH hint since %s/.local/bin isn't on PATH, got:\n%s", homeDir, output)
+	}
+}
+
+func TestInstallerRespectsXDGBinHome(t *testing.T) {
+	root := t.TempDir()
+	homeDir := filepath.Join(root, "home")
+	xdgBinDir := filepath.Join(root, "xdg-bin")
+	toolDir := filepath.Join(root, "tools")
+	for _, dir := range []string{homeDir, toolDir} {
+		if err := os.Mkdir(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// xdgBinDir is deliberately not pre-created either — same mkdir -p check.
+
+	writeFakeUname(t, toolDir)
+	tarballFixture, checksumsFixture := writeMatchingFixtures(t, root)
+	writeFakeCurl(t, filepath.Join(toolDir, "curl"), tarballFixture, checksumsFixture)
+	writeFakeTar(t, toolDir)
+
+	cmd := exec.Command("sh", "install.sh")
+	cmd.Env = []string{
+		"AEO_VERSION=2.3.5",
+		"HOME=" + homeDir,
+		"XDG_BIN_HOME=" + xdgBinDir,
+		"PATH=" + strings.Join([]string{toolDir, xdgBinDir, "/usr/bin", "/bin"}, string(os.PathListSeparator)),
+	}
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("installer failed: %v\n%s", err, output)
+	}
+
+	if _, err := os.Stat(filepath.Join(xdgBinDir, "aeo")); err != nil {
+		t.Fatalf("expected aeo installed under XDG_BIN_HOME: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(homeDir, ".local", "bin", "aeo")); !os.IsNotExist(err) {
+		t.Fatalf("installer wrote to $HOME/.local/bin instead of respecting XDG_BIN_HOME: %v", err)
 	}
 }
 
@@ -188,8 +257,8 @@ func TestInstallerPreservesHomebrewInstall(t *testing.T) {
 	binDir := filepath.Join(root, "bin")
 	cellarDir := filepath.Join(root, "Cellar", "aeo", "2.3.4", "bin")
 	toolDir := filepath.Join(root, "tools")
-	fallbackDir := filepath.Join(root, "fallback")
-	for _, dir := range []string{binDir, cellarDir, toolDir, fallbackDir} {
+	homeDir := filepath.Join(root, "home")
+	for _, dir := range []string{binDir, cellarDir, toolDir, homeDir} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -201,12 +270,7 @@ func TestInstallerPreservesHomebrewInstall(t *testing.T) {
 	if err := os.Symlink(filepath.Join("..", "Cellar", "aeo", "2.3.4", "bin", "aeo"), activeBinary); err != nil {
 		t.Fatal(err)
 	}
-	writeExecutable(t, filepath.Join(toolDir, "uname"), `#!/bin/sh
-case "$1" in
-  -s) echo Darwin ;;
-  -m) echo arm64 ;;
-esac
-`)
+	writeFakeUname(t, toolDir)
 	brewLog := filepath.Join(root, "brew.log")
 	writeExecutable(t, filepath.Join(toolDir, "brew"), fmt.Sprintf(`#!/bin/sh
 echo "$*" >> %q
@@ -220,19 +284,10 @@ fi
 `, brewLog, cellarBinary, cellarBinary))
 	writeExecutable(t, filepath.Join(toolDir, "curl"), "#!/bin/sh\nexit 99\n")
 
-	installer, err := os.ReadFile("install.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
-	safeInstaller := strings.Replace(string(installer), "/usr/local/bin", fallbackDir, 1)
-	installerPath := filepath.Join(root, "install.sh")
-	if err := os.WriteFile(installerPath, []byte(safeInstaller), 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := exec.Command("sh", installerPath)
+	cmd := exec.Command("sh", "install.sh")
 	cmd.Env = []string{
 		"AEO_VERSION=2.3.5",
+		"HOME=" + homeDir,
 		"PATH=" + strings.Join([]string{toolDir, binDir, "/usr/bin", "/bin"}, string(os.PathListSeparator)),
 	}
 	if output, err := cmd.CombinedOutput(); err != nil {
