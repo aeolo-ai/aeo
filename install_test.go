@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,6 +10,40 @@ import (
 	"strings"
 	"testing"
 )
+
+const fakeTarballContent = "fake-tarball-bytes-for-test\n"
+
+func fakeTarballChecksum() string {
+	sum := sha256.Sum256([]byte(fakeTarballContent))
+	return hex.EncodeToString(sum[:])
+}
+
+// writeFakeCurl generates a fake `curl` that serves fixture files instead of
+// hitting the network: tarballFixture for the release archive URL,
+// checksumsFixture for checksums.txt. It mirrors install.sh's real
+// `curl -fsSL <url> -o <path>` invocation order (URL before -o).
+func writeFakeCurl(t *testing.T, path, tarballFixture, checksumsFixture string) {
+	t.Helper()
+	script := fmt.Sprintf(`#!/bin/sh
+URL=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -o)
+      shift
+      case "$URL" in
+        *checksums.txt) cp %q "$1" ;;
+        *) cp %q "$1" ;;
+      esac
+      exit 0
+      ;;
+    http*) URL="$1" ;;
+  esac
+  shift
+done
+exit 1
+`, checksumsFixture, tarballFixture)
+	writeExecutable(t, path, script)
+}
 
 func TestInstallerReusesActiveAEODirectory(t *testing.T) {
 	root := t.TempDir()
@@ -27,17 +63,16 @@ case "$1" in
   -m) echo arm64 ;;
 esac
 `)
-	writeExecutable(t, filepath.Join(toolDir, "curl"), `#!/bin/sh
-while [ "$#" -gt 0 ]; do
-  if [ "$1" = "-o" ]; then
-    shift
-    : > "$1"
-    exit 0
-  fi
-  shift
-done
-exit 1
-`)
+	tarballFixture := filepath.Join(root, "fixture-tarball")
+	if err := os.WriteFile(tarballFixture, []byte(fakeTarballContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	checksumsFixture := filepath.Join(root, "fixture-checksums.txt")
+	checksumsContent := fmt.Sprintf("%s  aeo_darwin_arm64.tar.gz\n", fakeTarballChecksum())
+	if err := os.WriteFile(checksumsFixture, []byte(checksumsContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writeFakeCurl(t, filepath.Join(toolDir, "curl"), tarballFixture, checksumsFixture)
 	writeExecutable(t, filepath.Join(toolDir, "tar"), `#!/bin/sh
 while [ "$#" -gt 0 ]; do
   if [ "$1" = "-C" ]; then
@@ -87,6 +122,64 @@ exit 1
 	}
 	if _, err := os.Stat(filepath.Join(fallbackDir, "aeo")); !os.IsNotExist(err) {
 		t.Fatalf("installer unexpectedly wrote to fallback directory: %v", err)
+	}
+}
+
+func TestInstallerRejectsChecksumMismatch(t *testing.T) {
+	root := t.TempDir()
+	fallbackDir := filepath.Join(root, "fallback")
+	toolDir := filepath.Join(root, "tools")
+	for _, dir := range []string{fallbackDir, toolDir} {
+		if err := os.Mkdir(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	writeExecutable(t, filepath.Join(toolDir, "uname"), `#!/bin/sh
+case "$1" in
+  -s) echo Darwin ;;
+  -m) echo arm64 ;;
+esac
+`)
+	tarballFixture := filepath.Join(root, "fixture-tarball")
+	if err := os.WriteFile(tarballFixture, []byte(fakeTarballContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	checksumsFixture := filepath.Join(root, "fixture-checksums.txt")
+	// Deliberately wrong hash — simulates a tampered/corrupted download.
+	checksumsContent := "0000000000000000000000000000000000000000000000000000000000000000  aeo_darwin_arm64.tar.gz\n"
+	if err := os.WriteFile(checksumsFixture, []byte(checksumsContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writeFakeCurl(t, filepath.Join(toolDir, "curl"), tarballFixture, checksumsFixture)
+	// No `tar` on PATH: if the installer wrongly proceeds past the checksum
+	// check, the failure mode should still be "never extracted", not a
+	// coincidentally-successful extraction.
+
+	installer, err := os.ReadFile("install.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	safeInstaller := strings.Replace(string(installer), "/usr/local/bin", fallbackDir, 1)
+	installerPath := filepath.Join(root, "install.sh")
+	if err := os.WriteFile(installerPath, []byte(safeInstaller), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("sh", installerPath)
+	cmd.Env = []string{
+		"AEO_VERSION=2.3.5",
+		"PATH=" + strings.Join([]string{toolDir, "/usr/bin", "/bin"}, string(os.PathListSeparator)),
+	}
+	output, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("installer unexpectedly succeeded with a mismatched checksum:\n%s", output)
+	}
+	if !strings.Contains(string(output), "checksum mismatch") {
+		t.Fatalf("expected a checksum mismatch error, got:\n%s", output)
+	}
+	if _, err := os.Stat(filepath.Join(fallbackDir, "aeo")); !os.IsNotExist(err) {
+		t.Fatalf("installer wrote a binary despite the checksum mismatch: %v", err)
 	}
 }
 
