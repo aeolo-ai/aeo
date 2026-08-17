@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var version = "2.3.20"
+var version = "2.3.21"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 
@@ -3104,8 +3104,26 @@ func runUpdateCommand(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
 
+func isValidReleaseVersion(v string) bool {
+	if v == "" {
+		return false
+	}
+	for _, r := range v {
+		if !(r >= '0' && r <= '9') && !(r >= 'a' && r <= 'z') && !(r >= 'A' && r <= 'Z') && r != '.' && r != '-' {
+			return false
+		}
+	}
+	return true
+}
+
 func installDirectUpdate(plan selfUpdatePlan, targetVersion string) error {
-	cmd := exec.Command("sh", "-c", "curl -fsSL https://raw.githubusercontent.com/aeolo-ai/aeo/main/install.sh | sh")
+	if !isValidReleaseVersion(targetVersion) {
+		return fmt.Errorf("refusing to update: unexpected version format %q", targetVersion)
+	}
+	// Pinned to the release tag being installed, not the mutable main branch —
+	// otherwise every `aeo update` trusts whatever main currently holds.
+	installScriptURL := fmt.Sprintf("https://github.com/aeolo-ai/aeo/releases/download/v%s/install.sh", targetVersion)
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("curl -fsSL %s | sh", installScriptURL))
 	cmd.Env = append(os.Environ(),
 		"AEO_INSTALL_DIR="+plan.InstallDir,
 		"AEO_VERSION="+targetVersion,
