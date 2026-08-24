@@ -46,14 +46,25 @@ Use this when the customer wants Aeolo articles on their existing site in their 
 
 ---
 
-## /aeo content get <id> — Read full article content
+## /aeo content get <id> — Read article content
 
 ```bash
-aeo content get <id>
-aeo content get <id> --head   # scan-only: metadata + first ~600 chars of body
+aeo content get <id>              # the whole body
+aeo content get <id> --head       # metadata + first ~600 chars — a state check
+aeo content get <id> --blocks     # the article as addressable blocks
+aeo content get <id> --block b3   # one block, verbatim
 ```
 
-Response: `text/markdown` — full article content. Use this to review a draft before updating or deploying. Add `--head` when you only need to identify or triage an article (metadata + a short body preview); it avoids re-billing the full body on every later turn. Omit it (the default) whenever you actually need to read or edit the body.
+Response: `text/markdown`.
+
+**Read the least you need.** The default returns the whole article, and on a 6,000-character body that is thousands of characters of context spent on text you will not use.
+
+- `--head` when you only need to identify or triage an article, or to check whether an edit saved.
+- `--blocks` lists the article as `b1`, `b2`, … with a one-line preview each. Tables stay whole, so a comparison table is one block rather than a pile of fragments.
+- `--block <id>` returns that block's source verbatim. **That source is exactly what a `--patch` anchor needs** — read the block, patch against what it returned.
+- No flag when you genuinely need the full body (a sweeping rewrite, or a read where you don't yet know which part matters).
+
+Block ids are positional and derived per read, so they are valid for the article as it was when you listed them. List, then act — don't cache ids across turns where the article may have changed.
 
 ---
 
@@ -64,6 +75,8 @@ Response: `text/markdown` — full article content. Use this to review a draft b
 aeo content update <id> --status=review --title="New Title"
 
 # Targeted body edit (preferred — surgical)
+# Shows the before/after and asks before writing. Pass --yes to skip the prompt
+# (scripted use); the prompt is skipped automatically when stdin isn't a terminal.
 aeo content update <id> --patch "old sentence>>>new sentence"
 
 # Full body replace (from a file)

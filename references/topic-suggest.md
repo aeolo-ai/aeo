@@ -18,7 +18,7 @@ aeo topics list -d <domain_id>
 aeo prompts list --status tracked -d <domain_id>
 aeo content list --limit 200 -d <domain_id>
 aeo measure visibility -d <domain_id>
-aeo measure traffic --days 28 -d <domain_id>
+aeo measure traffic --days 30 -d <domain_id>
 ```
 
 If Topics are unavailable, say so and propose a fresh topology. Do not substitute legacy segment tags for Topics. Do not run a visibility check, generate Prompts, create or change Topics, or write data.

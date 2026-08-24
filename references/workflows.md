@@ -242,7 +242,7 @@ This takes 3-8 minutes. While waiting, gather metrics:
 
 ```bash
 aeo metrics overview              # All deployed articles with GA4 + GSC
-aeo metrics traffic --days=7      # Site-level: top queries, pages, countries
+aeo metrics traffic --days=30     # Site-level: top queries, pages, countries
 ```
 
 Then poll the visibility check:

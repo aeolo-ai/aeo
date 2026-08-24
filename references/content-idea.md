@@ -16,7 +16,7 @@ aeo strategy show -d <domain_id>
 aeo content list --limit 200 -d <domain_id>
 aeo prompts list -d <domain_id>
 aeo measure visibility -d <domain_id>
-aeo measure traffic --days 28 -d <domain_id>
+aeo measure traffic --days 30 -d <domain_id>
 aeo measure overview -d <domain_id>
 ```
 

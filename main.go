@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -18,9 +19,10 @@ import (
 	"time"
 )
 
-var version = "2.3.23"
+var version = "2.3.24"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
+const trafficRangeChoices = "30|60|90|180|365"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -862,8 +864,8 @@ COMMANDS:
   prompts       list | generate | add | update <id> | delete <id>
   topics        list | create | update <id> | archive <id> | restore <id> | assign-prompts <id>
   segments      list
-  measure       overview | content <id> | traffic [--days] | visibility | report --command <cmd>
-  metrics       overview | article <id> | traffic [--days]
+  measure       overview | content <id> | traffic [--days 30|60|90|180|365] | visibility | report --command <cmd>
+  metrics       overview | article <id> | traffic [--days 30|60|90|180|365]
   publish       preview <id> | deploy <id> | redeploy <id>
   post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
   reference     analyze --url <url> --media <type> | style --url <url>
@@ -985,7 +987,12 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   list              List content items
                     Flags: --status, --limit, --offset
   feed              Content Feed URLs + JSON Feed contract (render Aeolo articles on your own site)
-  get <id>          Get full article content
+  get <id>          Get article content
+                    Flags: --head (metadata + short preview — for a state check),
+                           --blocks (list addressable blocks b1, b2, … with a one-line
+                                     preview each), --block <id> (one block verbatim —
+                                     its source works as a --patch anchor)
+                    Default is the whole body; read a block when you need one part.
   review <id>       Load review workspace (article + brand + audit context)
   import            Import an agent-written draft article
                     Required: --title, --body (or --body-file)
@@ -1001,7 +1008,9 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Optional: --all
   update <id>       Update content item
                     Flags: --status, --deploy-status, --title, --meta-description,
-                           --keywords (comma-separated), --body, --body-file, --patch ("search>>>replace"),
+                           --keywords (comma-separated), --body, --body-file,
+                           --patch ("search>>>replace"; shows the change and asks before
+                                    writing — pass --yes to skip the prompt),
                            --thumbnail-url <url> (pin image directly, skip swap),
                            --clear-thumbnail (drop existing thumbnail)
   preview <id>      Generate preview link
@@ -1057,13 +1066,13 @@ Notes:
 
   overview          Article performance overview
   article <id>      Detailed article stats
-  traffic           Site-level GSC traffic (--days=7|14|30|90)
+  traffic           Site-level GSC traffic (--days=30|60|90|180|365)
 `,
 	"measure": `aeo measure <verb>
 
   overview          Article performance overview
   content <id>      Detailed article stats
-  traffic           Site-level GSC traffic (--days=7|14|30|90)
+  traffic           Site-level GSC traffic (--days=30|60|90|180|365)
   visibility        Show last visibility snapshot
   report            Submit command execution diagnostics
                     Flags: --command (required), --status-code, --response-body, --context
@@ -1383,10 +1392,10 @@ func runMetricsCommand(args []string, domainID string) {
 		requireArg(args, 1, "aeo measure content <id>")
 		run("/metrics/article/"+args[1], "GET", nil, domainID)
 	case "traffic":
-		days := findFlag(args[1:], "--days")
-		path := "/metrics/traffic"
-		if days != "" {
-			path += "?days=" + days
+		path, err := buildMetricsTrafficPath(args)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			os.Exit(1)
 		}
 		run(path, "GET", nil, domainID)
 	default:
@@ -1395,6 +1404,102 @@ func runMetricsCommand(args []string, domainID string) {
 		// that has the whole list instead of guessing it is a typo.
 		proxyCommand(append([]string{"metrics"}, args...), domainID)
 	}
+}
+
+func buildMetricsTrafficPath(args []string) (string, error) {
+	rangeArgs := args
+	if len(rangeArgs) > 0 && rangeArgs[0] == "traffic" {
+		rangeArgs = rangeArgs[1:]
+	}
+
+	days := findFlag(rangeArgs, "--days")
+	if !hasFlag(rangeArgs, "--days") {
+		return "/metrics/traffic", nil
+	}
+	if !isSupportedTrafficRange(days) {
+		return "", fmt.Errorf("--days must be one of %s", trafficRangeChoices)
+	}
+	return "/metrics/traffic?days=" + url.QueryEscape(days), nil
+}
+
+func isSupportedTrafficRange(value string) bool {
+	switch value {
+	case "30", "60", "90", "180", "365":
+		return true
+	default:
+		return false
+	}
+}
+
+// buildContentGetPath narrows what a read pulls back.
+//
+// The default is the whole article, and for an agent checking one paragraph
+// that is thousands of characters of input window spent on text it will not
+// use — the one budget that cannot be topped up. --blocks lists the article as
+// addressable blocks, --block returns one of them verbatim (and a block's
+// source is exactly what a --patch anchor needs), --head returns metadata plus
+// a short preview for a state check.
+func buildContentGetPath(id string, args []string) string {
+	path := "/content/" + id
+	params := url.Values{}
+	if hasFlag(args, "--head") {
+		params.Set("head", "true")
+	}
+	if hasFlag(args, "--blocks") {
+		params.Set("blocks", "true")
+	}
+	if v := findFlag(args, "--block"); v != "" {
+		params.Set("block", v)
+	}
+	if len(params) == 0 {
+		return path
+	}
+	return path + "?" + params.Encode()
+}
+
+// confirmPatch shows the exact rewrite and waits for a yes.
+//
+// Returns true without prompting when --yes is passed or stdin is not a
+// terminal: a piped or CI invocation has nobody to answer, and blocking there
+// would hang rather than protect anything.
+func confirmPatch(search, replace string, args []string) bool {
+	if hasFlag(args, "--yes", "-y") {
+		return true
+	}
+	info, err := os.Stdin.Stat()
+	if err != nil || (info.Mode()&os.ModeCharDevice) == 0 {
+		return true
+	}
+
+	fmt.Fprintln(os.Stderr, "\nProposed edit:")
+	fmt.Fprintf(os.Stderr, "  - %s\n", truncateForPrompt(search))
+	if strings.TrimSpace(replace) == "" {
+		fmt.Fprintln(os.Stderr, "  + (deleted)")
+	} else {
+		fmt.Fprintf(os.Stderr, "  + %s\n", truncateForPrompt(replace))
+	}
+	fmt.Fprint(os.Stderr, "\nApply? [y/N] ")
+
+	reader := bufio.NewReader(os.Stdin)
+	answer, err := reader.ReadString('\n')
+	if err != nil {
+		return false
+	}
+	switch strings.ToLower(strings.TrimSpace(answer)) {
+	case "y", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
+func truncateForPrompt(value string) string {
+	collapsed := strings.Join(strings.Fields(value), " ")
+	const max = 240
+	if len(collapsed) <= max {
+		return collapsed
+	}
+	return collapsed[:max] + "…"
 }
 
 func runReportCommand(args []string, domainID string) {
@@ -1868,7 +1973,7 @@ func main() {
 			run(path, "GET", nil, domainID)
 		case "get":
 			requireArg(args, 2, "aeo content get <id>")
-			run("/content/"+args[2], "GET", nil, domainID)
+			run(buildContentGetPath(args[2], args), "GET", nil, domainID)
 		case "review":
 			requireArg(args, 2, "aeo content review <id>")
 			run("/content/"+args[2]+"/review", "GET", nil, domainID)
@@ -1912,6 +2017,16 @@ func main() {
 				parts := strings.SplitN(v, ">>>", 2)
 				if len(parts) != 2 {
 					fmt.Fprintf(os.Stderr, "Error: --patch format must be \"search>>>replace\"\n")
+					os.Exit(1)
+				}
+				// A patch rewrites the customer's published words, and the
+				// caller here is usually an agent rather than a person. Show
+				// the exact before/after and get a yes first — the dashboard
+				// shows the same edit as a tracked change the reader accepts,
+				// and the terminal's equivalent of that is this prompt.
+				// --yes skips it for scripted use.
+				if !confirmPatch(parts[0], parts[1], args) {
+					fmt.Fprintln(os.Stderr, "Cancelled — nothing was written.")
 					os.Exit(1)
 				}
 				body["patches"] = []map[string]string{{"search": parts[0], "replace": parts[1]}}

@@ -32,29 +32,20 @@ One URL per invocation. Works for both your own channels and reference/benchmark
 
 ---
 
-### Step 1 — Detect Platform & Crawl
+### Step 1 — Queue Aeolo Analysis
 
-Detect the platform from the URL, then crawl with **gstack browse**. Social platforms lazy-load content — you must scroll to load more posts.
+Run `aeo post analyze` with one user-provided URL. Aeolo's background job owns
+URL collection and analysis; do not invoke a local browser helper, automate
+Chrome, or manually scroll and extract page text as a substitute.
 
 ```bash
-B=$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/browse/dist/browse
-$B goto <URL>
-
-# Scroll to load more posts — repeat until no new content appears
-$B scroll
-# wait 2s for content to load
-$B scroll
-# wait 2s
-$B scroll
-# wait 2s
-
-# Now extract all text
-$B text
+aeo post analyze --url <URL> --mode owned|reference [--provider <provider>] [--limit <n>]
 ```
 
-**Scroll loop**: Keep scrolling until the text output stops growing or you hit 15+ posts. Social platforms (Threads, LinkedIn) load 4-6 posts initially and need 3-5 scrolls to reach 15-20. If text length doesn't increase after a scroll, you've hit the bottom or a login wall.
-
-**Verification**: After crawling, count the posts in the output. If fewer than 10, scroll more. If fewer than 5 after max scrolling, note "limited data — login wall" and proceed with what's available.
+Keep the returned job ID. After the job completes, read the stored result with
+`aeo reference style --url <URL>` (add `--provider` when URL inference is not
+enough). If Aeolo reports insufficient evidence or an access restriction, state
+that limitation instead of attempting a client-side login-wall workaround.
 
 | URL Pattern | Platform | Data Available |
 |------------|----------|----------------|

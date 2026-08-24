@@ -64,7 +64,7 @@ Site-level GSC traffic overview (not per-article). Returns:
 **Country Breakdown** — traffic by country
 **Device Breakdown** — desktop vs mobile vs tablet
 
-`--days` accepts 7, 14, 30, or 90 (default: 30).
+`--days` accepts 30, 60, 90, 180 (6 months), or 365 (1 year). Default: 30. Other values are rejected so traffic requests reuse the shared cache windows.
 
 Requires Google Search Console connected.
 
