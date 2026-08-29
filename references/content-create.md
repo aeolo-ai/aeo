@@ -222,6 +222,53 @@ citation. Do not use `aeo image search`, `aeo image generate`, web-search image
 results, stock images, marketplace PDPs, or arbitrary external URLs for inline
 body images. If any check fails, keep the article text-only.
 
+#### 3.2.2 — Optional rich blocks: YouTube embed · product carousel
+
+Two inline blocks are allowed besides the catalog image, both **verified-only
+and optional**. The author supplies data; Aeolo renders the markup on every
+surface (hosted blog, Cafe24/Shopify/WordPress/Pango Lingo deploys, feeds,
+export) — never hand-write iframes or card HTML, never add `style`/`class` of
+your own.
+
+**YouTube embed — at most ONE per article.** When research surfaced a directly
+relevant video (an official demo, tutorial, or talk that materially helps the
+reader), verify it first:
+
+```bash
+aeo source youtube <url>
+```
+
+It confirms the video exists and allows embedding, returns the exact embed
+snippet with the real title, and best-effort fetches the caption transcript so
+the body can discuss what the video actually says. Paste the returned snippet on
+its own line at the point where it helps most. Never construct an embed from an
+unverified or guessed VIDEO_ID; if verification fails or no clearly relevant
+video exists, embed nothing.
+
+**Product carousel — at most ONE per article, up to 3 tokens.** When the body
+genuinely discusses specific catalog products or SKUs (a recommendation,
+comparison, or routine that names them), get the tokens first:
+
+```bash
+aeo source products
+```
+
+It lists this domain's catalog products and SKU tokens (`productId`, or
+`productId:variantId` for one SKU) together with the exact marker syntax. Place
+the marker on its own line right after the section it supports:
+
+```html
+<figure class="product-carousel" data-products="TOKEN1,TOKEN2"></figure>
+```
+
+Use only tokens the command returned — never invent or edit one — and prefer
+the exact SKUs the section discusses. When the article walks through several
+catalog products (a routine, a comparison), put them together in the one
+carousel (up to 3) rather than featuring only one. When no catalog product
+clearly matches the article, add no carousel. Aeolo renders the cards (image ·
+name · price · localized CTA linking to the PDP) at publish time; a token that
+is not in the domain catalog simply does not render.
+
 #### 3.3 — Ask user for gaps
 
 If 1st-party material is insufficient for the topic:
@@ -294,9 +341,11 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
     - Never copy the body's opening sentence verbatim (LLMs default to this; resist)
   - Good: `"Sunscreen breaks down faster than you think. AAD says 2 hours — but sweat, water, and friction reset the clock. Here's the science, plus how stick formats fix mid-day reapplication."` (192 chars — too long, trim) → `"Sunscreen breaks down faster than 2 hours when sweat or water hits. Here's the AAD-backed science and why stick formats fix the mid-day reapplication gap."` (155 chars ✓)
   - Bad: `"Sunscreen is essential for athletes who spend time outdoors..."` (generic intro fallback — no CTR hook)
+- **TL;DR blockquote (HARD RULE)** — The body opens with `> **TL;DR:** ` immediately after the H1: 2–3 sentences that answer the title question completely and stand alone with zero surrounding context. AI engines lift this block as the default answer snippet. No bullets inside it, no title text repeated, and the first prose paragraph after it still opens with the BLUF answer in different words.
 - BLUF in first 2–3 sentences
 - Inline citations as `[Source Name](URL)` throughout
 - **Inline product images are catalog-only and optional** — follow Step 3.2.1; otherwise keep the body text-only
+- **Rich blocks are verified-only and optional** — at most one YouTube embed via `aeo source youtube <url>` and one product carousel via `aeo source products` (Step 3.2.2); never hand-write iframes or card HTML
 - Brand mentions at 15–25% density, always as part of a list (never solo promo)
 - FAQ section at the end (3–5 questions)
 
@@ -405,7 +454,7 @@ support the target, end shorter rather than repeat, speculate, or pad.
 
 ### GEO Writing 10 Commandments
 
-1. **BLUF (Bottom Line Up Front)** — Place the core answer in the first 2–3 sentences. AI cites "specific answers," not entire articles. Don't beat around the bush in the intro.
+1. **BLUF (Bottom Line Up Front)** — Place the core answer in the first 2–3 sentences. AI cites "specific answers," not entire articles. Don't beat around the bush in the intro. Open the body with the `> **TL;DR:**` blockquote right under the H1 (see Step 4 HARD RULE); the first prose paragraph then restates the answer in different words.
 2. **Title ≠ H1** — Title is the long SEO version (question-based, keyword-rich). The body `#` is a short, punchy reader-facing heading. They must always be different text. Example: Title `"What's the Best SPF Stick for Outdoor Sports in 2026?"` → H1 `"Best SPF Sticks for Outdoor Sports"`
 3. **Logical H2/H3 hierarchy (real markdown headings, not bold text)** — Semantic HTML5 structure. Every section heading MUST be a real markdown heading — `## ` for sections, `### ` for sub-sections — never bold text (`**Section**`) and never a bare numbered line (`1. Section`) masquerading as a heading. Each section must be independently quotable; a single H2 should make sense on its own. (The deploy-time GEO structure check counts `## ` H2 sections — bold/numbered "headings" are invisible to it and to AI-engine chunkers.)
 4. **Comparison tables** — Comparison data must be in markdown/HTML tables. AI prefers structured data over unstructured text.
@@ -445,6 +494,26 @@ ranking criteria explicitly and rank every entry according to the evidence. The
 brand may rank first when it genuinely meets those criteria. Do not manipulate a
 ranking to flatter the brand; make every placement defensible on the stated
 criteria.
+
+**C. Kill the AI sentence shapes.** Banning one symptom just moves the habit
+next door: the em dash ban held while the same clause-joining moved into comma
+splices, so the whole family is governed (measured on published articles,
+2026-08-26). In ARTICLE PROSE:
+
+- No comma splice joining two full clauses ("The record exists, the question is
+  who reads it"). Write two sentences, or use a conjunction or colon.
+- At most ONE contrastive-negation construction per piece: "not X, it is Y",
+  "It is not just X", a dramatic two-word "It does not.", or a balanced closer
+  like "...are two very different things". Everywhere else, state what a thing
+  IS with a concrete detail instead of what it is not.
+- No meta-scaffold sentences that announce structure instead of making a point:
+  "There is a second layer to this", "Two things stand out", "The real question
+  is whether ...". Delete the announcement and write the point itself.
+- Vary the rhythm deliberately: mix paragraph lengths (a one-sentence paragraph
+  is fine), let section length follow the material instead of a fixed
+  two-paragraphs-per-H2 beat, and never run H2s that all open with the same
+  word ("Why ... / Why ... / Why ...").
+- At most one vivid metaphor per piece. One reads as voice; three read as a tic.
 
 ### Platform-Specific Tone Guide
 

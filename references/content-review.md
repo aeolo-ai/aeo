@@ -63,6 +63,7 @@ Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title str
 
 | Item | Criteria | Reference |
 |------|----------|-----------|
+| **TL;DR blockquote** (blog articles only) | Does the body open with `> **TL;DR:**` immediately after the H1 — 2–3 standalone sentences that answer the title question with zero surrounding context, no bullets, no title text repeated? | content-create Step 4 HARD RULE |
 | **BLUF** | Is the core answer in the first 2–3 sentences? | 10 Commandments #1 |
 | **H1** | Is it a question-based title? Does it match actual AI queries? | 10 Commandments #2 |
 | **H2/H3 hierarchy** | Can each section be independently quoted? | 10 Commandments #3 |
@@ -119,6 +120,25 @@ Catches semantic issues where the article reads like "AI-written content" or "br
 
 **Core principle**: Even if structure and sources are perfect, without genuine experience and honesty, the article will read as "AI-generated." This category evaluates whether the article stems from real human experience.
 
+#### 5b. AI Prose Tell Scan (count, don't vibe)
+
+The tells below read as machine writing even when every fact is real, and a
+reviewer that shares the writer's habits will not notice them by feel — so the
+verdict is a **count**, not an impression. Walk the body once per row:
+
+| Tell | Count rule | Verdict |
+|------|-----------|---------|
+| Contrastive negation ("not X, it is Y" / "It is not just X" / a dramatic "It does not." / "...two very different things") | Count every instance | 0–1 OK; 2+ = defect — rewrite all but the strongest into direct statements |
+| Comma splice (two full clauses joined by a bare comma) | Count every instance | Any = defect; split into two sentences or use a conjunction |
+| Meta-scaffold sentences ("There is a second layer to this", "Two things stand out", "The real question is whether ...") | Count every instance | Any = defect; delete the announcement, keep the point |
+| Heading uniformity | Do 3+ consecutive H2s open with the same word? | Yes = defect; vary heading shapes |
+| Section rhythm | Does (nearly) every H2 section hold the same paragraph count? | Yes = defect; let length follow the material |
+| Metaphor density | Count vivid analogies ("wearing a different label") | 0–1 OK; 2+ = defect |
+
+Em/en dash as a connector is already a defect under #2 Trust & Authority.
+Record the counts in the report — "reads fine" without numbers is a review
+failure, the same way a blanket "deploy-ready" fails Audit #0.
+
 #### 6. Engine Fit
 
 Based on the target engines in the brand context or visibility gap data:
@@ -154,6 +174,7 @@ Based on the target engines in the brand context or visibility gap data:
 | Freshness | ✅ / ⚠️ / ❌ | ... |
 | Brand Integration | ✅ / ⚠️ / ❌ | ... |
 | Semantic Authenticity | ✅ / ⚠️ / ❌ | ... |
+| AI Prose Tells (#5b) | ✅ / ❌ | negation: {n}, splices: {n}, scaffolds: {n}, metaphors: {n} |
 | Engine Fit | ✅ / ⚠️ / ❌ | ... |
 
 ### Issues Found
