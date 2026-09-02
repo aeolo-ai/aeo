@@ -63,7 +63,7 @@ Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title str
 
 | Item | Criteria | Reference |
 |------|----------|-----------|
-| **TL;DR blockquote** (blog articles only) | Does the body open with `> **TL;DR:**` immediately after the H1 — 2–3 standalone sentences that answer the title question with zero surrounding context, no bullets, no title text repeated? | content-create Step 4 HARD RULE |
+| **Lead-summary blockquote** (blog articles only) | Does the body open with a `> ` blockquote immediately after the H1 — 2–3 standalone sentences that answer the title question with zero surrounding context, no bullets, no title text repeated? Is it **unlabelled** (no "TL;DR", "Summary:", "요약:", or bolded lead-in)? A label is a defect. | content-create Step 4 HARD RULE |
 | **BLUF** | Is the core answer in the first 2–3 sentences? | 10 Commandments #1 |
 | **H1** | Is it a question-based title? Does it match actual AI queries? | 10 Commandments #2 |
 | **H2/H3 hierarchy** | Can each section be independently quoted? | 10 Commandments #3 |
