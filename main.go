@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.24"
+var version = "2.3.25"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -1146,7 +1146,9 @@ Notes:
 
   search <query>    Search Pexels for reference scenes
                     Flags: --per-page (default 12), --page (default 1)
-  swap              Generate a 16:9 thumbnail by swapping a product into a reference scene
+  swap              Composite ONE catalog product into a Pexels reference scene
+                    Renders the product's og_image verbatim — a retail-box packshot
+                    makes a box ad. No clean standalone cut? Use 'generate --product'.
                     Required: --content <id>, --product <id>, --reference <url>
                     Optional: --no-persist (don't save to content_history)
                     Async — returns a job ID; poll with 'aeo image poll'
@@ -1154,11 +1156,17 @@ Notes:
                     Required: --file <path>
                     Optional: --content <id> (pin as thumbnail), --mime-type (auto from extension)
                     Limits: image must be ≤25 megapixels (Shopify article cap)
-  generate          Generate image(s) from a text prompt (uses production credits)
-                    Required: --prompt <text>
-                    Optional: --model nano-banana-pro|gpt-image-2|grok-image (default nano-banana-pro),
-                              --sweep N (1-8 candidates), --aspect (default 16:9), --resolution,
-                              --ref url1,url2 (reference images), --brand-style
+  generate          Generate cover/gallery image(s) (uses production credits)
+                    Required: --prompt <text>, or --recommend <contentId> to compose
+                              the scene from that article's own visual brief
+                    Conditioning: --product <id,id> (catalog product IS the subject —
+                              turns on product-fidelity grammar), --subject-policy
+                              feature|ambient, --subject-ref url,url (reproduce exactly),
+                              --style-ref url,url (look only), --ref url,url (role-free),
+                              --brand-style (brand mood board; read it with 'aeo strategy visual')
+                    Optional: --model nano-banana-pro|gpt-image-2 (default nano-banana-pro),
+                              --sweep N (1-8 candidates — sweep, then curate by eye),
+                              --aspect (default 16:9), --resolution
                     Async — returns job IDs; poll with 'aeo image poll'
   poll              Check status + result URLs of image generation jobs
                     Usage: aeo image poll <jobId> [jobId...]
@@ -2850,11 +2858,18 @@ func main() {
 			run("/image/upload", "POST", b, domainID)
 		case "generate":
 			prompt := findFlag(args, "--prompt", "-p")
-			if prompt == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> [--model nano-banana-pro|gpt-image-2|grok-image] [--sweep N] [--aspect 16:9] [--resolution 1024] [--ref url1,url2] [--brand-style]")
+			// --recommend composes the scene server-side from the article's own
+			// visual brief, so the prompt is optional there (and layers on top
+			// when given). Everywhere else it is still the whole instruction.
+			recommend := findFlag(args, "--recommend", "--recommend-from")
+			if prompt == "" && recommend == "" {
+				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> | --recommend <contentId>\n              [--product <id,id>] [--subject-policy feature|ambient]\n              [--subject-ref url,url] [--style-ref url,url] [--ref url,url] [--brand-style]\n              [--model nano-banana-pro|gpt-image-2] [--sweep N] [--aspect 16:9] [--resolution 1024]")
 				os.Exit(1)
 			}
 			body := map[string]any{"prompt": prompt}
+			if recommend != "" {
+				body["recommendFromContentId"] = recommend
+			}
 			if v := findFlag(args, "--model"); v != "" {
 				body["model"] = v
 			} else {
@@ -2878,14 +2893,24 @@ func main() {
 			if hasFlag(args, "--brand-style", "--style") {
 				body["applyBrandStyle"] = true
 			}
-			if v := findFlag(args, "--ref", "--references"); v != "" {
-				refs := []string{}
-				for _, r := range strings.Split(v, ",") {
-					if r = strings.TrimSpace(r); r != "" {
-						refs = append(refs, r)
-					}
-				}
-				body["referenceUrls"] = refs
+			if v := splitCSV(findFlag(args, "--ref", "--references")); len(v) > 0 {
+				body["referenceUrls"] = v
+			}
+			// Role-declared conditioning. --ref stays role-free (the operator's
+			// own attachments); these three tell the server WHAT the image is of
+			// versus what it should merely look like, which is the difference
+			// between the product being reproduced and the model inventing one.
+			if v := splitCSV(findFlag(args, "--product", "--products")); len(v) > 0 {
+				body["styleProductIds"] = v
+			}
+			if v := splitCSV(findFlag(args, "--subject-ref", "--subject-refs")); len(v) > 0 {
+				body["subjectReferenceUrls"] = v
+			}
+			if v := splitCSV(findFlag(args, "--style-ref", "--style-refs")); len(v) > 0 {
+				body["styleReferenceUrls"] = v
+			}
+			if v := findFlag(args, "--subject-policy"); v != "" {
+				body["subjectPolicy"] = v
 			}
 			b, _ := json.Marshal(body)
 			run("/image/generate", "POST", b, domainID)
