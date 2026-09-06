@@ -92,6 +92,60 @@ Read the selected channel-voice / reference-style evidence for the channel
 (`--provider`, `--url`) — the same data as `reference style`. See
 [tov-extract.md](tov-extract.md).
 
+## /aeo site template — the managed site's page
+
+The managed site (`{sub}.aeolo.site`, or the customer's bound host) renders every
+article inside a **captured copy of the customer's own store page**: header, nav,
+footer, fonts, with the page's content region emptied to `<!--aeolo:content-->`
+and its page-describing head tags replaced by `<!--aeolo:head-->`. The capture
+makes exactly one judgement — which box is the content — and can get it wrong:
+longweekendhaus.com's footer grid was picked, so every article rendered on the
+footer's dark gradient. These commands let you see where the slot sits, move it,
+and step back. The dashboard's **Code** view (Channels → Site provided by Aeolo)
+is the same page with the same history.
+
+```bash
+aeo site template show                              # slot + head mark positions, live revision, chrome warning
+aeo site template read --around content             # numbered lines around the article slot
+aeo site template read --find "lwkd-b2c-footer__grid" --before 5 --after 5
+aeo site template read --from 1200 --after 40
+aeo site template revisions                         # history: capture / editor / agent / rollback
+aeo site template rollback 1                        # an earlier page back, as a NEW revision
+aeo site template recapture                         # capture the store again (~20s); old revisions stay
+```
+
+**Edit = exact-match patches, never a full page.** Each `find` must be quoted
+verbatim from `site template read` and match exactly once; a zero match is an
+anchor you did not read, a double match is an edit landing somewhere you did not
+look, and both are refused. From the shell, `--patch` repeats and uses the same
+`FIND>>>REPLACE` form as `content update`:
+
+```bash
+aeo site template edit \
+  --patch '<div class="grid"><!--aeolo:content--></div>>>><div class="grid"></div>' \
+  --patch '<main id="content">>>><main id="content"><!--aeolo:content-->' \
+  --note "move the article slot out of the footer"
+```
+
+In dashboard chat and MCP the command string cannot carry HTML (its quotes are
+stripped by the tokenizer) — pass the patches in the structured `templateUpdate`
+field: `{ patches: [{ find, replace }], note }` with `command: "site template edit"`.
+
+**It is a live-site write.** `edit`, `rollback` and `recapture` republish the page
+the public and the crawlers are reading, so show the user the exact patch (or the
+revision you will restore) and wait for approval before `confirmed: true`. Every
+write leaves a revision; `rollback <n>` puts revision n back as a new revision, so
+undoing an undo is another row and nothing is ever lost. A save over a revision you
+did not read is refused (`REVISION_CONFLICT`) — read again, then patch again.
+
+Long lines: a captured page often has a 100KB stylesheet on one line. `read` cuts
+such lines with `…(+N chars)`; use `--find "<text>"` to get the exact characters
+around a spot on one, and quote your anchor from that excerpt.
+
+Both marks must survive an edit exactly once each, and the page must carry no
+script, frame, inline handler, `<base>` or `http-equiv` — the same gate the edge
+runs before storing. A page that fails it is refused with the reason.
+
 ## /aeo blog show
 
 Report the hosted Aeolo blog for the active domain: its home URL, any bound custom
