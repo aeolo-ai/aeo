@@ -163,7 +163,7 @@ How the destination is decided: a named `channel_id` decides it from that channe
 Both apply to **every** target, and both refuse before anything is written.
 
 1. **Approved status** — Shopify requires status exactly `approved`; the other targets accept `approved` or `published`. Otherwise: "Only approved articles can be deployed." Fix with `aeo content update <id> --status approved`.
-2. **SERP metadata** — the title must be non-empty and ≤ 60 chars, and the meta description must be present and 50–160 chars. Failures return `INVALID_TITLE_LENGTH` / `INVALID_META_DESCRIPTION` as a `**Deploy blocked — …**` message, which the connector API answers with **HTTP 422 `DEPLOY_BLOCKED`**. Fix with `aeo content update <id> --title "…"` / `--meta-description "…"`, then retry deploy.
+2. **SERP metadata** — the title must be non-empty and ≤ 60 chars. A supplied meta description supports up to 500 chars; missing metadata is permitted. Around 160 chars is only a display advisory. Failures return `INVALID_TITLE_LENGTH` / `INVALID_META_DESCRIPTION` as a `**Deploy blocked — …**` message, which the connector API answers with **HTTP 422 `DEPLOY_BLOCKED`**. Fix with `aeo content update <id> --title "…"` / `--meta-description "…"`, then retry deploy.
 
 Response: `{ "success": true, "data": { "shopifyArticleId": "...", "blogId": "...", "url": "..." } }`
 

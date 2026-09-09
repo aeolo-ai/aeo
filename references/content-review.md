@@ -4,6 +4,10 @@ Reviews existing content based on GEO domain expertise.
 
 ---
 
+## Answer and scope — within the existing review
+
+Check the answer/meta against body, tables and FAQ for missing comparison set/criteria, routine roles/conditions, defining distinctions, contradictions and unsupported certainty. Include findings in the usual review; correct defects or acknowledge a clean draft. No extra review after each edit or separate summary report. Metadata supports 500 characters; 160 is display advice, not a quality or citation guarantee.
+
 ## /aeo content review <id> — Content review from a GEO perspective
 
 ### Flow

@@ -61,7 +61,7 @@ Works with generated/imported hub articles and standalone channel content.
 - Reddit saw **450% growth** in AI search citations (2025 Mar-Jun)
 - Domains with millions of Reddit/Quora mentions are **4x more likely** to be cited
 - Posts with **50+ upvotes** cross the AI citation threshold — below this, rarely cited
-- **TL;DR is the single most cited element** — AI engines use it as the default answer snippet
+- **A standalone opening answer helps readers** — keep the answer and article-specific detail visible. Engines choose their own snippets; TL;DR or blockquote placement does not guarantee citation.
 - Each numbered finding in a post can be independently extracted by AI as a citation unit
 - Comparison tables are gold for AI extraction (structured data in unstructured platform)
 
