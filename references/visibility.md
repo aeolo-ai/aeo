@@ -77,3 +77,11 @@ Two readings the table makes explicit:
 
 Not included: individual result rows. A single report carrying them was 1.5 MB;
 nothing about a trend needs them. Use `visibility` for the latest check's detail.
+
+## Exact market and engine reads
+
+Use `aeo visibility summary --market KR --format json` and `aeo visibility summary --market US --format json` to inspect each market. Optional `--engine chatgpt` narrows the engine; `--check-id <UUID>` pins one completed, nonexcluded run. The default is the latest completed check with results. `aeo diagnose visibility summary` is an alias.
+
+The read returns `state`, `checkId`, `checkedAt`, `scope`, `totalResults`, `mentionedResults`, `mentionRate`, `promptsChecked`, `byEngine`, `byMarket`, and `availableMarkets`. These are stored answer-sample counts, not the composite visibility score. Repeated samples remain separate. Actual `tested_location` determines market; unknown historical markets stay null. `empty_scope` and `no_completed_check` are distinct from a measured 0% rate. Failures return an error, never zero. No credits or new checks are used. Use the shared `aeo` execute-command tool in MCP/Mastra for this scoped read.
+
+`aeo visibility check poll <jobId>` includes recorded progress, current step and last heartbeat while running. Missing telemetry is reported as unavailable. Cancellation is terminal; a percentage alone never means completion. Completed reports use paged results, including runs above 1,000 samples.

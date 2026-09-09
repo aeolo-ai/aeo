@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.25"
+var version = "2.3.26"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -905,7 +905,7 @@ var subUsage = map[string]string{
 `,
 	"domain": `aeo domain <verb>
 
-  setup             Show setup checklist (integrations status)
+  setup             Show server setup checklist (--format json includes saved strategy)
   list              List accessible domains
   switch <id>       Switch active domain
   brand             Deprecated alias for 'aeo agent context'
@@ -937,6 +937,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   voice             Read selected channel-voice / reference-style evidence (same surface as 'reference style')
 `,
 	"visibility": `aeo visibility <verb>
+
+  summary           Exact mentions and samples (--market KR|US, --engine, --check-id, --format json)
 
   show              Show last visibility snapshot
   history           Score over time, one row per check (--limit, default 10)
@@ -1287,6 +1289,8 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 		return
 	}
 	switch args[0] {
+	case "summary":
+		proxyCommand(append([]string{"visibility"}, args...), domainID)
 	case "show":
 		run("/visibility", "GET", nil, domainID)
 	case "history":
@@ -1708,7 +1712,7 @@ func main() {
 		}
 		switch args[1] {
 		case "setup":
-			run("/setup-status", "GET", nil, domainID)
+			proxyCommand(args, domainID)
 		case "list":
 			run("/domains", "GET", nil, domainID)
 		case "brand":

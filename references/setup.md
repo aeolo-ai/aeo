@@ -232,3 +232,9 @@ hosted Aeolo blog publishes with no channel row at all. See
 Only then start the loops — daily content and the weekly report. A loop started
 on a half-set-up brand measures a market nobody chose and writes against an
 empty topic set.
+
+## Inspect completion without the browser
+
+`aeo domain setup --format json` reads the same server state as the onboarding page: seven required tasks in `onboarding`, optional tasks in `next`, and `done` / `total`. `strategy` contains `saved`, `source` (`content_strategy`), the canonical `manifest`, and `updatedAt`. An empty strategy row is not saved. `competitorCandidates` counts guest-snapshot candidates independently of saved strategy.
+
+Strategy and connector guidance stay available in onboarding but viewing or leaving those screens does not complete a task. Strategy is optional and uses the saved document rather than browser history. Google still requires a selected property/site; starting OAuth alone is not evidence of that selection. Use `aeo integrations google status` for connection details.
