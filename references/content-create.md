@@ -328,20 +328,12 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
   - The deploy step rejects with HTTP 422 / `INVALID_TITLE_LENGTH` if `title.length > 60`, on every target — agent must shorten and retry.
   - Good: `"Best No-White-Cast SPF Sticks for Sports (2026)"` (47 chars)
   - Bad: `"What's the Best Sunscreen for NYC Half Marathon Runners in 2026? Race-Morning Picks That Won't Sting, Slip, or Leave a White Cast"` (133 chars — drop everything after the question mark)
-- **Meta description is REQUIRED, 50–160 chars (HARD RULE — deploy gate enforces this)**:
-  - The deploy step rejects with HTTP 422 / `INVALID_META_DESCRIPTION` if missing or out of range. Always pass `--meta-description` in `/aeo content import` and `/aeo content update`.
-  - **Why it matters**:
-    1. *SERP hook*: when missing, Shopify auto-fills from the body's first sentence — usually a generic intro that doesn't motivate clicks. A purposeful meta gives 2–5× CTR over fallback.
-    2. *CTR feedback loop*: low CTR signals to Google "users don't find this useful" → article drops further in rank → impressions vanish. After honeymoon ends, recovery requires good CTR.
-    3. *GEO citations*: ChatGPT / Perplexity sometimes lift the meta as the source summary when citing your URL — empty meta forces them to extract from the body, reducing citation accuracy.
-  - **What to write (target 120–155 chars)**:
-    - Sentence 1 — lead with the answer/result (BLUF style, mirrors the title intent)
-    - Sentence 2 — one differentiator: founder credentials, first-party test, scope, or comparative angle
-    - Optional close — specific value or invitation ("compared", "tested by…", "with…")
-    - Never copy the body's opening sentence verbatim (LLMs default to this; resist)
-  - Good: `"Sunscreen breaks down faster than you think. AAD says 2 hours — but sweat, water, and friction reset the clock. Here's the science, plus how stick formats fix mid-day reapplication."` (192 chars — too long, trim) → `"Sunscreen breaks down faster than 2 hours when sweat or water hits. Here's the AAD-backed science and why stick formats fix the mid-day reapplication gap."` (155 chars ✓)
-  - Bad: `"Sunscreen is essential for athletes who spend time outdoors..."` (generic intro fallback — no CTR hook)
-- **Lead-summary blockquote (HARD RULE)** — The body opens with a `> ` blockquote immediately after the H1: 2–3 sentences that answer the title question completely and stand alone with zero surrounding context. AI engines lift this block as the default answer snippet. **Write it unlabelled** — no `**TL;DR:**`, no "TL;DR", no "Summary:", no "요약:", no bolded lead-in of any kind. The blockquote and its position are the marker; a label buys nothing from the extractor and tells the human reader they are reading a template. No bullets inside it, no title text repeated, and the first prose paragraph after it still opens with the BLUF answer in different words.
+- **Search description** — Author it separately from the fuller opening answer. Lead with the answer and preserve the article's distinctive scope. Comparisons need the set/count and criteria; routines need roles, order and conditions; explainers need the defining distinction and how to check it. Never replace useful detail with a generic brand routine or boilerplate cautions.
+  - Omitted metadata is permitted. Nonempty metadata supports up to 500 characters, matching Aeolo's storage contract. Around 160 characters is a display advisory, not a search-engine limit or a quality score. Do not mechanically shorten an accurate, useful explanation.
+  - Google may choose a query-dependent snippet from the body or the description. Automatic and authored descriptions can both be useful. Do not claim a guaranteed CTR increase, ranking gain, or AI citation preference from the field or its length.
+  - Keep comparison counts, verified price context, distinctions and product roles when they materially answer the question. Reverify changing prices before using them; do not restore unsupported safety claims to add detail.
+- **Lead-summary blockquote (HARD RULE)** — Open with an unlabelled `> ` blockquote immediately after the H1: 2–3 standalone sentences containing the answer, scope and useful supporting details. This is editorial house style, not an AI extraction contract. No bullets or repeated title. The next paragraph develops evidence or explanation instead of restating the answer. The listing excerpt can derive from this full lead; search metadata remains independently authored.
+- **Revision review** — After any correction, read the saved revision again and check the opening answer/search description against the body, tables and FAQ. Record specific supporting and conflicting passages, missing scope/details, and corrections. A successful update does not count as review of the update. Complete the existing review acknowledgement only after the final read-back has no unresolved findings.
 - BLUF in first 2–3 sentences
 - Inline citations as `[Source Name](URL)` throughout
 - **Inline product images are catalog-only and optional** — follow Step 3.2.1; otherwise keep the body text-only
@@ -422,10 +414,10 @@ Flags:
 | `--keywords` | comma-separated | — | — |
 | `--language` | enum | — | `en` |
 | `--rationale` | string | — | — |
-| `--meta-description` | string 50–160 chars | **Required for deploy** | — |
+| `--meta-description` | string, up to 500 chars | Optional; preserve answer and article scope | — |
 | `--sources` | JSON array `[{"name":"...","url":"..."}]` | — | — |
 
-> **Deploy gate**: `/aeo content import` itself accepts a missing or oversized meta (drafts iterate freely), but `/aeo content deploy` will return HTTP 422 with `INVALID_TITLE_LENGTH` or `INVALID_META_DESCRIPTION` if the article fails the SERP-friendly limits at deploy time. Always supply both at import so the article is deploy-ready.
+> **Deploy gate**: an omitted meta description is permitted. `/aeo content deploy` rejects an invalid title or a supplied description longer than 500 characters. The 160-character display advisory is not a publishing failure. Drafts may still need factual and editorial review even when length validation passes.
 
 5. On success: "Imported → View in Aeolo dashboard → Content Queue"
 
@@ -454,7 +446,7 @@ support the target, end shorter rather than repeat, speculate, or pad.
 
 ### GEO Writing 10 Commandments
 
-1. **BLUF (Bottom Line Up Front)** — Place the core answer in the first 2–3 sentences. AI cites "specific answers," not entire articles. Don't beat around the bush in the intro. Open the body with the unlabelled `> ` lead-summary blockquote right under the H1 (see Step 4 HARD RULE); the first prose paragraph then restates the answer in different words.
+1. **BLUF (Bottom Line Up Front)** — Place the core answer in the first 2–3 sentences. AI cites "specific answers," not entire articles. Don't beat around the bush in the intro. Open the body with the unlabelled `> ` lead-summary blockquote right under the H1 (see Step 4 HARD RULE); the next paragraph develops evidence or explanation rather than restating the answer.
 2. **Title ≠ H1** — Title is the long SEO version (question-based, keyword-rich). The body `#` is a short, punchy reader-facing heading. They must always be different text. Example: Title `"What's the Best SPF Stick for Outdoor Sports in 2026?"` → H1 `"Best SPF Sticks for Outdoor Sports"`
 3. **Logical H2/H3 hierarchy (real markdown headings, not bold text)** — Semantic HTML5 structure. Every section heading MUST be a real markdown heading — `## ` for sections, `### ` for sub-sections — never bold text (`**Section**`) and never a bare numbered line (`1. Section`) masquerading as a heading. Each section must be independently quotable; a single H2 should make sense on its own. (The deploy-time GEO structure check counts `## ` H2 sections — bold/numbered "headings" are invisible to it and to AI-engine chunkers.)
 4. **Comparison tables** — Comparison data must be in markdown/HTML tables. AI prefers structured data over unstructured text.
@@ -551,7 +543,7 @@ On a content refresh, Aeolo updates `dateModified` automatically on save — you
 Generate the following metadata upon article completion (used in the import payload):
 
 - `title` — SEO-optimized long version (question-based, keyword-rich). **Must differ from H1** (see Step 4 HARD RULE)
-- `metaDescription` — Under 150 characters (BLUF-based summary)
+- `metaDescription` — Independently authored answer and article-specific scope, up to 500 characters; 160 is a display advisory
 - `targetKeywords` — 1–20
 - `articleType` — Based on the format matrix
 - `estimatedRefreshDate` — Publish date + 60 days

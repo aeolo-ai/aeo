@@ -4,6 +4,14 @@ Reviews existing content based on GEO domain expertise.
 
 ---
 
+## Answer, scope and revision consistency
+
+For the opening answer and the separate search description, record the title question, answer, and retained details. A comparison needs its set/count and criteria; a routine needs roles, order and optional conditions; an explainer needs the distinction and how to verify it. Do not replace these with repeated brand instructions or generic cautions.
+
+Read the entire saved body, tables and FAQ. Quote support for summary claims and quote any conflicting passages. Record each finding with the affected sentence, evidence and correction. Check for lost comparison scope, unsupported new claims and stronger certainty than the body or sources support. After ANY title, meta or body correction, read the saved revision again before declaring it clean. Updating is not reviewing.
+
+A description up to 500 characters is supported; above 160 or below 50 is an editorial advisory, not an automatic defect. Missing metadata is permitted. A fuller listing excerpt derives from the opening answer independently of search metadata. Neither length nor blockquote format guarantees an engine-selected snippet or citation lift.
+
 ## /aeo content review <id> — Content review from a GEO perspective
 
 ### Flow
