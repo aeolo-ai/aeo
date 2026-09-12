@@ -121,6 +121,28 @@ aeo content update <id> --body-file ./revised-draft.md
 
 ---
 
+## /aeo content slug <id> <new-slug> — Change an article's URL slug
+
+```bash
+aeo content slug <id> best-retinol-serum-for-sensitive-skin
+```
+
+The slug is normalized the way a title is (lowercase, letters and digits in any script, spaces → `-`), so you can pass what the user typed. Show the old and the new address and confirm before running — this is a write.
+
+What happens:
+
+- **Never published** — the slug simply changes.
+- **Published on the Aeolo-served surface** (managed site `pages.{domain}` / `{sub}.aeolo.site`, or `{sub}.aeolo.blog`) — the old address keeps answering with a **301** to the new one, and `published_url` follows. The old slug stays reserved for this article; moving back to it later is allowed.
+- **Deployed to a CMS or custom channel** (WordPress, Shopify, Cafe24, Pango Lingo, custom feed) — refused with `SLUG_LOCKED_BY_CHANNEL`. That channel owns the address; change it there.
+
+Refusals: `SLUG_TAKEN` (another article on the domain has that slug, including a trashed one), `SLUG_RESERVED` (another article used to live there and still redirects from it), `INVALID_SLUG` (nothing usable left after normalizing).
+
+Locale editions have their own slugs and are **not** renamed with the canonical — run the command per edition.
+
+Response: `{ "id", "slug", "published_url", "updated_at", "redirected_from" }` — `redirected_from` is the old slug when a redirect was recorded, else `null`.
+
+---
+
 ## /aeo content preview <id> — Generate a preview link
 
 ```bash
