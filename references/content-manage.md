@@ -129,17 +129,19 @@ aeo content slug <id> best-retinol-serum-for-sensitive-skin
 
 The slug is normalized the way a title is (lowercase, letters and digits in any script, spaces → `-`), so you can pass what the user typed. Show the old and the new address and confirm before running — this is a write.
 
-What happens:
+What happens depends on where the article lives:
 
 - **Never published** — the slug simply changes.
-- **Published on the Aeolo-served surface** (managed site `pages.{domain}` / `{sub}.aeolo.site`, or `{sub}.aeolo.blog`) — the old address keeps answering with a **301** to the new one, and `published_url` follows. The old slug stays reserved for this article; moving back to it later is allowed.
-- **Deployed to a CMS or custom channel** (WordPress, Shopify, Cafe24, Pango Lingo, custom feed) — refused with `SLUG_LOCKED_BY_CHANNEL`. That channel owns the address; change it there.
+- **Aeolo-served surface** (managed site `pages.{domain}` / `{sub}.aeolo.site`, or `{sub}.aeolo.blog`) — the old address keeps answering with a **301** to the new one, and `published_url` follows. The old slug stays reserved for this article; moving back to it later is allowed.
+- **WordPress** — the post's slug changes on the site; WordPress itself 301s the old address. Our row adopts whatever slug WordPress assigned (it may append `-2`) and the permalink it returned.
+- **Shopify** — the article's handle changes and a URL redirect from the old path is created (Shopify does not do that by itself). `published_url` follows.
+- **Cafe24 / Pango Lingo / custom feed** — refused with `SLUG_LOCKED_BY_CHANNEL`: Cafe24 board posts have no slug, Pango Lingo has no address API, and a custom feed's addresses are decided by the site that renders it.
 
-Refusals: `SLUG_TAKEN` (another article on the domain has that slug, including a trashed one), `SLUG_RESERVED` (another article used to live there and still redirects from it), `INVALID_SLUG` (nothing usable left after normalizing).
+Refusals: `SLUG_TAKEN` (another article on the domain has that slug, including a trashed one), `SLUG_RESERVED` (another article used to live there and still redirects from it), `INVALID_SLUG` (nothing usable left after normalizing), `REMOTE_SLUG_CHANGE_FAILED` (the channel did not accept it — our row was put back).
 
 Locale editions have their own slugs and are **not** renamed with the canonical — run the command per edition.
 
-Response: `{ "id", "slug", "published_url", "updated_at", "redirected_from" }` — `redirected_from` is the old slug when a redirect was recorded, else `null`.
+Response: `{ "id", "slug", "published_url", "updated_at", "redirected_from", "channel_type" }` — `redirected_from` is the old slug when a redirect was recorded on our surface, else `null`; `channel_type` names the channel that moved with it (`wordpress` / `shopify`) or is `null`.
 
 ---
 
