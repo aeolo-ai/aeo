@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.26"
+var version = "2.3.29"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -453,6 +453,16 @@ func humanBytes(n int64) string {
 }
 
 // ── CLI Helpers ─────────────────────────────────────────────────────────────
+
+// --force overwrites a post that was edited on the destination (WordPress)
+// since our last write; without it the server answers REMOTE_MODIFIED and
+// names the two ways out.
+func redeployBody(args []string) []byte {
+	if hasFlag(args, "--force") {
+		return []byte(`{"force":true}`)
+	}
+	return nil
+}
 
 func run(path, method string, body []byte, domainID string) {
 	result, err := callConnector(path, method, body, domainID)
@@ -1019,7 +1029,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   deploy <id>       Deploy an approved article to a publish destination
                     Flags: --target shopify|blog|wordpress|cafe24|pangolingo,
                            --channel <id> (its type decides the target when --target is omitted)
-  redeploy <id>     Push the current article back in place (destination auto-detected)
+  redeploy <id> [--force]  Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
   editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans|es required; uses production credits)
   thumbnail         Pin an external thumbnail URL after validating image size
@@ -1087,7 +1097,7 @@ Notes:
   deploy <id>       Deploy an approved article to a publish destination
                     Flags: --target shopify|blog|wordpress|cafe24|pangolingo,
                            --channel <id> (its type decides the target when --target is omitted)
-  redeploy <id>     Push the current article back in place (destination auto-detected)
+  redeploy <id> [--force]  Push the current article back in place (destination auto-detected)
 `,
 	"billing": `aeo billing <verb>
 
@@ -1657,8 +1667,8 @@ func runPublishCommand(args []string, domainID string) {
 		requireArg(args, 1, "aeo publish deploy <id> [--target shopify|blog|wordpress|cafe24|pangolingo] [--channel <id>]")
 		run("/content/"+args[1]+"/deploy", "POST", buildDeployBody(args), domainID)
 	case "redeploy":
-		requireArg(args, 1, "aeo publish redeploy <id>")
-		run("/content/"+args[1]+"/redeploy", "PUT", nil, domainID)
+		requireArg(args, 1, "aeo publish redeploy <id> [--force]")
+		run("/content/"+args[1]+"/redeploy", "PUT", redeployBody(args), domainID)
 	default:
 		// Unknown verb for a noun this binary knows. The command registry lives
 		// on the server and can grow without this table; hand it to the router
@@ -2066,8 +2076,8 @@ func main() {
 			requireArg(args, 2, "aeo content deploy <id> [--target shopify|blog|wordpress|cafe24|pangolingo] [--channel <id>]")
 			run("/content/"+args[2]+"/deploy", "POST", buildDeployBody(args), domainID)
 		case "redeploy":
-			requireArg(args, 2, "aeo content redeploy <id>")
-			run("/content/"+args[2]+"/redeploy", "PUT", nil, domainID)
+			requireArg(args, 2, "aeo content redeploy <id> [--force]")
+			run("/content/"+args[2]+"/redeploy", "PUT", redeployBody(args), domainID)
 		case "import":
 			title := findFlag(args, "--title")
 			if title == "" {
