@@ -177,7 +177,7 @@ After success, show the published URL. If deploy fails because the target's chan
 ## /aeo content redeploy <id> — Push the current article back in place
 
 ```bash
-aeo content redeploy <id>
+aeo content redeploy <id> [--force]
 ```
 
 Updates the body, title, tags, and schema of an **already-deployed** article in-place. The URL handle is preserved — no need to delete and recreate.
@@ -192,6 +192,7 @@ Use when:
 Target-specific notes:
 - `blog` — the hosted blog renders straight from the article, so there is nothing to push; the edit is already live once the page cache rolls over.
 - `pangolingo` — the Korean original body is create-only on their API, so only the locale editions are pushed.
+- `wordpress` — **a post edited on the site since our last write is refused** (`[code:REMOTE_MODIFIED]`, HTTP 409 on the REST routes), with the edit time and the wp-admin URL. Every write we make fingerprints what the site holds; a mismatch means a person changed the post there. Two ways out, and you do not pick one for the user: they pull the site's version into the article from the dashboard (article → Update → "Pull their version"), or they discard it with `content redeploy <id> --force`. A post published before the fingerprint existed goes through once and is stamped.
 
 **Redeploy is not the deploy gate.** There is no approved-status check, and only the **Shopify** path revalidates title/meta — WordPress, Cafe24, and Pango Lingo redeploy without rechecking. When the Shopify path does refuse, the message opens `**Redeploy blocked — …**`, which the connector route does **not** map to 422: it answers HTTP 200 `{"success": true}`. Read the returned message, not the status code, before reporting a redeploy as live.
 
