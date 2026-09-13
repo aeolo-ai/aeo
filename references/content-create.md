@@ -552,3 +552,10 @@ Generate the following metadata upon article completion (used in the import payl
 - When saving the draft: save only the pure markdown body to the file
 - The agent tracks metadata separately and uses it only in the API payload during import
 - When presenting to the user, show metadata separately from the body (e.g., "Here's the article I wrote + metadata shown separately")
+
+
+### Managed-site folder destination
+
+For a proxy destination, run `aeo site folders list`, then pass `--folder /ingredients` (or `--folder-id <id>`) with `--target-channel <managed-channel-id>` to `aeo content generate` or `aeo content import`. Both accept the same destination flags. The server resolves a path to its stable folder ID before enqueue/import, so renaming the path does not reroute a queued job. Omitted folder uses the default. Unknown, deleted, or foreign folders fail with available paths; ask for a valid choice instead of dropping the flag. Locale editions inherit their original article's folder.
+
+Structured `content_import` uses `targetChannelId` plus `hostedFolderId` or `hostedFolderPath`. Never pass both folder selectors. Automation saves `config.hostedFolderId`; execution revalidates the stored selection and does not silently replace a deleted folder.

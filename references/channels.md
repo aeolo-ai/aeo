@@ -204,3 +204,8 @@ Tell them to remove the CNAME record afterwards; it no longer points anywhere we
 > **CUD Rule applies** to `channel add`, `channel update`, `channel delete`,
 > `channel connect`, `channel disconnect`, `channel indexing`, `blog bind`, and
 > `blog unbind`. Show what you are about to change and ask "Proceed?" before calling.
+
+
+## /aeo site folders list — writing destinations
+
+`aeo site folders list` lists the managed proxy site's folder names, paths, IDs and default. Create or rename folders in site management. Use `--folder /ingredients` or `--folder-id <id>` on `content generate` and `content import`, alongside `--target-channel <managed-channel-id>`. Omission uses the default folder. Folder selection is unavailable for WordPress, Shopify, other CMS and legacy hosted blogs. Invalid/deleted selections fail with available paths; never retry by silently dropping the user's folder choice.

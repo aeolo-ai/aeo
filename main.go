@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.29"
+var version = "2.3.30"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -684,6 +684,19 @@ func buildJSON(fields map[string]string) []byte {
 	return data
 }
 
+// Folder paths are resolved server-side against the selected tenant/channel.
+func applyWritingDestination(body map[string]any, args []string) {
+	if v := findFlag(args, "--target-channel", "--channel"); v != "" {
+		body["targetChannelId"] = v
+	}
+	if v := findFlag(args, "--folder"); v != "" {
+		body["hostedFolderPath"] = v
+	}
+	if v := findFlag(args, "--folder-id"); v != "" {
+		body["hostedFolderId"] = v
+	}
+}
+
 // buildDeployBody assembles the POST /content/<id>/deploy payload.
 //
 // --target has to travel. This body carried channel_id ONLY until 2026-08-03,
@@ -1016,6 +1029,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                               --target-channel <id> (destination; required when the domain
                               has several publish channels — ids from 'aeo channel list'.
                               Omitted: the sole publish surface is adopted; none = refused)
+                    --folder /ingredients or --folder-id <id> (managed sites; default when omitted)
+                    Discover choices: aeo site folders list
   jobs              List active writing jobs
                     Optional: --all
   update <id>       Update content item
@@ -1975,9 +1990,7 @@ func main() {
 			// Writing requires a destination (AEO-531). v2.3.18 documented this
 			// flag but never sent it — the server adopts a sole publish surface
 			// and refuses an ambiguous one, so forward the choice.
-			if v := findFlag(args, "--target-channel", "--channel"); v != "" {
-				body["targetChannelId"] = v
-			}
+			applyWritingDestination(body, args)
 			b, _ := json.Marshal(body)
 			run("/content/writing-jobs", "POST", b, domainID)
 		case "jobs":
@@ -2130,6 +2143,7 @@ func main() {
 				}
 				importBody["sources"] = sources
 			}
+			applyWritingDestination(importBody, args)
 			importJSON, _ := json.Marshal(importBody)
 			run("/content/import", "POST", importJSON, domainID)
 		default:
@@ -2691,6 +2705,7 @@ func main() {
 			if v := findFlag(args, "--channel-id"); v != "" {
 				importBody["channelId"] = v
 			}
+			applyWritingDestination(importBody, args)
 			importJSON, _ := json.Marshal(importBody)
 			run("/channel-posts", "POST", importJSON, domainID)
 		case "preview":
