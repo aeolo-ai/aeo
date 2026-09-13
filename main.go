@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.30"
+var version = "2.3.31"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -1046,7 +1046,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --channel <id> (its type decides the target when --target is omitted)
   redeploy <id> [--force]  Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
-  editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans|es required; uses production credits)
+  editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans|es|id|vi|th required; uses production credits)
+  slug              Change an article's URL slug
   thumbnail         Pin an external thumbnail URL after validating image size
   unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo, auto-detected; --target to force) and reset it to draft
   delete            Soft-delete an article (drops out of lists; restorable)
@@ -1103,8 +1104,6 @@ Notes:
   visibility        Show last visibility snapshot
   report            Submit command execution diagnostics
                     Flags: --command (required), --status-code, --response-body, --context
-  # from the command registry — generated, do not edit by hand
-  attribution       First-touch AI attribution (Traffic/Attribution page): attributed sessions, revenue, CVR, AOV, and sessions by AI source (ChatGPT/Perplexity/Gemini...)
 `,
 	"publish": `aeo publish <verb>
 
