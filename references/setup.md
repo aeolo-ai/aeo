@@ -164,8 +164,13 @@ created.** Confirm the picks with the user, then create only those:
 aeo topics create --name "레티놀 입문" --demand-token <token>
 ```
 
-Pass the token — it carries demand the job already paid DataForSEO for. Creating
-without it triggers a second, billed measurement.
+Pass the token — it carries demand the job already measured and avoids duplicate
+provider work. Existing automatic lifecycle sweeps are platform-funded, not a
+silent customer credit charge. For saved Topics, read `aeo topics demand` for
+freshness and a quote; explicitly refresh with `aeo topics demand run --max-credits 1`
+and poll with `aeo topics demand poll <jobId>`. See [topics.md](topics.md) for
+batch limits, credit budgets, and the distinction between Topic demand and exact
+conversational Prompt volume.
 
 The deeper lane is the market map (`aeo market-map run` → `populate`), which is
 grounded in market terrain rather than the brand snapshot. See

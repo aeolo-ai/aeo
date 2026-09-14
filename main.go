@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.31"
+var version = "2.3.32"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -1073,6 +1073,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   restore <id>            Restore an archived Topic with required --revision
   assign-prompts <id>     Reassign Prompts atomically to this Topic
                           Required: --prompt-ids id1,id2
+  demand                  Read saved Topic demand, freshness, and next batch credit estimate (0 credits)
+  demand run              Refresh up to 30 stale Topics (1 credit; 30-day cache/active-job reuse 0)
+                          Required: --max-credits 0..100 (explicit per-run budget)
+  demand poll <jobId>      Read measurement outcome, including partial/unavailable results (0 credits)
   # from the command registry — generated, do not edit by hand
   candidates        Start the demand-priced Topic candidate job (generate → price → rank, ~2-3 min)
   candidates poll   Poll a Topic candidate job; returns each candidate with its evidence and a --demand-token to create it with
@@ -1612,6 +1616,22 @@ func runTopicsCommand(args []string, domainID string) {
 		return
 	}
 	switch args[0] {
+	case "demand":
+		if len(args) > 1 && args[1] == "run" {
+			raw := findFlag(args, "--max-credits")
+			budget, err := strconv.Atoi(raw)
+			if raw == "" || err != nil || budget < 0 || budget > 100 {
+				fmt.Fprintln(os.Stderr, "Error: --max-credits is required and must be an integer from 0 to 100")
+				os.Exit(1)
+			}
+		}
+		if len(args) > 1 && args[1] == "poll" && (len(args) < 3 || strings.TrimSpace(args[2]) == "" || strings.HasPrefix(args[2], "-")) {
+			fmt.Fprintln(os.Stderr, "Error: jobId required. Usage: aeo topics demand poll <jobId>")
+			os.Exit(1)
+		}
+		// Keep demand scope, billing, and outcome formatting on the same router
+		// used by MCP. The CLI only rejects unsafe arguments before dispatch.
+		proxyCommand(append([]string{"topics"}, args...), domainID)
 	case "list":
 		path := "/topics"
 		if hasFlag(args, "--include-archived") {
