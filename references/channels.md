@@ -131,6 +131,16 @@ In dashboard chat and MCP the command string cannot carry HTML (its quotes are
 stripped by the tokenizer) — pass the patches in the structured `templateUpdate`
 field: `{ patches: [{ find, replace }], note }` with `command: "site template edit"`.
 
+**Ops = an element by its offsets, never quoted.** When the user picks an element
+in the dashboard's site preview, the turn carries its `revision` and `start`/`end`
+offsets into the page. Send those numbers back as `templateUpdate.ops`:
+`{ ops: [{ type: "remove" | "replace", revision, start, end, html? }] }` — a `replace`
+carries the element's new outer markup in `html`. This is how a 50 KB run of
+sections is deleted without reproducing a byte of it in a `find`. Ops run before
+patches, on the revision they name; a different live revision is refused with the
+reason (ask the user to pick again — do not guess offsets), and so is a range that
+is not exactly one element or one that holds an `aeolo:` mark.
+
 **It is a live-site write.** `edit`, `rollback` and `recapture` republish the page
 the public and the crawlers are reading, so show the user the exact patch (or the
 revision you will restore) and wait for approval before `confirmed: true`. Every
