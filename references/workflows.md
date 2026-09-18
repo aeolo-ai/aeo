@@ -363,6 +363,7 @@ When a draft lands in review, the customer is asked to read and approve it on tw
 ```bash
 aeo automation notify                                    # both rails, current state
 aeo automation notify set --email kim@brand.com,lee@brand.com --email-enabled true
+aeo automation notify set --email-locale ko              # mail in Korean (auto = the brand's content language)
 aeo automation notify set --email none                   # clear the reviewers (rail off)
 aeo automation notify set --slack-enabled false          # the channel stays connected
 ```
