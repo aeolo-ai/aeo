@@ -358,7 +358,7 @@ Adjust cadence in the automation schedules / dispatcher; `strategy update` no lo
 
 ### Review notifications
 
-When a draft lands in review, the customer is asked to read and approve it on two independent rails: Slack (Max — the shared Slack Connect channel Aeolo staff connect in the dashboard) and email (Pro+ — reviewer addresses on the domain). Only the canonical article notifies; its locale editions follow the approval.
+When a draft lands in review, the customer is asked to read and approve it on two independent rails: Slack (Max, the shared Slack Connect channel Aeolo staff connect in the dashboard) and email (Pro+, reviewer addresses on the domain). Only the canonical article notifies; its locale editions follow the approval.
 
 ```bash
 aeo automation notify                                    # both rails, current state
