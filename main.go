@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.32"
+var version = "2.3.33"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -1039,7 +1039,9 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --patch ("search>>>replace"; shows the change and asks before
                                     writing — pass --yes to skip the prompt),
                            --thumbnail-url <url> (pin image directly, skip swap),
-                           --clear-thumbnail (drop existing thumbnail)
+                           --clear-thumbnail (drop existing thumbnail),
+                           --target-channel <id|hosted> (re-address the next publish;
+                                    refused once live), --folder /path or --folder-id <id>
   preview <id>      Generate preview link
   deploy <id>       Deploy an approved article to a publish destination
                     Flags: --target shopify|blog|wordpress|cafe24|pangolingo,
@@ -2098,6 +2100,19 @@ func main() {
 				body["thumbnail_url"] = nil
 			} else if v := findFlag(args, "--thumbnail-url"); v != "" {
 				body["thumbnail_url"] = v
+			}
+			// --target-channel <id|hosted> re-addresses where the NEXT publish
+			// goes; --folder / --folder-id pick the managed-site folder. Same
+			// flags as generate/import, snake_case because this is the PATCH
+			// body. The server refuses once the article is live (409).
+			if v := findFlag(args, "--target-channel", "--channel"); v != "" {
+				body["target_channel_id"] = v
+			}
+			if v := findFlag(args, "--folder"); v != "" {
+				body["hosted_folder_path"] = v
+			}
+			if v := findFlag(args, "--folder-id"); v != "" {
+				body["hosted_folder_id"] = v
 			}
 			data, _ := json.Marshal(body)
 			run("/content/"+args[2], "PATCH", data, domainID)

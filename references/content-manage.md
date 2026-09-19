@@ -88,6 +88,10 @@ aeo content update <id> --meta-description="Updated description" --keywords="seo
 # Thumbnail
 aeo content update <id> --thumbnail-url https://example.com/og.png
 aeo content update <id> --clear-thumbnail
+
+# Destination: where the NEXT publish goes (ids from `aeo channels list`)
+aeo content update <id> --target-channel <channelId>
+aeo content update <id> --target-channel hosted --folder /guide   # managed site + folder
 ```
 
 All flags are optional — send only what you want to change.
@@ -103,6 +107,8 @@ All flags are optional — send only what you want to change.
 | body patch | `--patch` | `"search>>>replace"` | Targeted edit — replaces the first match without resending the whole body |
 | thumbnail | `--thumbnail-url` | url | Pin an external thumbnail directly |
 | thumbnail | `--clear-thumbnail` | flag | Drop the existing thumbnail |
+| `target_channel_id` | `--target-channel` | channel id \| `hosted` | Re-address the next publish. Refused once the article is published / generating / deployed (`DESTINATION_LOCKED`, 409). Unpublished locale editions follow the canonical. An approved article addressed to a channel with an active content schedule ships on the next dispatcher sweep |
+| `hosted_folder_id` / path | `--folder-id` / `--folder` | id / `/path` | Managed-site folder for that destination (see `aeo site folders list`); omitted keeps the current folder when valid, else the channel default |
 
 ### Body editing workflow
 
