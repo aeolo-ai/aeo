@@ -444,3 +444,19 @@ Present as a unified briefing:
 After presenting, note 1-2 sentences on the highest-leverage opportunity (critical
 audit item, visibility gap cluster, or brand mismatch). Then ask what the user
 wants to work on.
+
+
+## Inspect scheduled measurement repeat
+
+Use the supported connector path with the existing aeo login:
+
+```bash
+aeo automation schedules --domain <id>
+aeo automation schedules --format json --domain <id>
+# After approval: updates the schedule, does not start a measurement.
+aeo automation schedule set --track visibility --repeat 3 --domain <id>
+```
+
+The visibility read shows **saved repeat**, **effective repeat per prompt per engine**, the owner's **plan limit**, configured engines and market. A missing saved repeat defaults to 1. An old saved repeat can exceed today's plan allowance; the effective value uses the same helper as the dispatcher. JSON exposes these as `measurement.configuredRepeat`, `repeat`, and `repeatMax`. Re-read after updates. Omitted flags preserve the other settings; invalid or explicitly over-plan repeat is rejected without saving.
+
+Manual run repeat and scheduled repeat are separate settings. Selecting 3 for a manual run does not update the weekly schedule. The CLI's OAuth access token belongs to `/v2/connector`; do not send it to dashboard routes requiring a Supabase session and interpret their `INVALID_TOKEN` as a broken CLI login.
