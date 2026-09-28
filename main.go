@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.34"
+var version = "2.3.35"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -934,7 +934,13 @@ var subUsage = map[string]string{
   brand             Deprecated alias for 'aeo agent context'
   brand update      Update brand context
                     Flags: --name, --industry, --category, --value-proposition, --brand-context,
-                           --region KR|US|JP|TW|HK|CN (measured market; required before 'prompts add')
+                           --key-features a,b, --language, --markets ko-KR,en-US,
+                           --region KR|US|JP|TW|HK|CN (measured market; required before 'prompts add'),
+                           --family-json '[...]', --description "...",
+                           --voice-json '{"tone":"...","voice":[...],"do":[...],"avoid":[...]}',
+                           --competitors-json '[{"name":"...","domain":"..."}]',
+                           --ceps-json '["...", {"label":"...","fitReason":"..."}]'
+                           (JSON flags replace the whole list; '[]' clears it)
   audit             Show latest audit report
   channels          List connected channels
   # from the command registry — generated, do not edit by hand
@@ -1763,17 +1769,13 @@ func main() {
 			run("/domains", "GET", nil, domainID)
 		case "brand":
 			if len(args) >= 3 && args[2] == "update" {
-				run("/brand-profile", "PATCH", buildJSON(map[string]string{
-					"name":              findFlag(args, "--name"),
-					"industry":          findFlag(args, "--industry"),
-					"category":          findFlag(args, "--category"),
-					"value_proposition": findFlag(args, "--value-proposition"),
-					"brand_context":     findFlag(args, "--brand-context"),
-					// Measured market. The server validates the code against the
-					// dialable region list and rejects anything else; `prompts add`
-					// stays blocked until this is set.
-					"target_region": findFlag(args, "--region"),
-				}), domainID)
+				// Through the server router, argv intact. This used to build its
+				// own REST body from six whitelisted flags, so every other flag
+				// the registry advertises (--key-features, --markets,
+				// --family-json, --voice-json, --competitors-json, --ceps-json,
+				// --description, --language) was dropped in silence, and a call
+				// carrying only those failed as "Domain not found or no access".
+				proxyCommand(args, domainID)
 			} else {
 				run("/brand-profile", "GET", nil, domainID)
 			}

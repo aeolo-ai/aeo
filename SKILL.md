@@ -37,7 +37,7 @@ Names only, on purpose: flags, credit costs, sharp edges, and output contracts l
 
 | Area | Commands | Reference |
 |------|----------|-----------|
-| `domain` | `list` · `add <url>` (new brands only — never re-analyzes; existing ones use `rescan`) · `switch [id]` · `brand update` (`--markets ko-KR,en-US` sets the whole reach; `--family-json` replaces the brand-family roster) · `brand aliases` (roster + alias candidates; suggests only) · `audit` · `channels` · `setup [--format json]` (server checklist and canonical strategy) · `rescan` | [brand.md](references/brand.md), [setup.md](references/setup.md) |
+| `domain` | `list` · `add <url>` (new brands only — never re-analyzes; existing ones use `rescan`) · `switch [id]` · `brand update` (`--markets ko-KR,en-US` sets the whole reach; `--family-json` replaces the brand-family roster; `--voice-json` / `--competitors-json` / `--ceps-json` / `--description` replace those Brand Understanding fields) · `brand aliases` (roster + alias candidates; suggests only) · `audit` · `channels` · `setup [--format json]` (server checklist and canonical strategy) · `rescan` | [brand.md](references/brand.md), [setup.md](references/setup.md) |
 | `agent` | `context` | [brand.md](references/brand.md) |
 | `channel` | `list` · `add` · `update <id>` · `indexing <id>` · `delete <id>` · `connect <id>` · `disconnect <id>` · `voice` · `blog bind <host>` / `blog unbind` | [channels.md](references/channels.md), [tov-extract.md](references/tov-extract.md) |
 | `site folders` | `list` (managed-site folder paths and IDs; pass `--folder /path` on generate/import) | [channels.md](references/channels.md) |

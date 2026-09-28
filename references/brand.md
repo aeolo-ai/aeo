@@ -32,6 +32,10 @@ Accepted fields:
 | `primary_language` | ISO 639-1 | e.g. `"en"`, `"ko"`, `"ja"` |
 | `target_region` | `--region` | Measured market: `KR`, `US`, `JP`, `TW`, `HK`, `CN`. Rejected if outside that list |
 | `brand_context` | string (max 50000) | Free-form brand positioning and durable notes (see template below) |
+| `description` | `--description` | Snapshot one-line description (Structured Snapshot → Description). `--value-proposition` also sets it when `--description` is absent |
+| voice | `--voice-json` | Brand Voice section: `{"tone":"...","voice":[...],"do":[...],"avoid":[...]}`, max 6 per list |
+| competitors | `--competitors-json` | Snapshot competitors: `[{"name":"...","domain":"example.com"}]` or bare names |
+| ceps | `--ceps-json` | Category entry points: `["...", {"label":"...","fitReason":"..."}]` |
 
 ```bash
 aeo domain brand update --name="..." --category="..." --value-proposition="..."
@@ -58,6 +62,36 @@ single run without changing the stored value.
 > Canonical form is `aeo domain brand update` (matches `aeo domain` help). Bare `aeo brand update` routes only on the **dashboard-chat / MCP agent surface** (the connector registry normalizes it to `domain brand update`); the raw `aeo` terminal binary does not accept it, so always use `aeo domain brand update` in shell examples.
 
 Partial update — unset fields are preserved.
+
+### Brand Understanding lists: voice, competitors, CEPs
+
+These are the parts of `aeo agent context` a scan infers and an operator most
+often has to correct. Each JSON flag **replaces its whole list**; `'[]'` clears
+it. Malformed JSON is refused, never dropped. Show the before/after and get an
+explicit yes first (canonical-memory write).
+
+```bash
+aeo domain brand update --voice-json '{"tone":"calm, expert","voice":["plain","specific"],"do":["Name the workflow being automated."],"avoid":["Hype and superlatives."]}'
+aeo domain brand update --competitors-json '[{"name":"Lindy","domain":"lindy.ai"},{"name":"Relevance AI","domain":"relevanceai.com"}]'
+aeo domain brand update --ceps-json '["Automate lead follow-up", {"label":"Build an internal ops agent","fitReason":"no-code builder"}]'
+aeo domain brand update --value-proposition "..." --description "..."
+```
+
+Where each lands:
+
+- `--voice-json`: the tone the agent context, writing job and research read
+  (`analysis_data...brandKnowledge.brandTone`) plus `brand_snapshot.identity.brandTone`
+  (market map). Needs an onboarding preview; a crawled channel style reference,
+  when mounted, still outranks it in writing.
+- `--competitors-json`: `brand_snapshot.competitors` (source `manual`), mirrored
+  into the legacy lists a `domain rescan` would otherwise restore from. This is
+  not the visibility tracking list (`tracked_competitors`).
+- `--ceps-json`: `brand_snapshot.marketing.ceps`.
+- `--description`: `brand_snapshot.identity.oneLineDescription`.
+
+The keys in `--voice-json` match what `agent context` prints (Tone / Voice / Do
+/ Avoid); the stored names (`primaryTone`, `voiceCharacteristics`, `dos`,
+`donts`) are accepted too.
 
 ### brand_context template
 
