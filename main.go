@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.35"
+var version = "2.3.36"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -1730,6 +1730,8 @@ func main() {
 	cmd := args[0]
 
 	switch cmd {
+	case "pages", "page":
+		runPagesCommand(args, domainID)
 	case "--version", "-V":
 		fmt.Printf("aeo %s (native)\n", version)
 		checkLatestVersion()
