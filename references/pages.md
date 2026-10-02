@@ -2,7 +2,7 @@
 
 Pages are a separate HTML workspace, not article content. Use `aeo pages` for PDPs, product comparisons, ingredients and routines. Do not import PDP HTML as an article or use `site template edit` to modify a page: the latter changes captured site chrome.
 
-Access follows the **domain owner's active Custom plan** and domain membership. Your personal plan is irrelevant. Members can read and comment. Owners/editors can create, edit, translate, change review state, ask the comment agent and accept its proposal. Viewers can reply and resolve/reopen/delete their own threads. Staff retain support access. Private edits do not publish or request indexing.
+Access follows the **domain owner's active Custom plan** and domain membership. Your personal plan is irrelevant. Members can read and comment. Owners/editors can create, edit, translate, change review state, publish a reviewed revision, ask the comment agent and accept its proposal. Viewers can reply and resolve/reopen/delete their own threads. Staff retain support access. Private edits do not publish or request indexing.
 
 ## Scope and data
 
@@ -28,6 +28,17 @@ PageDraftInput fields: `channelId`, `title`, `slug` (no extension), `kind` (`pro
 - `pages builds translate <targetPageId>` with `{ "expectedRevision": N }` starts its translation. Poll `pages builds edition <targetPageId>` or `pages builds get <jobId>`. For a failed job, an explicit retry passes its `retryOf` ID.
 - `pages review <pageId>` with `{ "expectedRevision": N, "state": "draft|in_review|reviewed", "sourceFingerprint": "…" }`. Non-English review requires the current English fingerprint. Review does not publish.
 - `pages trash <pageId>` / `pages restore <pageId>` with `{ "expectedRevision": N }` are recoverable; no permanent deletion command.
+
+## Publication
+
+WordPress, Shopify and managed proxy destinations use the same publication service as the dashboard. Read `pages channels` for the destination's connection and publishing capability. Creating, editing and reviewing a page remain private operations.
+
+1. Read `pages get <pageId>` and inspect the exact page revision. Finish review with `pages review <pageId>` and `{ "expectedRevision": N, "state": "reviewed" }` (include the current English `sourceFingerprint` for non-English editions).
+2. Read the page again after review, since review advances the revision. Check `pages publication <pageId>` for existing publication state, published revision, URL and failures.
+3. When the user requests publication, run `pages publish <pageId> --input-json '{"expectedRevision":N}' --domain <domainId> --channel-id <channelId>` using the current reviewed revision. CLI also accepts `--input-file publish.json` containing the same body. The server enforces editor access, channel readiness, review state and the revision check.
+4. Re-read `pages publication <pageId>` and verify the returned public URL. A saved or reviewed page does not prove publication; publication does not prove indexing or AI citation.
+
+On a revision conflict, read the current page and review the changes before another publish attempt. On a timeout, inspect publication state before retrying so an unknown transport result does not become a duplicate operation. A failure retains its error and may retain an earlier published version; report those states separately. Do not use `pages trash` as an unpublish command.
 
 ## DOM comments
 

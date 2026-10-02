@@ -16,6 +16,8 @@ Private page changes do not publish. All operations use the shared Pages service
   get | elements | inspect <pageId> [--revision N]
   create | preview                         --input-file request.json
   update | edit | editions | review <id>    --input-file request.json
+  publication <id>                         read publication state and URL
+  publish <id>                             --input-file request.json
   trash | restore <id>                     --input-file request.json
   builds list | get <jobId> | edition <pageId>
   builds analyze | generate <id> | apply <id> | translate <id>
@@ -25,7 +27,9 @@ Private page changes do not publish. All operations use the shared Pages service
 
 Mutation bodies: --input-file <JSON file> or --input-json '<JSON>'.
 Use elements to obtain a revision-bound DOM selection before edit/comment create.
-Use get to obtain expectedRevision before update/review/trash/restore.
+Use get to obtain expectedRevision before update/review/publish/trash/restore.
+Publish sends the reviewed revision to WordPress, Shopify, or managed proxy.
+Read publication state before retrying; reviewed status alone is not publication.
 Comment mutations require version; generating a proposal does not apply it.
 See the aeo skill references/pages.md for exact request examples.
 `
