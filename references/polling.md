@@ -39,11 +39,29 @@ You can keep working — I'll report back when it's done.
 
 ---
 
-## Status response reference
+## Site audit: current scoring and completion
+
+`aeo audit run` uses the same default 10-page budget as the dashboard. Use
+`--max-pages N` for an integer from 1 to 50 and `--channel-id <uuid>` to target
+a channel. The run spends credits; a report read and polling do not launch a new run.
+Poll the returned job ID with `aeo audit poll <jobId>` until terminal status, then
+read `aeo domain audit`. That report selects the domain's latest saved run: compare
+its run ID, channel, measurement URLs and timestamps with the job you requested.
+
+The current total is the rounded equal-weight average of Lighthouse SEO,
+Performance and Accessibility category means, matching the dashboard. Best
+practices is separate. Missing measurements are N/A, never zero; legacy readiness
+is a different historical evaluation and must not substitute for the current total.
+Inspect technical SEO issue codes, affected URLs, evidence, device scope and sample
+coverage before recommending a fix. Sampled lab scores do not establish whole-site
+performance, indexing, AI citations or conversion. On read failure, retry the read;
+do not start another paid audit automatically.
+
+## General job statuses
 
 | Response | Meaning | Action |
 |----------|---------|--------|
 | `{ "status": "pending"\|"running" }` | In progress | Wait |
 | result/status JSON | Complete — full report or result payload | Stop polling, present report |
 | `{ "code": "...FAILED" }` | Job failed | Stop polling, report error |
-| `{ "code": "NOT_FOUND" }` | jobId invalid or expired | Stop polling, re-trigger |
+| `{ "code": "NOT_FOUND" }` | jobId invalid or expired | Stop polling, verify job ID and saved results before considering a new paid run |

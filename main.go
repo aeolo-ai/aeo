@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.36"
+var version = "2.3.38"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -941,7 +941,7 @@ var subUsage = map[string]string{
                            --competitors-json '[{"name":"...","domain":"..."}]',
                            --ceps-json '["...", {"label":"...","fitReason":"..."}]'
                            (JSON flags replace the whole list; '[]' clears it)
-  audit             Show latest audit report
+  audit             Show Lighthouse scores, technical SEO evidence, and separate legacy readiness
   channels          List connected channels
   # from the command registry — generated, do not edit by hand
   add               Onboard a new brand: crawl the site and build its brand understanding (runs in the background; check with 'domain setup')
@@ -980,7 +980,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 	"audit": `aeo audit <verb>
 
   run               Start a site foundation audit
-                    Flags: --max-pages (default 5, costs 3 credits per 5 pages), --channel-id
+                    Flags: --max-pages (default 10, range 1–50; credits scale with pages), --channel-id
   poll <jobId>      Poll a background audit job
 `,
 	"diagnose": `aeo diagnose <area>
@@ -992,9 +992,9 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --limit, --prompt-ids
   visibility poll <jobId>
                     Poll check status
-  audit             Show latest audit report
+  audit             Show Lighthouse scores, technical SEO evidence, and separate legacy readiness
   audit run         Start a site foundation audit
-                    Flags: --max-pages (default 5, costs 3 credits per 5 pages), --channel-id
+                    Flags: --max-pages (default 10, range 1–50; credits scale with pages), --channel-id
   audit poll <jobId>
                     Poll a background audit job
   # from the command registry — generated, do not edit by hand
