@@ -103,6 +103,8 @@ Retired writes (`carousel create/update`, `post import/preview/approve/publish`,
 - **Agent-only workflows** (no bare CLI verb — they need external-agent reasoning): `/aeo topics suggest <domain_id>` proposes a durable Topic architecture without saving (distinct from `aeo topics candidates`, the server job that generates and demand-prices candidates); `/aeo content idea <domain_id>` recommends one next article; `/aeo prompts audit <domain_id>` judges Prompt validity/utility read-only; `/aeo prompts portfolio <domain_id>` safely restructures the tracked Prompt set (preview → confirm → atomic write → verify). Manual drafting writes directly then `aeo content import`. `aeo content generate` is the explicit paid server-side job; `aeo content review <id>` is a real wired command. The `post write` → `post import` workflow is retired.
 - **Explicit verbs required**: `aeo content list`, `aeo visibility show`, etc. Bare `aeo <command>` shows sub-help (exception: `aeo content --limit 5` = implicit list).
 
+When authoring or cleaning saved writing inputs, use [writing-inputs.md](references/writing-inputs.md) for ownership, scope and examples.
+
 Before writing/generating content, always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
 
 ---

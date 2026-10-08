@@ -338,7 +338,7 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
 - Inline citations as `[Source Name](URL)` throughout
 - **Inline product images are catalog-only and optional** — follow Step 3.2.1; otherwise keep the body text-only
 - **Rich blocks are verified-only and optional** — at most one YouTube embed via `aeo source youtube <url>` and one product carousel via `aeo source products` (Step 3.2.2); never hand-write iframes or card HTML
-- Brand mentions at 15–25% density, always as part of a list (never solo promo)
+- Mention the brand where it helps answer the question. First-party explanations can stand alone; do not impose a mention quota or manufacture a comparison.
 - FAQ section at the end (3–5 questions)
 
 **Output format:**
@@ -427,22 +427,9 @@ Flags:
 
 ### Format Selection Matrix
 
-When in doubt, **default to ranked_list** — 53% of AI citations come from listicles.
+Choose a form that resolves the reader's decision using available evidence. No default listicle, citation-rate quota or engine-specific word count is justified here. Use the decision table in [geo-strategy.md](geo-strategy.md#gap--content-decision-framework); supported depth determines length.
 
-| Prompt Pattern | articleType | AI Citation Rate | Length Guide |
-|---|---|---|---|
-| "best X", "top X", "X recommendations" | `ranked_list` | 32% | 2,000–4,000 words |
-| "X vs Y", "compare X and Y" | `comparison` | 18% | 1,200–2,500 words |
-| "how to X", "step by step X" | `how_to` | 15% | 1,500–3,000 words |
-| "what is X", "why X", "X explained" | `guide` | — | about 1,500 words |
-| Complex questions, multiple questions at once | `faq` | 11% | 1,500–2,500 words |
-| Industry trends, expert perspectives | `thought_leadership` | — | 1,500–3,000 words |
-| Customer stories, adoption results | `case_study` | — | 1,200–2,000 words |
-
-Treat these as writing targets, not mechanical validators. Reach the target by
-adding supported mechanisms, standards, study conditions, practical
-consequences, or relevant industry context. If the available evidence cannot
-support the target, end shorter rather than repeat, speculate, or pad.
+When editing the inputs themselves, use [writing-inputs.md](writing-inputs.md). The rules below include Aeolo output conventions, not proven requirements for AI citation.
 
 ### GEO Writing 10 Commandments
 
@@ -465,7 +452,7 @@ support the target, end shorter rather than repeat, speculate, or pad.
    | blog | `<!-- schema: Article, BlogPosting -->` |
    | thought_leadership | `<!-- schema: Article, BlogPosting -->` |
    | case_study | `<!-- schema: Article -->` |
-9. **Freshness signals** — Do NOT write `datePublished`/`dateModified` into the article body. Aeolo stores freshness as structured metadata and renders it as JSON-LD at deploy time; the publish/refresh save sets the dates automatically. Recency still matters editorially: citation rate drops from 100% within 30 days to 18% after 1 year, so favor fresh angles and current data.
+9. **Freshness signals** — Do NOT write `datePublished`/`dateModified` into the article body. Aeolo stores freshness as structured metadata and renders it as JSON-LD at deploy time; the publish/refresh save sets the dates automatically. Re-check facts that can change; do not infer a citation probability from article age.
 10. **Internal + external links** — Cross-link your own content + link to external authority sources. AI actively crawls link graphs.
 
 ### Credibility Guards — every article, every locale
@@ -507,36 +494,13 @@ splices, so the whole family is governed (measured on published articles,
   word ("Why ... / Why ... / Why ...").
 - At most one vivid metaphor per piece. One reads as voice; three read as a tic.
 
-### Platform-Specific Tone Guide
+### Engine Fit and Freshness
 
-If not specified, default to a "practical + structured" combination that works for both ChatGPT and Gemini.
-
-| Engine | Primary Citation Sources | Tone & Structure |
-|--------|--------------------------|------------------|
-| **ChatGPT** | Wikipedia, Global news, Blogs | Practical, conversational, how-to focused. Encyclopedic tone preferred. Average **2,800 words** benchmark. |
-| **Claude** | Academic content | 5,000+ character long-form. Technical documentation tone. Academic citations, structured argumentation. Depth-first. |
-| **Perplexity** | Blog/editorial, News, Expert reviews | Niche expertise + content from **within the last 90 days**. High fact density. |
-| **Gemini** | **YouTube (category leader)**, Blogs, News | Schema-enriched. Structured data. Consider YouTube content in parallel. |
-
-### Content Freshness Rules
-
-| Article Age | Residual Citation Rate | Agent Action |
-|-------------|------------------------|--------------|
-| 0–30 days | 100% | Optimal time for new article publishing |
-| 31–90 days | 73% | Data/statistics update recommended |
-| 91–180 days | 51% | Refresh needed — new data + structural improvements |
-| 181–365 days | 34% | Major rewrite |
-| 1 year+ | 18% | New article recommended |
-
-On a content refresh, Aeolo updates `dateModified` automatically on save — your job is to replace stale statistics/data with the latest, not to edit a date line in the body.
+Use the approved audience and voice. Engine-specific experiments need dated, scoped evidence from the selected queries, market and engine; they are not universal tone or length rules. Review time-sensitive facts against current sources. Refresh when information changes or the page no longer resolves the reader's question, not merely because a fixed number of days elapsed. Keep publication/modification dates accurate; editing a date is not a substantive refresh.
 
 ### Brand Mention Principles
 
-- Brand appears as **part of a list** — never as standalone promotional content
-- Mention competitors alongside for naturalness
-- Fact-based information only (specs, pricing, review summaries)
-- Mention density: **15–25%** of the total article — excessive mentions reduce AI trust
-- Use brand VP and key features from the brand context (`/aeo agent context`)
+Represent the publisher honestly. A first-party product explanation can stand alone; comparison content needs a real decision and defensible criteria. Do not insert competitors or target a mention percentage solely to appear independent. Match product/service claims to the applicable catalog entry and evidence; brand voice is not a source for those claims.
 
 ### Metadata Generation
 
@@ -546,7 +510,7 @@ Generate the following metadata upon article completion (used in the import payl
 - `metaDescription` — Independently authored answer and article-specific scope, up to 500 characters; 160 is a display advisory
 - `targetKeywords` — 1–20
 - `articleType` — Based on the format matrix
-- `estimatedRefreshDate` — Publish date + 60 days
+- `estimatedRefreshDate` — An editorial review date based on the subject's expected change rate, not a promised citation lifespan
 
 **Important: Do not include metadata in the article body.**
 - When saving the draft: save only the pure markdown body to the file

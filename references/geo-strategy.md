@@ -7,17 +7,9 @@ After loading `/aeo`, always refer to this before interpreting data or deciding 
 
 ## What is GEO
 
-While SEO focused on search result "rankings," GEO aims to be **cited, recommended, and trusted** by AI engines like ChatGPT, Claude, Perplexity, and Gemini. It's a fundamentally different paradigm.
+GEO work aims to improve supported brand representation, citations and recommendations in AI answers. Crawlability, indexing, retrieval, citation, recommendation and customer action are separate outcomes. Clear content and correct technical delivery are controllable inputs; they do not guarantee downstream results.
 
-| Traditional SEO | GEO |
-|-----------------|-----|
-| Page ranking optimization | Citation & recommendation optimization |
-| Volume-first | Consistency-first |
-| Create once and leave | Continuous updates on 30–60 day cycles |
-| DA (Domain Authority) focused | Third-party mention frequency + structured content |
-| Single search engine | 4+ AI engines simultaneously |
-
-**GEO rewards speed and structural clarity. Both are variables the brand can control.**
+Treat the recommendations below as editorial decisions and testable hypotheses. Do not turn a citation share observed in one sample into a universal writing rule.
 
 ---
 
@@ -36,22 +28,13 @@ Use Agent/Brand Context, content strategy, visibility gaps, and existing content
 
 ## How to Read Visibility Data
 
-### Gap = "This engine did not cite our brand for this prompt"
+### A gap is a scoped observation
 
-What to check in the visibility report:
-1. **Which engine** was the brand missing from? → Strategy differs by engine
-2. **Which stage** prompt was it missing from? → Determines content type and angle
-3. **Are competitors appearing?** → If yes, comparison content opportunity; if nobody appears, foundational content opportunity
-4. **How many engines simultaneously missed it?** → More engines = higher priority
+Read the metric actually measured: brand mention, recommendation and a linked citation are different. Retain engine, query, market/language, date and repeat count. Missing results or unmeasured engines are not zero visibility.
 
-### Meaning and Priority by Stage
+Before prioritizing, ask whether the question represents a customer decision, whether an eligible product/service can support an answer, what evidence is available, and whether existing content already answers it. Competitor appearance and repeated absence help prioritize within that scope; neither proves demand, conversion potential or the required format.
 
-| Stage | Meaning | Query Example | GEO Priority | Reason |
-|-------|---------|---------------|--------------|--------|
-| `comparison` | Comparing options — right before purchase | "best CRM for startups", "which CRM for a B2B startup" | **1st priority** | High-intent queries without brand names. AI recommendations directly influence purchase |
-| `use-case` | Specific situation-based | "CRM for 10-person B2B team" | **2nd priority** | Long-tail, low competition, high conversion |
-| `foundational` | Concept/need exploration | "what is CRM", "why use CRM" | **3rd priority** | Brand awareness building. Long-term effect |
-| `implementation` | Post-purchase / pre-purchase verification | "HubSpot pricing", "how to use [BrandName]" | **Skip** | Brand name already in the query → not a GEO target |
+Comparison, use-case and foundational questions serve different reader decisions. Branded pre-purchase checks can also deserve content, while remaining separate from unaided discovery measurement.
 
 ### Discovery Prompts vs. Branded Diagnostics
 
@@ -74,11 +57,7 @@ engine recommend the customer brand when the user did not name it first?
 
 ### Engine Priority
 
-Unless otherwise specified: **ChatGPT > Gemini > Perplexity > Grok**
-
-However, two exceptions:
-- If the user specifies a particular engine, follow their preference
-- If visibility checks were only run on some engines, evaluate only among the checked engines
+Use the customer's configured measurement scope and priorities. Compare only measured engines under the same relevant conditions; record the reason for an engine-specific experiment rather than assuming a universal engine ranking.
 
 ---
 
@@ -97,80 +76,54 @@ Semantically group multiple gaps that can be covered by a single article. Criter
 
 ### Phase 2: Determine articleType
 
-Decide based on the gap's stage + query pattern:
+| Reader decision | Candidate articleType | Required basis |
+|---|---|---|
+| Choose among options | `ranked_list` | A real comparison set, explicit criteria and evidence for placements |
+| Compare named alternatives | `comparison` | Matched dimensions and applicable product/service scope |
+| Complete a task | `how_to` | Supported steps, prerequisites and limits |
+| Understand a question or mechanism | `guide` | Direct answer, explanation and relevant evidence |
+| Resolve several distinct questions | `faq` | Questions with separate useful answers, not repeated filler |
+| Assess a perspective | `thought_leadership` | Clearly attributed reasoning and supported claims |
+| Understand a documented outcome | `case_study` | Actual case evidence, conditions and limitations |
 
-| Gap Pattern | Recommended articleType |
-|-------------|------------------------|
-| comparison stage + "best X", "top X" | `ranked_list` — **always consider first** |
-| comparison stage + "X vs Y" | `comparison` |
-| use-case stage + "best X for [situation]" | `ranked_list` or `how_to` |
-| foundational stage + "what is X" | `guide` |
-| foundational stage + "how to X" | `how_to` |
-| Multiple stages simultaneously | `faq` (serves as a hub) |
+These are choices, not citation guarantees. A brand-owned product explanation need not pretend to be an independent ranking. Select the supported form after defining the reader's decision; do not default to a listicle because of an unattributed percentage.
 
-**Listicle (ranked_list) is the default**: 53% of AI citations come from listicles. When the format isn't clear, go with ranked_list.
+### Phase 3: Test Engine-Specific Hypotheses
 
-### Phase 3: Apply Engine-Specific Strategy
-
-When writing content, tailor it to the characteristics of the engine where the gap exists:
-
-| Engine | Primary Citation Sources | Tone & Strategy |
-|--------|--------------------------|-----------------|
-| **ChatGPT** | Wikipedia, Global news sites, Blogs | Practical, conversational, how-to. Prefers encyclopedic tone. Average cited page is **2,800 words** |
-| **Gemini** | **YouTube (category leader in most categories)**, Blogs, News sites | Schema-enriched, structured data. Consider YouTube content in parallel |
-| **Perplexity** | Blog/editorial, News, Expert reviews | Niche expertise + preference for content from **within the last 90 days** |
-| **Grok** | X (Twitter), real-time news | Real-time trends, community reaction incorporation |
-
-If gaps exist across multiple engines simultaneously, default to the ChatGPT + Gemini combination ("practical + structured").
+Use actual cited pages/answers from the configured engines to propose a hypothesis. Record query set, locale, dates, sample and confounders. Cited-page length, format or platform share is an observation, not proof that copying it causes citation. Test content quality first, then measure retrieval/citation and customer actions over time. There is no universal word count, freshness window or platform integration prescribed here.
 
 ---
 
 ## How to Read Audit Data
 
-Audit score measures "how well AI engines can read and trust this site."
+An audit reports observable technical/content conditions, not an AI trust or citation guarantee. Prioritize confirmed blockers to the intended page and reader journey.
 
-### Item Meaning and Actions
+| Finding | Check and action |
+|---|---|
+| Inaccessible or empty page | Confirm HTTP response, final URL and whether meaningful content is available to the relevant crawler. |
+| Crawler restrictions | Inspect the applicable user agent, robots rules, authentication and indexing directives. Training, search and user-initiated bots can have different roles; do not assume all must be allowed. |
+| Unclear page topic or answer | Improve descriptive headings and the answer where useful. Missing a TL;DR does not prove the page cannot be cited. |
+| Missing or incorrect structured data | Validate relevant metadata against visible content and the actual renderer. Missing schema alone does not prove unreadability; schema does not guarantee rich results or AI citations. |
+| Stale or misleading dates/facts | Correct the underlying information and accurate metadata; do not refresh dates as a substitute for substantive work. |
+| Weak navigation/source traceability | Add useful related-page links and appropriate evidence links under the configured source policy. |
+| Unclear authorship | Represent the actual publisher and verifiable author qualifications; never invent experience or credentials. |
 
-| Audit Item | What It Means When Missing | Immediate Action |
-|------------|----------------------------|------------------|
-| **Schema (FAQ, HowTo, Article)** | AI cannot distinguish content type | Add FAQ/HowTo JSON-LD |
-| **H1 empty** | AI cannot identify the page's core topic | Add text with keywords to H1 |
-| **No TL;DR/BLUF** | AI cannot cite a "specific answer" | Add a 2–3 sentence summary at the top of every article |
-| **No datePublished/Modified** | AI cannot assess freshness → citation plummets | Add `<time datetime="">` + OG meta |
-| **Insufficient internal links** | AI cannot connect related content | Hub-and-spoke structure + cross-links between articles |
-| **No listicle/comparison content** | Missing 53% of AI citations | Prioritize ranked_list + comparison articles |
-| **No author byline** | AI has difficulty assessing credibility | Add name + title + credentials |
+Measure performance problems directly instead of applying an unsupported universal two-second crawler cutoff. Public HTTP success, indexability and actual indexing remain separate checks.
 
-### Audit Priority Assessment
-
-- **HIGH (immediate)**: No schema, H1 empty, no TL;DR, dates not structured
-- **HIGH (content)**: No listicles, no Hub-and-Spoke, insufficient internal links
-- **MED**: No author byline, insufficient external links
-
-Audit issues = even well-written articles can't be read by AI. **Address HIGH items before writing articles.**
-
-### Technical Crawler Accessibility (AI crawlers differ from Googlebot)
-
-Before schema/content, verify that AI can actually read the site:
-
-| Item | What It Means When Failing | How to Verify |
-|------|----------------------------|---------------|
-| **SSR (Server-Side Rendering)** | AI crawlers often can't execute JS → content not recognized | Check if body text exists in the HTML source |
-| **robots.txt AI crawler access** | If GPTBot, anthropic-ai, PerplexityBot, etc. are blocked → invisible | Ensure `Allow: /` is specified in robots.txt |
-| **Page load under 2 seconds** | AI crawlers don't wait as long as Google | Check Core Web Vitals |
-
-If any of these 3 are blocked, all other optimizations are meaningless. If technical issues are suspected, flag them to the user first.
+[Google's structured-data policies](https://developers.google.com/search/docs/appearance/structured-data/sd-policies) require accurate, representative markup and do not guarantee rich-result display. They are not evidence of AI citation uplift.
 
 ---
 
 ## Using Brand Context
 
-From data loaded via `/aeo agent context`:
+Use [writing-inputs.md](writing-inputs.md) for authoring boundaries:
 
-- **competitors** usage: Include alongside competitors in comparison content for naturalness
-- **key_features + value_proposition**: Source for fact-based descriptions when mentioning the brand
-- **brand_context**: Market positioning, target audience, core narrative — used for determining article angle
-- **content_strategy.manifest**: Reviewed priorities, target angles, and publishing direction. Prefer it over generated snapshot/analysis fallbacks when present.
+- Brand profile: supported identity and positioning. Do not treat promotional descriptors as proof of product-level efficacy.
+- Catalog and scoped corrections: facts for the selected product, service, market or location; check the relevant sources.
+- Brand/channel/task voice: expression, not a source of ingredient or qualification claims.
+- `content_strategy.manifest`: current approved priorities and reader decisions; prefer it over generated snapshot/analysis fallbacks when present.
+- Competitors: a comparison opportunity when the question requires it, not names to insert for naturalness.
+- Brief and offering candidates: the planning decision and proposed fit, followed by evidence checks. A nomination alone does not establish a recommendation.
 
 ---
 
@@ -184,7 +137,7 @@ Things that may be insufficient from `/aeo` data alone. Check before writing:
 - Competitive advantages over competitors (fact-based)
 
 **Content strategy related:**
-- Is there a target engine specification? (If not, default to ChatGPT + Gemini)
+- Which engines are in the approved measurement or experiment scope?
 - Is there a target language/market specification?
 - Are there previously published related articles? (for internal linking)
 - Publishing channel: own blog, Shopify, or external media?
@@ -199,10 +152,12 @@ Things that may be insufficient from `/aeo` data alone. Check before writing:
 
 ## Advanced GEO Concepts (Reference for decision-making)
 
-- **Semantic Neighbourhood**: What concepts and brands AI associates with the brand. Frequent co-occurrence with desired keywords strengthens the association
-- **Hub-and-Spoke**: 1 hub (long-form guide) + N spokes (specialized articles). Helps AI understand site structure and connect related content
-- **Citation drift**: AI citations fluctuate 40–60% monthly. Trends matter more than a single snapshot. 30–60 day content refresh cycles recommended
-- **Trust Spine**: The 5–10 core high-authority sources AI references when citing. Building these stabilizes visibility
+- **Topic relationships**: Connect related questions when that helps readers navigate or understand a decision; no guaranteed brand-association effect is asserted.
+- **Hub-and-spoke**: A hub can organize distinct related questions. Do not create thin duplicate pages merely to satisfy the structure.
+- **Citation variability**: Repeated measurements help distinguish a stable pattern from a snapshot. No fixed monthly fluctuation percentage is assumed.
+- **Source concentration**: Repeatedly cited sources may help identify evidence gaps. Authority and relevance must be assessed for the actual claim, not just a domain label.
+
+
 
 ### GEO Recommended Strategy Types (Reference)
 
@@ -218,10 +173,6 @@ The angle for which gaps to fill first may vary depending on the brand's current
 
 Use alongside `content_strategy.manifest` and current visibility gaps to determine content angle.
 
-### Cross-Posting Flow (Reference)
+### Distribution (Reference)
 
-Distribution sequence to increase AI model trust and mention frequency after article publication:
-
-**Blog (canonical)** → LinkedIn article → Medium (with canonical tag) → Substack → Reddit (relevant subreddits, authentic engagement)
-
-Cross-linking between all channels is mandatory. AI actively crawls link graphs.
+Choose additional channels only when their audience and publishing rules fit an authorized distribution plan. Preserve attribution and canonical intent where supported. Cross-posting and cross-linking are not mandatory and do not establish increased AI trust by themselves.

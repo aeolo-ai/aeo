@@ -93,16 +93,16 @@ Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title str
 | Item | Criteria | Reference |
 |------|----------|-----------|
 | **Freshness metadata** | Is the body free of `datePublished`/`dateModified` lines? (dates live in structured metadata / deploy-time JSON-LD, not the body) | 10 Commandments #9 |
-| **Data recency** | Are cited statistics/data less than 1 year old? | Freshness rules |
-| **Article age** | What is the residual citation rate based on publish date? (0–30 days 100% → 1 year+ 18%) | Freshness rules |
+| **Data recency** | Are time-sensitive facts still current, and are older sources suitable for the specific claim? | Freshness rules |
+| **Article age** | Has the underlying information changed, and does the page need a substantive update? Do not assign citation probability from age. | Freshness rules |
 
 #### 4. Brand Integration
 
 | Item | Criteria | Reference |
 |------|----------|-----------|
-| **Mention density** | Is it within 15–25% of the total article? | Brand mention principles |
-| **Appears within a list** | Does the brand appear as part of a list, not as standalone promotion? | Brand mention principles |
-| **Competitors mentioned together** | Are competitors mentioned alongside for naturalness? | Brand mention principles |
+| **Mention relevance** | Does each brand mention help answer the question, without forced repetition or a fixed percentage? | Brand mention principles |
+| **Publisher identity** | Is the brand-owned explanation identified honestly without pretending to be an independent ranking? | Brand mention principles |
+| **Comparison relevance** | If alternatives are compared, do the reader decision, matched scope and evidence justify the comparison? Competitors are not mandatory. | Brand mention principles |
 | **Fact-based** | Is only verifiable information used (specs, pricing, review summaries)? | Brand mention principles |
 | **Tone consistency** | Is it consistent with the approved task-specific task-specific reference evidence and relevant voice examples? | content-create Step 1.5 |
 | **Eligibility (self-defeat)** | Does any criterion, checklist item, or verification method this article teaches readers disqualify THIS brand? Check the brand context's constraint sections (what the brand is NOT). A criterion the brand cannot pass must not be taught — flag as ❌, not reworded. | Brand constraint sections (AEO-554) |
@@ -145,14 +145,7 @@ failure, the same way a blanket "deploy-ready" fails Audit #0.
 
 #### 6. Engine Fit
 
-Based on the target engines in the brand context or visibility gap data:
-
-| Engine | Check Points |
-|--------|-------------|
-| **ChatGPT** | Practical/conversational tone, ~2800 words, how-to structure |
-| **Gemini** | Schema-enriched, structured data, YouTube integration consideration |
-| **Perplexity** | Niche expertise, data from within the last 90 days, high fact density |
-| **Grok** | Real-time trends, community reaction incorporation |
+Use the configured engines, query set, market and measurement date. Assess whether the page answers the target question with accessible, supported information. Evaluate an engine-specific tactic only when its scoped evidence and hypothesis are recorded. Do not score against generic word counts, fixed freshness windows or mandatory platform integrations.
 
 ---
 

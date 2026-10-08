@@ -16,13 +16,13 @@ Create or update the content strategy. Uses PUT (atomic replace via upsert).
 
 ```bash
 aeo strategy update \
-  --manifest "## Brand Positioning\n..."
+  --manifest "## Reader Decision\n..."
 ```
 
 **Flags:**
 | Flag | Type | Description |
 |------|------|-------------|
-| `--manifest` | string | Full strategy manifest (markdown, max 100K chars) |
+| `--manifest` | string | Full strategy manifest (markdown, normalized body max 5,000 characters; detailed evidence/history belongs in linked documents) |
 
 > Scheduling flags (`--frequency`, `--articles-per-cycle`, `--preferred-days`, `--auto-propose`) were removed. The CLI rejects them — encode any cadence/priority intent inside the manifest instead.
 
@@ -87,55 +87,35 @@ aeo strategy visual update \
 
 ## Manifest Template
 
-A good manifest has these sections:
+Use [writing-inputs.md](writing-inputs.md) for the boundary between facts, voice and strategy. Replace prompts below with decisions before saving; do not copy the brand introduction or accumulate a worklog.
 
 ```markdown
-## Brand Positioning
-How the brand should appear in AI search results.
-Key differentiators, tone, and authority signals.
+## Reader Decision
+[Whose decision should the content help, in which market and situation?]
 
-## Content Balance
-Target mix of article types (e.g., 40% how-to, 30% comparison, 20% thought leadership, 10% FAQ).
-Language distribution if multi-language.
+## Priorities
+[Rank the next opportunities; explain demand, offering fit and available evidence.]
 
-## Priority Queue
-Highest-priority topics to address next, with rationale.
-Link to visibility gaps or competitive intelligence.
+## Scope
+[Included markets/topics and strategic exclusions; link to the facts and policies that constrain them.]
 
-## Constraints
-Topics to avoid, compliance requirements, tone guidelines.
-Competitor mentions policy.
-
-## Changelog
-- 2026-03-16 — Initial strategy created based on visibility audit
+## Next Action
+[What should the reader be able to do next, and which eligible destination supports it?]
 ```
 
----
+The normalized manifest body is limited to 5,000 characters on new saves. Existing longer manifests remain readable; do not silently truncate or overwrite them. The separately bounded planning-settings envelope is not extra space for prose. Preserve existing structured planning settings when changing only the body.
 
 ## Initial Strategy Creation Guide
 
-When creating a strategy for the first time:
-
-1. **Load context first**: Run `/aeo agent context` to get brand context + audit + visibility
-2. **Identify gaps**: Look at visibility gaps — which engines, which topics are underserved?
-3. **Check brand context**: Ensure `brand_context` is filled for durable
-   positioning/audience/narratives. Use tone/reference analysis only when a
-   task explicitly selects it.
-4. **Draft manifest**: Use the template above. Focus on:
-   - What makes this brand unique (positioning)
-   - What content types work best for the gaps (balance)
-   - Top 3–5 topics to write next (priority queue)
-5. **Save**: `aeo strategy update --manifest "..."`
-
----
+1. Read current brand identity, offerings, notes and source/market constraints.
+2. Identify a real customer decision the offering can support. Use demand, observed search/visibility and existing content as evidence; absence of a brand mention alone is not enough.
+3. Rank opportunities with reasons and relevant source links. Distinguish new discovery from branded purchase checks and from unsupported product claims.
+4. Choose scope and intended reader action. Do not impose a universal article mix or repeat voice rules.
+5. Review the proposed replacement, then save with `aeo strategy update --manifest "..."` under the normal write authorization.
 
 ## When to Update the Manifest
 
-- **After proposals are generated**: Add accepted topics to Priority Queue, remove completed ones
-- **After publishing an article**: Update Changelog, adjust Content Balance if mix shifted
-- **After a visibility check**: New gaps may surface — update Priority Queue
-- **After brand context changes**: Positioning section may need alignment
-- **Monthly review**: Full review of all sections, trim stale items
+Update when approved priorities, market eligibility, evidence or the next reader action change. Completing an article can change the priority queue; publishing does not require appending a changelog. Keep detailed rationale/history in linked records, and retain only current decisions in the active input. A single visibility fluctuation is a review signal, not an automatic strategy rewrite.
 
 ---
 
@@ -149,6 +129,6 @@ When creating a strategy for the first time:
 PUT body:
 ```json
 {
-  "manifest": "## Brand Positioning\n..."
+  "manifest": "## Reader Decision\n..."
 }
 ```

@@ -95,33 +95,20 @@ The keys in `--voice-json` match what `agent context` prints (Tone / Voice / Do
 
 ### brand_context template
 
-`brand_context` is free-form markdown for durable brand facts, positioning,
-audience, narratives, and constraints. Do not store reference-analysis dumps or
-one-off voice examples here; those should stay with the task/reference analysis
-that produced them. Only durable tone constraints that should affect all future
-work belong here.
-
-Suggest this structure when helping a user build it from scratch:
+Use [writing-inputs.md](writing-inputs.md) for input ownership. Keep canonical identity in the brand profile, product/service details in the catalog and supporting documents, voice in voice settings, and priorities in strategy. `brand_context` holds durable supplemental facts and scoped corrections that those fields cannot represent.
 
 ```markdown
-## Brand Overview
-[Brand mission, positioning, and what makes it different]
+## Supplemental brand facts
+[Only facts not already represented in the profile; identify scope and source]
 
-## Target Audience
-[Who the brand serves — personas, pain points, jobs-to-be-done]
+## Current corrections
+[Product/service, SKU/location and market; corrected claim; source; confirmation state]
 
-## GEO Strategy
-[Which AI engines to prioritize, content angles to emphasize, competitive positioning]
-
-## Key Narratives
-[3–5 core messages the brand wants AI engines to associate with]
-
-## Competitive Context
-[Main competitors, how to frame comparisons, where the brand wins]
-
-## Constraints
-[Compliance requirements, claims to avoid, source preferences, positioning guardrails]
+## Boundaries
+[Applicable exclusions and limits that must survive reuse; supporting source]
 ```
+
+Replace placeholders before saving. Do not paste tone/reference dumps, strategy, source-preference settings or dated operations logs here. Preserve customer corrections even when the original report is not yet verified; label that state explicitly. Move history to a linked record only after retaining the current applicable facts and restrictions.
 
 ---
 

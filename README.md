@@ -85,7 +85,7 @@ _Full report: https://www.aeolo.io/report/.../visibility_
 | **Account & billing** | `aeo whoami` · `aeo billing subscription / credits / ledger` · `aeo auth login / status / logout` |
 | **Send feedback** | `aeo feedback "msg"` or `aeo feedback` (opens `$EDITOR`) |
 
-Production actions reserve and capture Aeolo credits server-side. Failed background jobs are refunded by the worker finalizers. Current costs: visibility checks cost 1 credit per prompt × engine; site audit starts at 3 credits per 5 pages; writing, reference analysis, video analysis, reference style analysis, and image swap cost 5 credits each.
+Production actions reserve and capture Aeolo credits server-side. Failed background jobs are refunded by the worker finalizers. Manual visibility checks cost 2 credits per prompt × target market × engine × repeat; scheduled subscription-funded checks have no additional credit charge. Site audit starts at 3 credits per 5 pages. Other action prices are quoted by the server before execution.
 
 Run `aeo --help` for the complete reference, or `aeo <command> --help` for detail on any verb.
 
