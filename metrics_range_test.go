@@ -38,3 +38,39 @@ func TestBuildMetricsTrafficPathRejectsUnsupportedRanges(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildMetricsTrafficPathPassesLimitAndQuery(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{name: "limit only", args: []string{"traffic", "--limit", "500"}, want: "/metrics/traffic?limit=500"},
+		{name: "query only", args: []string{"traffic", "--query", "울쎄라,ulthera"}, want: "/metrics/traffic?query=%EC%9A%B8%EC%8E%84%EB%9D%BC%2Culthera"},
+		{name: "all three", args: []string{"traffic", "--days=365", "--limit=1000", "--query", "ウルセラ"}, want: "/metrics/traffic?days=365&limit=1000&query=%E3%82%A6%E3%83%AB%E3%82%BB%E3%83%A9"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := buildMetricsTrafficPath(tt.args)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBuildMetricsTrafficPathRejectsBadLimitAndQuery(t *testing.T) {
+	for _, args := range [][]string{
+		{"traffic", "--limit", "0"},
+		{"traffic", "--limit", "1001"},
+		{"traffic", "--limit", "all"},
+		{"traffic", "--query", "  "},
+	} {
+		if _, err := buildMetricsTrafficPath(args); err == nil {
+			t.Fatalf("expected an error for %v", args)
+		}
+	}
+}

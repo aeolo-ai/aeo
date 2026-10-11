@@ -54,7 +54,7 @@ Period: last 30 days.
 ### `aeo metrics traffic`
 
 ```bash
-aeo metrics traffic [-d <domainId>] [--days=30]
+aeo metrics traffic [-d <domainId>] [--days=30] [--limit=20] [--query "term1,term2"]
 ```
 
 Site-level GSC traffic overview (not per-article). Returns:
@@ -65,6 +65,10 @@ Site-level GSC traffic overview (not per-article). Returns:
 **Device Breakdown** — desktop vs mobile vs tablet
 
 `--days` accepts 30, 60, 90, 180 (6 months), or 365 (1 year). Default: 30. Other values are rejected so traffic requests reuse the shared cache windows.
+
+`--limit` sets how many query rows come back, 1-1000 (default 20). The Summary totals cover exactly the listed rows, so a small limit undercounts the site.
+
+`--query` keeps only queries that contain any of the comma-separated terms (case-insensitive, literal match). The filter runs at Search Console before the row cap, so a term outside the top N still shows up, and the pages, country and device tables are narrowed to that same traffic. Spell every script you care about, e.g. `--query "울쎄라,ulthera,ウルセラ,音波拉提"`.
 
 Requires Google Search Console connected.
 

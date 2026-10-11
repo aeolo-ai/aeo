@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.38"
+var version = "2.3.39"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -920,7 +920,7 @@ var subUsage = map[string]string{
   ledger            Show credit ledger entries
                     Flags: --days (default 30), --limit (default 50)
   # from the command registry — generated, do not edit by hand
-  feedback          Send feedback to the Aeolo team (bug reports, ideas, anything)
+  feedback          Report a support request, bug, or idea to the Aeolo team; returns a receipt and notification outcome
 `,
 	"agent": `aeo agent <verb>
 
@@ -998,7 +998,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   audit poll <jobId>
                     Poll a background audit job
   # from the command registry — generated, do not edit by hand
-  traffic             Site-level GSC traffic: top queries, pages, country, device
+  traffic             Site-level GSC traffic: top queries (default 20, --limit up to 1000), pages, country, device
   references analyze  Start reference analysis for a URL (uses production credits)
   references poll     Poll a reference analysis job
   video analyze       Analyze a short-form video URL (uses production credits)
@@ -1054,7 +1054,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --channel <id> (its type decides the target when --target is omitted)
   redeploy <id> [--force]  Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
-  editions          Write one locale edition of an article (--language ko|en|ja|zh-Hant|zh-Hans|es|id|vi|th required; uses production credits)
+  editions          Write one locale edition of an article (--language en|ko|ja|zh-Hans|zh-Hant|es|id|vi|th|de|fr|hi|ar|it|nl|pl|ru required; uses production credits)
   slug              Change an article's URL slug
   thumbnail         Pin an external thumbnail URL after validating image size
   unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo, auto-detected; --target to force) and reset it to draft
@@ -1107,12 +1107,16 @@ Notes:
   overview          Article performance overview
   article <id>      Detailed article stats
   traffic           Site-level GSC traffic (--days=30|60|90|180|365)
+                    Flags: --limit 1-1000 query rows (default 20),
+                           --query "term1,term2" keep queries containing any term
 `,
 	"measure": `aeo measure <verb>
 
   overview          Article performance overview
   content <id>      Detailed article stats
   traffic           Site-level GSC traffic (--days=30|60|90|180|365)
+                    Flags: --limit 1-1000 query rows (default 20),
+                           --query "term1,term2" keep queries containing any term
   visibility        Show last visibility snapshot
   report            Submit command execution diagnostics
                     Flags: --command (required), --status-code, --response-body, --context
@@ -1460,14 +1464,33 @@ func buildMetricsTrafficPath(args []string) (string, error) {
 		rangeArgs = rangeArgs[1:]
 	}
 
-	days := findFlag(rangeArgs, "--days")
-	if !hasFlag(rangeArgs, "--days") {
+	params := url.Values{}
+	if hasFlag(rangeArgs, "--days") {
+		days := findFlag(rangeArgs, "--days")
+		if !isSupportedTrafficRange(days) {
+			return "", fmt.Errorf("--days must be one of %s", trafficRangeChoices)
+		}
+		params.Set("days", days)
+	}
+	if hasFlag(rangeArgs, "--limit") {
+		limit, err := strconv.Atoi(findFlag(rangeArgs, "--limit"))
+		if err != nil || limit < 1 || limit > 1000 {
+			return "", fmt.Errorf("--limit must be an integer from 1 to 1000")
+		}
+		params.Set("limit", strconv.Itoa(limit))
+	}
+	if hasFlag(rangeArgs, "--query") {
+		query := strings.TrimSpace(findFlag(rangeArgs, "--query"))
+		if query == "" {
+			return "", fmt.Errorf("--query needs at least one term")
+		}
+		params.Set("query", query)
+	}
+	if len(params) == 0 {
 		return "/metrics/traffic", nil
 	}
-	if !isSupportedTrafficRange(days) {
-		return "", fmt.Errorf("--days must be one of %s", trafficRangeChoices)
-	}
-	return "/metrics/traffic?days=" + url.QueryEscape(days), nil
+	// Encode sorts keys, so a lone --days keeps the long-standing URL.
+	return "/metrics/traffic?" + params.Encode(), nil
 }
 
 func isSupportedTrafficRange(value string) bool {
