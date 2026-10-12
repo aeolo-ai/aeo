@@ -1,5 +1,7 @@
 # Content Strategy Reference
 
+Document saves use the shared [role and review contract](document-roles.md). A `DOCUMENT_REVIEW_REQUIRED` warning means nothing was saved. Show it to the user; after explicit acknowledgement, repeat the identical command with `--force --review-token <receipt>`. The receipt is bound to the current documents and expires after 15 minutes. Successful reviewed saves archive the originals.
+
 ## Commands
 
 ### `/aeo strategy show`

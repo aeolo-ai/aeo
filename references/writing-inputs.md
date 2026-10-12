@@ -4,6 +4,8 @@ Read this when creating or cleaning brand inputs, voice, strategy or briefs. The
 
 ## One owner per fact or instruction
 
+For the three Markdown documents, [document-roles.md](document-roles.md) is the canonical role contract; the table below covers the broader input system.
+
 | Input / existing owner | Write here | Keep elsewhere |
 |---|---|---|
 | Brand identity: profile name, category, description, value proposition, key features | What is offered; who it serves and in which situations; supported distinction and limits | Monthly priorities, duplicated catalog, worklogs |

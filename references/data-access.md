@@ -1,5 +1,7 @@
 # Data Access — Research Source Configuration
 
+Document saves use the shared [role and review contract](document-roles.md). A `DOCUMENT_REVIEW_REQUIRED` warning means nothing was saved. Show it to the user; after explicit acknowledgement, repeat the identical command with `--force --review-token <receipt>`. The receipt is bound to the current documents and expires after 15 minutes. Successful reviewed saves archive the originals.
+
 ## Default sources (always available)
 
 These are available to all aeo users without configuration:
@@ -15,13 +17,13 @@ These are available to all aeo users without configuration:
 
 ## Custom sources (per-domain)
 
-Run `aeo config data-sources` to see this domain's configured sources.
+Run `aeo config data-sources` to see this domain's Source Guide.
 
 If no custom sources are configured, ask the user during onboarding or before the first article:
 "Where does your team keep product data, test results, and customer feedback?
 (Google Drive folders, specific URLs, internal wikis, etc.)"
 
-Turn their answer into a Source Policy patch.
+Turn their answer into a Source Guide patch.
 
 - Interactive CLI/operator flow: after explicit approval, apply it with
   `aeo config data-sources update --data-sources "..."`

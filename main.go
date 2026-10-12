@@ -932,7 +932,7 @@ var subUsage = map[string]string{
   list              List accessible domains
   switch <id>       Switch active domain
   brand             Deprecated alias for 'aeo agent context'
-  brand update      Update brand context
+  brand update      Update brand profile and Brand Notes (--brand-context; warnings: --force --review-token)
                     Flags: --name, --industry, --category, --value-proposition, --brand-context,
                            --key-features a,b, --language, --markets ko-KR,en-US,
                            --region KR|US|JP|TW|HK|CN (measured market; required before 'prompts add'),
@@ -1006,9 +1006,9 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 `,
 	"strategy": `aeo strategy <verb>
 
-  show              Show content strategy
-  update            Update content strategy
-                    Flags: --manifest
+  show              Show Content Strategy
+  update            Update Content Strategy
+                    Flags: --manifest; warnings: --force --review-token
   # from the command registry — generated, do not edit by hand
   visual            Show the visual style guide: description, keywords, the brand mood board (image URLs + per-image definitions), and each product board's size
   visual update     Update the visual style guide steering image generation
@@ -1240,8 +1240,8 @@ Notes:
 `,
 	"config": `aeo config <subcommand>
 
-  data-sources         Show configured data sources
-  data-sources update  Update data sources (--data-sources)
+  data-sources         Show Source Guide
+  data-sources update  Update Source Guide (--data-sources; warnings: --force --review-token)
   # from the command registry — generated, do not edit by hand
   glossary                 Show the brand's approved per-locale term renderings (e.g
   glossary update          Replace the terminology glossary (--glossary '<json>')
@@ -1928,8 +1928,7 @@ func main() {
 					fmt.Fprintln(os.Stderr, "Error: --data-sources is required")
 					os.Exit(1)
 				}
-				data, _ := json.Marshal(map[string]any{"data-sources": ds})
-				run("/data-sources", "PUT", data, domainID)
+				proxyCommand(args, domainID)
 			} else {
 				run("/data-sources", "GET", nil, domainID)
 			}
@@ -1957,9 +1956,7 @@ func main() {
 				fmt.Fprintln(os.Stderr, "Error: --manifest required")
 				os.Exit(1)
 			}
-			body := map[string]any{"manifest": manifest}
-			data, _ := json.Marshal(body)
-			run("/strategy", "PUT", data, domainID)
+			proxyCommand(args, domainID)
 		default:
 			// Unknown verb for a noun this binary knows. The command registry lives
 			// on the server and can grow without this table; hand it to the router

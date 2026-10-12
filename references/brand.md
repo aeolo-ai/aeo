@@ -1,6 +1,10 @@
 # Brand & Prompts
 
+Document saves use the shared [role and review contract](document-roles.md). A `DOCUMENT_REVIEW_REQUIRED` warning means nothing was saved. Show it to the user; after explicit acknowledgement, repeat the identical command with `--force --review-token <receipt>`. The receipt is bound to the current documents and expires after 15 minutes. Successful reviewed saves archive the originals.
+
 ---
+
+Document names and ownership: [canonical document roles](document-roles.md).
 
 ## /aeo agent context — Show current agent context
 
@@ -8,7 +12,7 @@
 aeo agent context
 ```
 
-Response: `text/markdown` — the default brand operating context used by the agent, including brand snapshot, brand notes, content strategy, source policy, publishing channels, measurement status, provenance, and warnings.
+Response: `text/markdown` — the default brand operating context used by the agent, including brand snapshot, Brand Notes, Content Strategy, Source Guide, publishing channels, measurement status, provenance, and warnings.
 
 If empty or JSON error, suggest running setup and checking the domain ID.
 
