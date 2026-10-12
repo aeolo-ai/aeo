@@ -1,192 +1,58 @@
 # Content Review
 
-Reviews existing content based on GEO domain expertise.
-
----
+Review an existing article using [writing-policy.md](writing-policy.md), the approved reader request, channel rules and actual source material. Keep factual findings, request compliance, editorial suggestions and planning overlap separate. A style preference or related topic is not a factual error.
 
 ## Answer and scope — within the existing review
 
-Check the answer/meta against body, tables and FAQ for missing comparison set/criteria, routine roles/conditions, defining distinctions, contradictions and unsupported certainty. Include findings in the usual review; correct defects or acknowledge a clean draft. No extra review after each edit or separate summary report. Metadata supports 500 characters; 160 is display advice, not a quality or citation guarantee.
+Check the saved title, metadata and every body paragraph, list item, table and caption. Compare the answer with the requested question and conditions. Do not review only quotations and numbers. Track unexamined units and missing inputs internally; missing evidence must not become a clean result.
 
-## /aeo content review <id> — Content review from a GEO perspective
+## /aeo content review <id> — Review workflow
 
 ### Flow
 
-1. **Load context** — Fetch the following 4 items in parallel:
-   ```bash
-   aeo content get <id> > /tmp/aeo_review_article.md &
-   aeo agent context > /tmp/aeo_review_brand.md &   # /aeo agent context
-   aeo domain audit > /tmp/aeo_review_audit.md &    # /aeo domain audit
-   aeo content --status=published --limit=50 > /tmp/aeo_review_published.md &   # for Audit #0b
-   wait
-   ```
-
-2. **Perform review** — Evaluate the article against the checklist below.
-
-3. **Output report** — Present results in the format below.
-
-4. **Suggest next actions** — If edits are needed, suggest patches via `/aeo content update <id>`.
-
----
+1. Read the actual saved article with `aeo content get <id>` and brand context with `aeo agent context`. Load the approved channel instructions, corrections and allowed sources through the available reference tools. A context summary or source listing is not the full source. Prefer the exact source text delivered during writing when it is available; identify any later evidence separately.
+2. Read [writing-policy.md](writing-policy.md). Apply the factual and request checks below. If required source material is inaccessible, report what is missing and which conclusions remain unverified. Do not silently substitute a smaller evidence packet.
+3. When overlap is in scope, read existing article inventory with `aeo content --status=published --limit=50`, then the relevant bodies with `aeo content get <id>`. Paginate with `--offset` when necessary. A first page, similar title or failed lookup does not establish full coverage.
+4. Return concise findings using the report below. Suggest targeted edits; review itself does not authorize editing, deleting, overwriting or publishing. Apply only changes already authorized by the user.
 
 ### Review Checklist
 
-#### 0. Fabrication & Citation Audit (BLOCKING — run this first)
+#### Facts and evidence
 
-Run this **before** the quality checklist below, and run it **adversarially**: assume the draft contains at least one fabricated quote and one unsourced statistic, and go find them. This pass is not about confirming the draft is good — it is about proving that every quote and every number is real and traceable. A draft that fails any check here is **NOT deploy-ready**, no matter how well it scores on categories 1–6.
+Use the source-to-claim criteria in the shared policy. For each factual assertion, preserve subject, relationship, eligibility, market, period, quantity, attribution and certainty. Split a sentence's independent assertions when support differs; one supported clause cannot clear its unsupported neighbour.
 
-| Item | Adversarial check | Verdict if it fails |
-|------|-------------------|---------------------|
-| **Quote traceability** | For EVERY direct quotation (anything in quotation marks attributed to a person, study, or organization), name the exact source URL — gathered during research — that contains those words. Can you point to the URL? Do those words actually appear there? | If a quote has no traceable source URL, it is a **FABRICATION**. Remove it, or convert it to an unquoted paraphrase of a real cited source. Never pass a draft with an unverifiable quote. |
-| **Named-person check** | For every named expert / advisor / customer, does a real citable source establish that this person said this? An invented name (e.g. "advisor Julio Pina") with no source is a fabrication. | Cut the name and quote, or replace with a real, cited expert. |
-| **Quantified-claim sourcing** | For EVERY number, percentage, "#1" / "best" / "most" superlative, "studies show", or factual/spec claim — is there an inline `[Source Name](URL)` link next to it that traces to a real source? | If a quantified or superlative claim has no inline source, **cut it or hedge it** (drop the specific number / soften to a non-quantified statement). Do not ship unsourced stats. |
-| **Source-to-claim match** | Open the cited sources. Does each source directly support the attached claim at the same strength and scope? Check every mechanism, practical recommendation, causal inference, and generalized conclusion — not only quotes and numbers. | If the evidence is narrower than the claim, narrow or remove the claim. If the source does not support it, fix the claim or find a real source. |
+- **supported**: the allowed evidence supports the actual assertion at its stated scope and strength.
+- **unsupported**: the evidence examined does not establish the assertion. This does not prove it false.
+- **contradicted**: applicable evidence directly conflicts with the assertion. Identify that conflict.
+- **not checked**: necessary evidence is inaccessible, review coverage is incomplete or the check failed. Hold the affected conclusion; never report it as passed.
 
-**How to record the verdict:** the Fabrication & Citation Audit must itemize every quote and every quantified claim with its traceable source URL (or "NO SOURCE → removed/hedged"). "Issues found: none" is only acceptable when you have explicitly walked each quote and each stat and shown its source. A blanket "looks good / deploy-ready" without this itemized trace is itself a review failure.
+Do not treat the absence of a public URL as fabrication. Approved brand documents and readable internal sources can support a claim; preserve source identity and the matching passage internally, respecting disclosure restrictions and the channel's link policy. A URL or source ID alone is not semantic support. Do not label a statement fabricated just because evidence is missing. Quotes need matching original words and attribution; weakening an unsupported assertion does not supply evidence.
 
-#### 0b. Cannibalization Audit (BLOCKING — run this second)
+Do not require citations for pure questions or ordinary non-factual reader advice, such as asking the clinic about appointment arrangements. A conversational introduction such as “we often get this question” is not by itself a factual defect under the agreed review scope. Concrete claims about actual customers, credentials, services, frequency statistics or measured outcomes still need matching evidence. Separate those claims from surrounding advice.
 
-A draft can be flawless on every other axis and still be a defect: if the brand already published this topic, the new article splits the brand's own citation signal instead of adding to it. Two pages competing for one query means AI engines see a weaker, more diffuse answer for both.
+Record the defective passage, its individual assertion, verdict, source/passage or precise evidence gap, and a minimal remedy. Do not reproduce the entire article and source corpus in the report or ask the agent to reconstruct hashes/IDs the tool already supplies.
 
-Run this against `/tmp/aeo_review_published.md`. **Compare topics, not title strings** — the failure mode is two different-sounding headlines covering the same ground:
+#### Request compliance
 
-> "Is K-Beauty Sunscreen Safe for Sensitive Skin?" vs "HAESKN Sunscreen Stick for Sensitive Skin Guide"
->
-> Different strings. Same article. An exact-title check passes this; a topic check does not.
+Check the commissioned question, requested comparisons or conditions, approved narrator/register and explicit channel requirements. Identify an actual unmet instruction; do not replace it with generic GEO conventions. Style examples do not establish credentials or experience. Preserve material limitations without narrating the agent's research process.
 
-| Item | Adversarial check | Verdict if it fails |
-|------|-------------------|---------------------|
-| **Recent duplicate** | Does any article published in the **last 14 days** answer the same core question, even under a different headline? Strip brand names and format words ("best", "guide", "review") from both titles and compare what remains. | **BLOCKING.** Do not deploy a second article on a topic covered within two weeks. Recommend updating the existing article instead (`aeo content update <existing-id>`). |
-| **Cluster saturation** | How many published articles already cover this topic cluster? | **3 or more → BLOCKING.** The problem is not coverage, it is that the existing pages are not being cited. Another article will not fix that; strengthening the best existing one might. |
-| **Spoke justification** | If the draft claims to be a "spoke", a "different angle", or to "add new context" on an existing topic — name the specific question it answers that the existing article does **not**. Then check: does the existing article already answer it in a section? | If you cannot name a question the existing article leaves unanswered, this is **not a spoke — it is a duplicate**. "Connects two existing pieces" and "approaches it through a different lens" are rationalizations, not new coverage. |
-| **Hub link** | If it genuinely is a spoke, does the draft link back to the hub article, and does the hub have room to link forward to it? | Add the cross-link before deploy. An unlinked spoke reads to an engine as a competing page, not a supporting one. |
+#### Editorial suggestions
 
-**Why this section exists:** the review pass previously had no cannibalization item at all, so a duplicate published eight days after its twin received a clean "ZERO defects, deploy-ready" verdict. The reviewer was not wrong about what it checked — the check simply did not exist. If you find yourself writing a justification for why a near-duplicate is acceptable, that is the signal to fail it, not to pass it.
+Use the shared house style and the selected channel's requirements. Suggest changes where repetition, confusing structure or empty process narration makes the answer less useful. Keep preferences separate from factual verdicts; an explicit channel requirement belongs under request compliance. No compulsory opening summary, FAQ count, expert quotation, anecdote, author biography or competitor mention is needed to make an article truthful. Technical metadata, syntax and schema validation belong to the existing tools; report their actual errors instead of inventing another prose checklist.
 
-#### 1. Structure & Quotability
+#### Planning overlap
 
-| Item | Criteria | Reference |
-|------|----------|-----------|
-| **Lead-summary blockquote** (blog articles only) | Does the body open with a `> ` blockquote immediately after the H1 — 2–3 standalone sentences that answer the title question with zero surrounding context, no bullets, no title text repeated? Is it **unlabelled** (no "TL;DR", "Summary:", "요약:", or bolded lead-in)? A label is a defect. | content-create Step 4 HARD RULE |
-| **BLUF** | Is the core answer in the first 2–3 sentences? | 10 Commandments #1 |
-| **H1** | Is it a question-based title? Does it match actual AI queries? | 10 Commandments #2 |
-| **H2/H3 hierarchy** | Can each section be independently quoted? | 10 Commandments #3 |
-| **Markdown headings** (blog articles only) | Is every section heading a real markdown `## `/`### ` heading — not bold text (`**Section**`) or a bare numbered line? Not applicable to social posts. | 10 Commandments #3 |
-| **Comparison tables** | If comparison data exists, is it structured as a table? | 10 Commandments #4 |
-| **FAQ section** | Are there 3–5 supported adjacent questions at the bottom that the main body has not already answered? | Replace or remove any FAQ that merely restates a body conclusion, or whose answer introduces unsupported advice. |
-| **FAQ is a `## ` H2** (blog articles only) | Is the FAQ section under a real markdown `## FAQ` / `## 자주 묻는 질문` H2 (not a bold "FAQ" line)? Deploy-time FAQPage schema only fires when it is. Not applicable to social posts. | 10 Commandments #7 |
-| **Schema hints** | Is the recommended schema type specified? | 10 Commandments #8 |
-
-#### 2. Trust & Authority
-
-| Item | Criteria | Reference |
-|------|----------|-----------|
-| **Inline citations** | Are there enough `[Source Name](URL)` inline citations? (1–2 per section) Does every quantified/factual claim carry one? (see Audit #0) | 10 Commandments #5 |
-| **Expert quotes** | Are they in "real name + title + quote" format, and does each quote trace to a real source URL? (see Audit #0 — any untraceable quote is a fabrication and must be removed) | 10 Commandments #6 |
-| **Authority sources** | For scientific, medical, safety, or regulatory claims, are primary research, official regulators, or professional institutions used instead of commercial explainers or ingredient suppliers? | 10 Commandments #5 |
-| **Internal + external links** | Are both internal content links and external authority source links present? | 10 Commandments #10 |
-| **No em dash** | Does the body use `—`/`–` to join clauses or set off an aside? Any occurrence is a defect; numeric ranges with a hyphen are fine. | Credibility Guards A |
-| **Self-ranking** | If the article is a ranked list including the brand, is the brand anywhere other than #1, and are the ranking criteria stated? | Credibility Guards B |
-
-#### 3. Freshness
-
-| Item | Criteria | Reference |
-|------|----------|-----------|
-| **Freshness metadata** | Is the body free of `datePublished`/`dateModified` lines? (dates live in structured metadata / deploy-time JSON-LD, not the body) | 10 Commandments #9 |
-| **Data recency** | Are time-sensitive facts still current, and are older sources suitable for the specific claim? | Freshness rules |
-| **Article age** | Has the underlying information changed, and does the page need a substantive update? Do not assign citation probability from age. | Freshness rules |
-
-#### 4. Brand Integration
-
-| Item | Criteria | Reference |
-|------|----------|-----------|
-| **Mention relevance** | Does each brand mention help answer the question, without forced repetition or a fixed percentage? | Brand mention principles |
-| **Publisher identity** | Is the brand-owned explanation identified honestly without pretending to be an independent ranking? | Brand mention principles |
-| **Comparison relevance** | If alternatives are compared, do the reader decision, matched scope and evidence justify the comparison? Competitors are not mandatory. | Brand mention principles |
-| **Fact-based** | Is only verifiable information used (specs, pricing, review summaries)? | Brand mention principles |
-| **Tone consistency** | Is it consistent with the approved task-specific task-specific reference evidence and relevant voice examples? | content-create Step 1.5 |
-| **Eligibility (self-defeat)** | Does any criterion, checklist item, or verification method this article teaches readers disqualify THIS brand? Check the brand context's constraint sections (what the brand is NOT). A criterion the brand cannot pass must not be taught — flag as ❌, not reworded. | Brand constraint sections (AEO-554) |
-
-#### 5. Semantic Authenticity
-
-Catches semantic issues where the article reads like "AI-written content" or "brand advertisement." Even if structure and sources are perfect, failing this category means neither AI engines nor readers will trust it.
-
-| Item | Criteria | Red Flag Example |
-|------|----------|------------------|
-| **Positioning honesty** | Is the article honest about its identity? If written by the brand, does it pretend to be an independent review? | Ranking own product #1 while listing "Editorial Team" as author → disguised advertising |
-| **Own product bias** | Are own product weaknesses addressed as honestly as competitor weaknesses? Not bashing competitors while going easy on own product? | Competitor: "only 40min water resistance" vs Own: "water resistance not independently rated" (cushioned) |
-| **Independent expert voice** | Beyond founder/internal quotes, is there at least one independent expert (dermatologist, researcher, etc.)? | All quotes from founders → feels like a press release |
-| **Experience specificity** | Are test/experience claims specific? Who, how many times, under what conditions? | "tested through months of sessions" (zero specificity) vs "tested by 3 players across 12 sessions on outdoor courts in 30°C+" |
-| **Testing methodology** | For comparison/review articles, are evaluation criteria and methods stated? | Wirecutter: separate methodology section with timing/location/personnel specified. Ours: none |
-| **Domain-specific context** | Does the article contain context unique to the topic? Not just generic statements? | Padel article with no padel court characteristics (glass wall glare, match duration) → feels like any sport was substituted in |
-| **1st-party data** | Does it include 1st-party experiences such as internal tests, customer testimonials, or usage data? | All external sources only → "written by someone who never used it" |
-| **Author E-E-A-T** | Does it have a real author name + bio + credentials? Not anonymous like "Editorial Team"? | "Acme Editorial Team" → unknown identity, suspected AI/ghost writers |
-
-**Core principle**: Even if structure and sources are perfect, without genuine experience and honesty, the article will read as "AI-generated." This category evaluates whether the article stems from real human experience.
-
-#### 5b. AI Prose Tell Scan (count, don't vibe)
-
-The tells below read as machine writing even when every fact is real, and a
-reviewer that shares the writer's habits will not notice them by feel — so the
-verdict is a **count**, not an impression. Walk the body once per row:
-
-| Tell | Count rule | Verdict |
-|------|-----------|---------|
-| Contrastive negation ("not X, it is Y" / "It is not just X" / a dramatic "It does not." / "...two very different things") | Count every instance | 0–1 OK; 2+ = defect — rewrite all but the strongest into direct statements |
-| Comma splice (two full clauses joined by a bare comma) | Count every instance | Any = defect; split into two sentences or use a conjunction |
-| Meta-scaffold sentences ("There is a second layer to this", "Two things stand out", "The real question is whether ...") | Count every instance | Any = defect; delete the announcement, keep the point |
-| Heading uniformity | Do 3+ consecutive H2s open with the same word? | Yes = defect; vary heading shapes |
-| Section rhythm | Does (nearly) every H2 section hold the same paragraph count? | Yes = defect; let length follow the material |
-| Metaphor density | Count vivid analogies ("wearing a different label") | 0–1 OK; 2+ = defect |
-
-Em/en dash as a connector is already a defect under #2 Trust & Authority.
-Record the counts in the report — "reads fine" without numbers is a review
-failure, the same way a blanket "deploy-ready" fails Audit #0.
-
-#### 6. Engine Fit
-
-Use the configured engines, query set, market and measurement date. Assess whether the page answers the target question with accessible, supported information. Evaluate an engine-specific tactic only when its scoped evidence and hypothesis are recorded. Do not score against generic word counts, fixed freshness windows or mandatory platform integrations.
-
----
+Compare the core question and substantive answer with relevant existing articles. Identify the overlapping passages and any supported new evidence, audience condition or useful decision aid. A translation/edition is not automatically a competing original. Recommend an update or consolidation when the new article adds no useful distinct answer, but do not block on age or article count alone. Do not infer loss of citations from topic similarity. Missing inventory means overlap is unverified. Any publication hold must name the applicable approved publishing policy; a recommendation is not permission to overwrite or delete an article.
 
 ### Report Format
 
-```
-## GEO Content Review — "{article title}"
+- **Scope**: article/version reviewed, sources examined, missing inputs and coverage limits.
+- **Facts**: supported/no factual defects found within this scope, corrections needed, or not checked. List actual defects with the passage, verdict and source/gap; do not force an error count or invent one.
+- **Request**: met requirements and any specific omissions.
+- **Editing**: separate suggestions, with the applicable channel rule where required.
+- **Planning**: overlap assessment only if examined; identify the existing article and duplicated answer.
+- **Next action**: targeted corrections, missing evidence or a planning decision. Do not collapse these into a single “deploy-ready” score.
 
-### Summary
-- **Overall**: ✅ Good / ⚠️ Needs Work / ❌ Major Issues
-- **Word count**: {n} words
-- **Article type**: {type}
-- **Cannibalization**: ✅ no overlapping published article / ❌ duplicates "{title}" (published {n}d ago)
+### Execution boundary
 
-### Scores
-
-| Category | Score | Notes |
-|----------|-------|-------|
-| Fabrication & Citation (#0) | ✅ / ❌ | quotes traced: {n}, stats traced: {n} |
-| Cannibalization (#0b) | ✅ / ❌ | closest published article + why it is or is not a duplicate |
-| Structure & Quotability | ✅ / ⚠️ / ❌ | ... |
-| Trust & Authority | ✅ / ⚠️ / ❌ | ... |
-| Freshness | ✅ / ⚠️ / ❌ | ... |
-| Brand Integration | ✅ / ⚠️ / ❌ | ... |
-| Semantic Authenticity | ✅ / ⚠️ / ❌ | ... |
-| AI Prose Tells (#5b) | ✅ / ❌ | negation: {n}, splices: {n}, scaffolds: {n}, metaphors: {n} |
-| Engine Fit | ✅ / ⚠️ / ❌ | ... |
-
-### Issues Found
-1. **[Category]** — {specific issue} → {recommended fix}
-2. ...
-
-### Recommended Patches
-> If edits are needed, include patch suggestions ready to use with `/aeo content update <id>`.
-> Apply after user confirmation.
-```
-
----
-
-### Notes
-
-- Reviews are **read-only** — not subject to the CUD Rule. Edits are made via `/aeo content update` after user confirmation.
-- Externally written articles (local files) can also be reviewed — if a file path is provided instead of `<id>`, the file is read and the same checklist is applied.
-- Reviews can be performed without brand context, but the Brand Integration category is skipped and this is noted explicitly.
+`content_review_ack` is the writer's recorded self-review. Acceptance of its structure and source references does not establish independent factual approval. Claim an independent review only when an actual separate reviewer result is available, and identify its scope. Do not launch an additional model, paid task or legal review merely because this guide mentions review. The existing workflow owns retries, persistence and publication gates; tool failure is an execution issue, not evidence that the article is false. Legal compliance, when requested or required by the workflow, needs its own applicable jurisdiction and current sources; do not certify it from factual support alone.

@@ -1,5 +1,7 @@
 # Content Creation
 
+Read [writing-policy.md](writing-policy.md) before drafting. It is the shared source for evidence, format, research, originality and house style. This document owns the interactive workflow and output contract, not a second quality checklist.
+
 Default draft directory: `.aeo/` in the working directory. Add to `.gitignore`.
 File naming: `{AEOLO_DOMAIN_ID}_{slug}.md`. See Step 5 for path resolution.
 
@@ -58,9 +60,9 @@ Use `aeo content generate` only when the user explicitly wants Aeolo to run a se
 | **Gap-driven** | `aeo visibility show` gap + content strategy priority | Brand context, target prompts, gap context | Competitor facts |
 | **Client-brief** | User provides client materials/meeting notes/appeal points | Angle, materials (raw state) | Claims extraction, competitor context |
 | **Prompt-targeted** | "I want us to show up for this prompt" | Target prompt | Brand claims, competitors |
-| **Content Refresh** | Existing article's recency expired (91+ days) | Existing article structure + content | Latest data, updated competitor context |
+| **Content Refresh** | Changed information or an unanswered reader need in an existing article | Existing article structure + content | Latest data, updated competitor context |
 
-Content Refresh is **writing a new article**, not a "patch." Read the existing article via `/aeo content get <id>` and use it as reference input, but the subsequent flow is the same as other Paths. A patch that only changes `dateModified` does not count as a GEO recency signal.
+For Content Refresh, read the existing article via `/aeo content get <id>` and confirm whether the authorized task is an update or a distinct new article. Do not create a competing original merely because time elapsed. Changing only `dateModified` is not a substantive update.
 
 #### Article Brief Checklist
 
@@ -72,7 +74,7 @@ Content Refresh is **writing a new article**, not a "patch." Read the existing a
 - Related gap ID, prompt, or existing content ID: [fill in if available]
 
 ### Brand Ammunition
-- [ ] Brand Claims (minimum 3): claim + proof point + source
+- [ ] Relevant brand claims: claim + proof point + source, without a quota
 - [ ] Competitor Context: facts about comparison targets (required/optional depending on articleType)
 
 ### 1st-Party Experience (authenticity material)
@@ -81,7 +83,7 @@ Content Refresh is **writing a new article**, not a "patch." Read the existing a
 - [ ] Domain-specific context: are there unique facts specific to this topic? (no generic statements)
 - [ ] Positioning: will the article be transparent about being written by the brand?
 
-> If the above items are empty, request them from the user. To avoid reading like "written by someone who's never used the product," at least 1 first-party material is needed.
+> Use first-party experiences only when supplied, relevant and authorized. Their absence does not prevent a supported educational or product explanation. Ask for missing evidence only when it is necessary to answer the commissioned question.
 
 ### Article Direction
 - [ ] Topic / H1 candidate
@@ -136,7 +138,7 @@ Extract in the format below and apply consistently throughout all subsequent ste
 - Other notes: [additional style instructions]
 ```
 
-> Voice / channel-scaffold guidance shapes tone, phrasing, and section ordering only — it must NEVER replace markdown structure. Keep section headings as `## ` markdown headings and the FAQ as a `## FAQ` H2 even when mimicking a channel's format.
+> Approved channel requirements own voice and output conventions. An analyzed style sample is a reference, not authority for facts or mandatory article structure. Use real markdown section headings; if a FAQ is useful, use a `## FAQ` H2.
 
 After extraction, confirm with the user in one line: _"This article will be written in a [characteristics] tone. Does that sound right?"_
 
@@ -160,10 +162,10 @@ If no task-specific tone/reference evidence is attached or provided, skip this s
 ### Step 2 — Outline
 
 Build a structured outline:
-- H1: question-based title matching actual AI search queries (see 10 commandments below)
+- H1: a clear reader-facing heading for the commissioned question
 - H2/H3: hierarchy where each section is independently quotable
-- Note which sections will include comparison tables, expert quotes, or authority citations
-- Identify 3–5 FAQ questions to cover at the end
+- Identify evidence needed for each section; use tables or quotations only where useful and supported
+- Add FAQ only for supported adjacent questions not already answered
 
 Show the outline to the user and confirm before writing.
 
@@ -310,7 +312,7 @@ Before proceeding to Step 4:
 
 ### Step 4 — Write
 
-Write the full article following the **GEO Writing Instructions** below. Key rules:
+Write the article using [writing-policy.md](writing-policy.md) and the approved channel requirements. Output rules:
 - **Apply the Tone Profile extracted in Step 1.5 consistently across all sections** — including heading naming, sentence length, and tone
 - **Title ≠ H1 (HARD RULE)** — These two titles must always be separate:
   - **Title** (`/aeo content import` title parameter): SEO-optimized long version (question-based, keyword-rich)
@@ -318,13 +320,11 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
   - **H1** (first `#` in the body): Short and punchy reader-facing heading
     Example: `"Reapply Sunscreen Mid-Run: The Runner's Guide"`
   - The body must start with `# {H1}`, and the title text must not be repeated anywhere in the body
-  - The first paragraph after H1 should go straight to the BLUF answer
+  - Open in the approved channel voice and answer the reader promptly; no compulsory summary block
   - Do not use the same text for Title and H1
   - Do not repeat the H1 text in the intro
-  - Example: `# Do You Need Sunscreen for Padel?` → `Glass walls on a padel court block wind, not UV. Here's what dermatologists say...`
 - **Title length ≤ 60 chars (HARD RULE — deploy gate enforces this)**:
-  - Mobile SERP truncates around 55 chars; desktop ~70. A 60-char ceiling lands every device cleanly.
-  - Anything longer = "…" in the SERP listing, search-intent signals get cut, CTR collapses.
+  - This is Aeolo's current title validation constraint, not a guarantee of search display or performance.
   - The deploy step rejects with HTTP 422 / `INVALID_TITLE_LENGTH` if `title.length > 60`, on every target — agent must shorten and retry.
   - Good: `"Best No-White-Cast SPF Sticks for Sports (2026)"` (47 chars)
   - Bad: `"What's the Best Sunscreen for NYC Half Marathon Runners in 2026? Race-Morning Picks That Won't Sting, Slip, or Leave a White Cast"` (133 chars — drop everything after the question mark)
@@ -332,33 +332,20 @@ Write the full article following the **GEO Writing Instructions** below. Key rul
   - Omitted metadata is permitted. Nonempty metadata supports up to 500 characters, matching Aeolo's storage contract. Around 160 characters is a display advisory, not a search-engine limit or a quality score. Do not mechanically shorten an accurate, useful explanation.
   - Google may choose a query-dependent snippet from the body or the description. Automatic and authored descriptions can both be useful. Do not claim a guaranteed CTR increase, ranking gain, or AI citation preference from the field or its length.
   - Keep comparison counts, verified price context, distinctions and product roles when they materially answer the question. Reverify changing prices before using them; do not restore unsupported safety claims to add detail.
-- **Lead-summary blockquote (HARD RULE)** — Open with an unlabelled `> ` blockquote immediately after the H1: 2–3 standalone sentences containing the answer, scope and useful supporting details. This is editorial house style, not an AI extraction contract. No bullets or repeated title. The next paragraph develops evidence or explanation instead of restating the answer. The listing excerpt can derive from this full lead; search metadata remains independently authored.
 - **Existing review pass** — Within the usual review, check the answer and description against body, tables and FAQ for lost scope or contradictory claims. Apply concrete corrections or acknowledge a clean draft. Do not add a review/ack loop after every edit or a separate summary report.
-- BLUF in first 2–3 sentences
-- Inline citations as `[Source Name](URL)` throughout
+- Render citations according to the selected channel's reference policy; keep evidence traceable even when public links are disabled
 - **Inline product images are catalog-only and optional** — follow Step 3.2.1; otherwise keep the body text-only
 - **Rich blocks are verified-only and optional** — at most one YouTube embed via `aeo source youtube <url>` and one product carousel via `aeo source products` (Step 3.2.2); never hand-write iframes or card HTML
 - Mention the brand where it helps answer the question. First-party explanations can stand alone; do not impose a mention quota or manufacture a comparison.
-- FAQ section at the end (3–5 questions)
+- FAQ is optional; include only useful, supported adjacent questions
 
 **Output format:**
-- **Body**: Pure markdown only (from H1 to FAQ)
+- **Body**: Author in markdown for the import tool; the system converts it to canonical HTML. Do not reinterpret stored HTML as an instruction to change authoring syntax
 - **Metadata**: Displayed separately from the body
 
-### Step 4.5 — Semantic Authenticity Check (MANDATORY GATE)
+### Step 4.5 — Review the draft
 
-**Must be performed before saving the article.** Self-check against the "Semantic Authenticity" checklist from [content-review.md](content-review.md):
-
-| Check Item | Pass Criteria |
-|------------|--------------|
-| Positioning honesty | If written by the brand, does it avoid pretending to be an independent review? |
-| Own product bias | Are own product weaknesses addressed as honestly as competitor weaknesses? |
-| Independent expert voice | Is there at least 1 independent expert beyond founder/internal quotes? |
-| Experience specificity | Do test/experience claims specify who, how many times, and under what conditions? |
-| Domain-specific context | Does the article contain unique facts specific to this topic? (not just generic statements) |
-| 1st-party data | Has the 1st-party material collected during Pre-flight been actually reflected in the article? |
-
-**If 2 or more items fail**, show the results to the user and confirm whether to revise. A single failure shows a warning only and can proceed.
+Use [content-review.md](content-review.md) with the saved or draft version actually being reviewed. Fix factual or explicit request defects within the authorized task; keep editing suggestions and planning overlap separate. A single unsupported material claim can need correction, while several optional style suggestions do not make the facts false. Do not invent experiences, outside experts or weaknesses to satisfy a checklist. Self-review is not independent approval.
 
 ### Step 5 — Save draft
 
@@ -431,68 +418,13 @@ Choose a form that resolves the reader's decision using available evidence. No d
 
 When editing the inputs themselves, use [writing-inputs.md](writing-inputs.md). The rules below include Aeolo output conventions, not proven requirements for AI citation.
 
-### GEO Writing 10 Commandments
+### Shared writing criteria
 
-1. **BLUF (Bottom Line Up Front)** — Place the core answer in the first 2–3 sentences. AI cites "specific answers," not entire articles. Don't beat around the bush in the intro. Open the body with the unlabelled `> ` lead-summary blockquote right under the H1 (see Step 4 HARD RULE); the next paragraph develops evidence or explanation rather than restating the answer.
-2. **Title ≠ H1** — Title is the long SEO version (question-based, keyword-rich). The body `#` is a short, punchy reader-facing heading. They must always be different text. Example: Title `"What's the Best SPF Stick for Outdoor Sports in 2026?"` → H1 `"Best SPF Sticks for Outdoor Sports"`
-3. **Logical H2/H3 hierarchy (real markdown headings, not bold text)** — Semantic HTML5 structure. Every section heading MUST be a real markdown heading — `## ` for sections, `### ` for sub-sections — never bold text (`**Section**`) and never a bare numbered line (`1. Section`) masquerading as a heading. Each section must be independently quotable; a single H2 should make sense on its own. (The deploy-time GEO structure check counts `## ` H2 sections — bold/numbered "headings" are invisible to it and to AI-engine chunkers.)
-4. **Comparison tables** — Comparison data must be in markdown/HTML tables. AI prefers structured data over unstructured text.
-5. **Authority signals** — External authority source citations are mandatory. Statistics, research, .edu/.gov sources. Inline citation format: `[Source Name](URL)`. No unsourced claims.
-6. **Expert quotes — real and verifiable ONLY, or omit** — Use a direct quote ONLY when it is a real statement you found via `web_search` and can cite with the exact source URL where those words actually appear ("Real name + title + quote" + traceable URL). AI uses attributed quotes for credibility. **If you cannot find a real, verifiable quote, OMIT the quote entirely** — make the point in your own words or as an unquoted paraphrase of a cited source. Fabricating a named person's statement — inventing words for a real or made-up executive, expert, or customer — is PROHIBITED and has caused live incidents (a fake "이승건 토스 대표" quote; fabricated Einstein / McConnell quotes). A missing quote is fine; an invented one is a defect that blocks the article.
-7. **FAQ section (a `## FAQ` H2)** — 3–5 FAQs at the bottom, under a real markdown `## FAQ` (or `## 자주 묻는 질문`) H2 heading, with each question as an `### ` H3. Cover related questions not addressed in the main body. Aeolo's FAQ parser and the deploy-time FAQPage JSON-LD only fire when the FAQ section is a real `## ` heading matching this convention — a bold "FAQ" line does not count.
-8. **Schema markup hints** — Choose the right schema type for the article, but do NOT write it into the body. Aeolo derives JSON-LD from the structured `type`/`articleType` import field and renders it at deploy time. Use this mapping to pick the type:
+Read [writing-policy.md](writing-policy.md). Evidence, format, research, originality and house style are generated from the same policy used by the automatic writer; do not add local quotas or assume a structure guarantees AI citations.
 
-   | articleType | Schema Hint |
-   |---|---|
-   | ranked_list | `<!-- schema: Article, ItemList -->` |
-   | comparison | `<!-- schema: Article, ItemList -->` |
-   | how_to | `<!-- schema: HowTo, Article -->` |
-   | faq | `<!-- schema: FAQPage, Article -->` |
-   | guide | `<!-- schema: Article -->` |
-   | blog | `<!-- schema: Article, BlogPosting -->` |
-   | thought_leadership | `<!-- schema: Article, BlogPosting -->` |
-   | case_study | `<!-- schema: Article -->` |
-9. **Freshness signals** — Do NOT write `datePublished`/`dateModified` into the article body. Aeolo stores freshness as structured metadata and renders it as JSON-LD at deploy time; the publish/refresh save sets the dates automatically. Re-check facts that can change; do not infer a citation probability from article age.
-10. **Internal + external links** — Cross-link your own content + link to external authority sources. AI actively crawls link graphs.
+### Output conventions
 
-### Credibility Guards — every article, every locale
-
-Two habits that fail the same way: the article ships, nothing errors, and the
-piece is quietly worth less as a citation. They are separate from the ten above
-because they are not about structure at all, they are about whether a reader
-believes the page.
-
-**A. No em dash as a connector.** Never join clauses or set off an aside with `—`
-or `–` in ARTICLE PROSE. Rewrite with a period, a comma, a colon, or parentheses.
-It is the most recognisable tell of machine-written text, and a reader who
-notices it discounts everything around it. Numeric ranges keep a plain hyphen
-(`2020-2024`). This governs what you publish, not these reference docs.
-
-**B. Rank transparently.** In a ranked list or "best/top X" article, state the
-ranking criteria explicitly and rank every entry according to the evidence. The
-brand may rank first when it genuinely meets those criteria. Do not manipulate a
-ranking to flatter the brand; make every placement defensible on the stated
-criteria.
-
-**C. Kill the AI sentence shapes.** Banning one symptom just moves the habit
-next door: the em dash ban held while the same clause-joining moved into comma
-splices, so the whole family is governed (measured on published articles,
-2026-08-26). In ARTICLE PROSE:
-
-- No comma splice joining two full clauses ("The record exists, the question is
-  who reads it"). Write two sentences, or use a conjunction or colon.
-- At most ONE contrastive-negation construction per piece: "not X, it is Y",
-  "It is not just X", a dramatic two-word "It does not.", or a balanced closer
-  like "...are two very different things". Everywhere else, state what a thing
-  IS with a concrete detail instead of what it is not.
-- No meta-scaffold sentences that announce structure instead of making a point:
-  "There is a second layer to this", "Two things stand out", "The real question
-  is whether ...". Delete the announcement and write the point itself.
-- Vary the rhythm deliberately: mix paragraph lengths (a one-sentence paragraph
-  is fine), let section length follow the material instead of a fixed
-  two-paragraphs-per-H2 beat, and never run H2s that all open with the same
-  word ("Why ... / Why ... / Why ...").
-- At most one vivid metaphor per piece. One reads as voice; three read as a tic.
+Use real markdown H2/H3 headings when authoring for import. If a FAQ is useful, use `## FAQ` (or its localized equivalent) and H3 questions; do not add one just for schema. Keep metadata outside the body. Set the supported article type and let the platform render structured metadata; do not write JSON-LD or publication dates into article prose. Preserve verbatim quotations when applying house style.
 
 ### Engine Fit and Freshness
 

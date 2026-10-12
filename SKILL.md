@@ -107,7 +107,7 @@ Before editing brand documents, read [document-roles.md](references/document-rol
 
 When authoring or cleaning saved writing inputs, use [writing-inputs.md](references/writing-inputs.md) for ownership, scope and examples.
 
-Before writing/generating content, always read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md) first.
+Before writing or reviewing content, read [writing-policy.md](references/writing-policy.md), the shared authoring criteria generated from the runtime policy. For topic planning, also read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md). Writing, factual review, editorial suggestions and publishing decisions have separate roles; use [content-review.md](references/content-review.md) for that boundary.
 
 ---
 
