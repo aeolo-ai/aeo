@@ -1,6 +1,6 @@
 # Content Review
 
-Review an existing article using [writing-policy.md](writing-policy.md), the approved reader request, channel rules and actual source material. Keep factual findings, request compliance, editorial suggestions and planning overlap separate. A style preference or related topic is not a factual error.
+Review an existing article using [writing-policy.md](writing-policy.md), the approved reader request, channel rules and actual source material. Keep factual findings, request compliance and editorial suggestions separate. A style preference or related topic is not a factual error.
 
 ## Answer and scope — within the existing review
 
@@ -12,8 +12,7 @@ Check the saved title, metadata and every body paragraph, list item, table and c
 
 1. Read the actual saved article with `aeo content get <id>` and brand context with `aeo agent context`. Load the approved channel instructions, corrections and allowed sources through the available reference tools. A context summary or source listing is not the full source. Prefer the exact source text delivered during writing when it is available; identify any later evidence separately.
 2. Read [writing-policy.md](writing-policy.md). Apply the factual and request checks below. If required source material is inaccessible, report what is missing and which conclusions remain unverified. Do not silently substitute a smaller evidence packet.
-3. When overlap is in scope, read existing article inventory with `aeo content --status=published --limit=50`, then the relevant bodies with `aeo content get <id>`. Paginate with `--offset` when necessary. A first page, similar title or failed lookup does not establish full coverage.
-4. Return concise findings using the report below. Suggest targeted edits; review itself does not authorize editing, deleting, overwriting or publishing. Apply only changes already authorized by the user.
+3. Return concise findings using the report below. Suggest targeted edits; review itself does not authorize editing, deleting, overwriting or publishing. Apply only changes already authorized by the user.
 
 ### Review Checklist
 
@@ -40,17 +39,12 @@ Check the commissioned question, requested comparisons or conditions, approved n
 
 Use the shared house style and the selected channel's requirements. Suggest changes where repetition, confusing structure or empty process narration makes the answer less useful. Keep preferences separate from factual verdicts; an explicit channel requirement belongs under request compliance. No compulsory opening summary, FAQ count, expert quotation, anecdote, author biography or competitor mention is needed to make an article truthful. Technical metadata, syntax and schema validation belong to the existing tools; report their actual errors instead of inventing another prose checklist.
 
-#### Planning overlap
-
-Compare the core question and substantive answer with relevant existing articles. Identify the overlapping passages and any supported new evidence, audience condition or useful decision aid. A translation/edition is not automatically a competing original. Recommend an update or consolidation when the new article adds no useful distinct answer, but do not block on age or article count alone. Do not infer loss of citations from topic similarity. Missing inventory means overlap is unverified. Any publication hold must name the applicable approved publishing policy; a recommendation is not permission to overwrite or delete an article.
-
 ### Report Format
 
 - **Scope**: article/version reviewed, sources examined, missing inputs and coverage limits.
 - **Facts**: supported/no factual defects found within this scope, corrections needed, or not checked. List actual defects with the passage, verdict and source/gap; do not force an error count or invent one.
 - **Request**: met requirements and any specific omissions.
 - **Editing**: separate suggestions, with the applicable channel rule where required.
-- **Planning**: overlap assessment only if examined; identify the existing article and duplicated answer.
 - **Next action**: targeted corrections, missing evidence or a planning decision. Do not collapse these into a single “deploy-ready” score.
 
 ### Execution boundary

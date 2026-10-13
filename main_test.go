@@ -217,6 +217,59 @@ func TestValidateInstalledVersion(t *testing.T) {
 	}
 }
 
+func TestCompareReleaseVersions(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		a, b       string
+		comparison int
+		valid      bool
+	}{
+		{name: "same", a: "2.3.42", b: "2.3.42", comparison: 0, valid: true},
+		{name: "newer patch", a: "2.3.42", b: "2.3.41", comparison: 1, valid: true},
+		{name: "older patch", a: "2.3.41", b: "2.3.42", comparison: -1, valid: true},
+		{name: "numeric components", a: "2.10.0", b: "2.9.99", comparison: 1, valid: true},
+		{name: "older major", a: "1.99.99", b: "2.0.0", comparison: -1, valid: true},
+		{name: "missing component", a: "2.3", b: "2.3.0", valid: false},
+		{name: "prerelease", a: "2.3.42-rc.1", b: "2.3.41", valid: false},
+		{name: "leading zero", a: "2.03.42", b: "2.3.41", valid: false},
+		{name: "non numeric", a: "latest", b: "2.3.41", valid: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			comparison, valid := compareReleaseVersions(tc.a, tc.b)
+			if comparison != tc.comparison || valid != tc.valid {
+				t.Fatalf("compareReleaseVersions(%q, %q) = (%d, %t), want (%d, %t)", tc.a, tc.b, comparison, valid, tc.comparison, tc.valid)
+			}
+		})
+	}
+}
+
+func TestReleaseUpdateRequired(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		current, target string
+		update          bool
+		errorText       string
+	}{
+		{name: "newer release", current: "2.3.41", target: "2.3.42", update: true},
+		{name: "same release", current: "2.3.42", target: "2.3.42"},
+		{name: "older release", current: "2.3.42", target: "2.3.41", errorText: "refusing to downgrade"},
+		{name: "invalid release", current: "2.3.42", target: "latest", errorText: "unexpected release version"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			update, err := releaseUpdateRequired(tc.current, tc.target)
+			if update != tc.update {
+				t.Fatalf("releaseUpdateRequired(%q, %q) update = %t, want %t", tc.current, tc.target, update, tc.update)
+			}
+			if tc.errorText == "" && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if tc.errorText != "" && (err == nil || !strings.Contains(err.Error(), tc.errorText)) {
+				t.Fatalf("error = %v, want text %q", err, tc.errorText)
+			}
+		})
+	}
+}
+
 func TestFindAEOCopiesPreservesPathOrder(t *testing.T) {
 	root := t.TempDir()
 	first := filepath.Join(root, "first")

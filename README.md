@@ -35,7 +35,7 @@ aeo update
 ## 60-second tour
 
 ```bash
-aeo auth login                   # browser-based OAuth → API key in ~/.config/aeo/
+aeo auth login                   # browser OAuth → auto-refreshing session in ~/.config/aeo/
 aeo domain list                  # pick a domain
 aeo domain switch <id>
 
@@ -77,8 +77,8 @@ _Full report: https://www.aeolo.io/report/.../visibility_
 | **Content lifecycle** | `aeo content list / get / write / jobs / update / preview / deploy / redeploy / import` |
 | **Strategy** | `aeo strategy` · `aeo strategy update` |
 | **Prompts** | `aeo prompts list / add / update / delete` |
-| **Channels** | `aeo channel add / connect / disconnect` (Shopify, LinkedIn, Threads, Reddit) |
-| **Channel posts** | `aeo post list / import / approve / publish` |
+| **Channels** | `aeo channel add / update / connect / disconnect` · `channels indexing` |
+| **Channel posts** | `aeo post list / get / delete` · `post import` for Reddit drafts; new Threads/LinkedIn drafts are retired |
 | **Analysis** | `aeo reference analyze` · `aeo video analyze` |
 | **Metrics** | `aeo metrics overview / article <id> / traffic` |
 | **Drive integration** | `aeo drive list / read <fileId>` (read-only Google Drive) |
@@ -101,9 +101,11 @@ Run `aeo --help` for the complete reference, or `aeo <command> --help` for detai
 
 The agent picks the right `aeo` commands, parses results, and chains them into multi-step workflows. Same pattern works in Cursor, Codex CLI, and any agent that can call shell commands — `aeo` outputs clean Markdown / JSON specifically so it can be consumed by an LLM downstream.
 
+Threads/LinkedIn draft creation and short-form video generation were retired on 2026-07-27. Use blog articles for new output. Reference/video analysis and existing-post reads, cleanup, approval, and explicit publishing remain available; Reddit draft import remains supported.
+
 ## How auth works
 
-`aeo auth login` opens a browser device-flow against [Aeolo](https://www.aeolo.io). On success, an API key is written to `~/.config/aeo/config.json` and used as a Bearer token on all subsequent calls. No telemetry, no background processes — every command is a single HTTPS request to the Aeolo API.
+`aeo auth login` opens a browser device-flow against [Aeolo](https://www.aeolo.io). On success, a short-lived OAuth access token and rotating refresh token are saved in `~/.config/aeo/config.json`. The CLI refreshes the session when needed and uses the access token as a Bearer token. `AEOLO_API_KEY` remains available for API-key authentication; older servers may return a static key. No telemetry or background processes; authentication, refresh, and polling commands can make multiple HTTPS requests.
 
 To use a non-default API base (self-hosting, staging):
 
@@ -128,8 +130,8 @@ Tags must be created **inside the submodule** (not the monorepo root):
 
 ```bash
 cd packages/cli
-git tag -a v1.X.Y -m "description"
-git push origin v1.X.Y
+git tag -a vX.Y.Z -m "description"
+git push origin vX.Y.Z
 ```
 
 This triggers GitHub Actions, which:
