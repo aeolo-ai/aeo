@@ -667,7 +667,7 @@ func checkLatestVersion() {
 		return
 	}
 	latest := strings.TrimPrefix(release.TagName, "v")
-	if latest != "" && latest != version {
+	if comparison, ok := compareReleaseVersions(latest, version); ok && comparison > 0 {
 		fmt.Fprintf(os.Stderr, "\nUpdate available: %s → %s\n", version, latest)
 		fmt.Fprintf(os.Stderr, "  aeo update\n")
 	}
@@ -3359,6 +3359,59 @@ func latestReleaseVersion() (string, error) {
 	return latest, nil
 }
 
+// compareReleaseVersions compares stable three-part release versions. It
+// returns -1 when a < b, 0 when equal and 1 when a > b. The boolean is false
+// for anything outside the release tag contract.
+func compareReleaseVersions(a, b string) (int, bool) {
+	parse := func(value string) ([3]uint64, bool) {
+		var parsed [3]uint64
+		parts := strings.Split(value, ".")
+		if len(parts) != len(parsed) {
+			return parsed, false
+		}
+		for i, part := range parts {
+			if part == "" || len(part) > 1 && part[0] == '0' {
+				return parsed, false
+			}
+			n, err := strconv.ParseUint(part, 10, 64)
+			if err != nil {
+				return parsed, false
+			}
+			parsed[i] = n
+		}
+		return parsed, true
+	}
+
+	aa, ok := parse(a)
+	if !ok {
+		return 0, false
+	}
+	bb, ok := parse(b)
+	if !ok {
+		return 0, false
+	}
+	for i := range aa {
+		if aa[i] < bb[i] {
+			return -1, true
+		}
+		if aa[i] > bb[i] {
+			return 1, true
+		}
+	}
+	return 0, true
+}
+
+func releaseUpdateRequired(current, target string) (bool, error) {
+	comparison, valid := compareReleaseVersions(target, current)
+	if !valid {
+		return false, fmt.Errorf("unexpected release version %q", target)
+	}
+	if comparison < 0 {
+		return false, fmt.Errorf("refusing to downgrade aeo %s to %s", current, target)
+	}
+	return comparison > 0, nil
+}
+
 func runUpdateCommand(cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -3476,6 +3529,15 @@ func selfUpdate() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
 		os.Exit(1)
+	}
+	updateRequired, err := releaseUpdateRequired(version, targetVersion)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed: %s\n", err)
+		os.Exit(1)
+	}
+	if !updateRequired {
+		fmt.Printf("✓ Already on the latest version: aeo %s\n", version)
+		return
 	}
 
 	fmt.Printf("Target version: %s\n", targetVersion)

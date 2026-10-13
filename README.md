@@ -130,8 +130,8 @@ Tags must be created **inside the submodule** (not the monorepo root):
 
 ```bash
 cd packages/cli
-git tag -a v1.X.Y -m "description"
-git push origin v1.X.Y
+git tag -a vX.Y.Z -m "description"
+git push origin vX.Y.Z
 ```
 
 This triggers GitHub Actions, which:
