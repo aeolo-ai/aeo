@@ -72,7 +72,7 @@ aeo image generate \
 | `--style-ref url,url` | Lend **look only**. Outranks the stored board for this generation. Max 8. |
 | `--ref url,url` | Role-free attachments, directed by your prompt alone. Max 4. |
 | `--sweep N` | 1–8 candidates. Renders are a physical dice roll (a product can come out floating); N candidates then a pick is the operating shape, not a luxury. 5 credits each. |
-| `--model` | `nano-banana-pro` (default) or `gpt-image-2`. |
+| `--model` | `nano-banana-2-1` (default), `nano-banana-pro`, or `gpt-image-2`. 2.1 is the default since 2026-10-13: same request shape as Pro, matched or beat it on product fidelity in a four-case bench, at a quarter of the provider cost. |
 | `--aspect` / `--resolution` | Default `16:9`. Vertical surfaces want `4:5` **natively** — do not crop a 16:9 master, a crop is not a vertical composition. |
 
 Reference URLs for `--subject-ref` / `--style-ref` / `--ref` come from `aeo image gallery` (past outputs and uploads) or any public URL.

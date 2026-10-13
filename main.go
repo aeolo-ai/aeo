@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.39"
+var version = "2.3.41"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -1206,7 +1206,7 @@ Notes:
                               feature|ambient, --subject-ref url,url (reproduce exactly),
                               --style-ref url,url (look only), --ref url,url (role-free),
                               --brand-style (brand mood board; read it with 'aeo strategy visual')
-                    Optional: --model nano-banana-pro|gpt-image-2 (default nano-banana-pro),
+                    Optional: --model nano-banana-2-1|nano-banana-pro|gpt-image-2 (default nano-banana-2-1),
                               --sweep N (1-8 candidates — sweep, then curate by eye),
                               --aspect (default 16:9), --resolution
                     Async — returns job IDs; poll with 'aeo image poll'
@@ -2950,7 +2950,7 @@ func main() {
 			// when given). Everywhere else it is still the whole instruction.
 			recommend := findFlag(args, "--recommend", "--recommend-from")
 			if prompt == "" && recommend == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> | --recommend <contentId>\n              [--product <id,id>] [--subject-policy feature|ambient]\n              [--subject-ref url,url] [--style-ref url,url] [--ref url,url] [--brand-style]\n              [--model nano-banana-pro|gpt-image-2] [--sweep N] [--aspect 16:9] [--resolution 1024]")
+				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> | --recommend <contentId>\n              [--product <id,id>] [--subject-policy feature|ambient]\n              [--subject-ref url,url] [--style-ref url,url] [--ref url,url] [--brand-style]\n              [--model nano-banana-2-1|nano-banana-pro|gpt-image-2] [--sweep N] [--aspect 16:9] [--resolution 1024]")
 				os.Exit(1)
 			}
 			body := map[string]any{"prompt": prompt}
@@ -2960,7 +2960,7 @@ func main() {
 			if v := findFlag(args, "--model"); v != "" {
 				body["model"] = v
 			} else {
-				body["model"] = "nano-banana-pro"
+				body["model"] = "nano-banana-2-1"
 			}
 			if v := findFlag(args, "--sweep", "--count"); v != "" {
 				var n int
