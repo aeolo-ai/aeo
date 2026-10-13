@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.41"
+var version = "2.3.42"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -684,6 +684,39 @@ func buildJSON(fields map[string]string) []byte {
 	return data
 }
 
+// The command router owns writing options. Only prompt files are local: replace
+// their path with the contents without dropping any current or future flags.
+func contentGenerateArgs(args []string) ([]string, error) {
+	prompt := findFlag(args, "--prompt")
+	path := findFlag(args, "--prompt-file")
+	if path != "" {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("reading prompt file: %w", err)
+		}
+		prompt = string(raw)
+	}
+	prompt = strings.TrimSpace(prompt)
+	if prompt == "" {
+		return nil, fmt.Errorf("--prompt or --prompt-file is required")
+	}
+	if path == "" {
+		return args, nil
+	}
+	result := make([]string, 0, len(args)+2)
+	for i := 0; i < len(args); i++ {
+		name, _, inline := strings.Cut(args[i], "=")
+		if name == "--prompt" || name == "--prompt-file" {
+			if !inline && i+1 < len(args) {
+				i++
+			}
+			continue
+		}
+		result = append(result, args[i])
+	}
+	return append(result, "--prompt", prompt), nil
+}
+
 // Folder paths are resolved server-side against the selected tenant/channel.
 func applyWritingDestination(body map[string]any, args []string) {
 	if v := findFlag(args, "--target-channel", "--channel"); v != "" {
@@ -890,11 +923,11 @@ COMMANDS:
   measure       overview | content <id> | traffic [--days 30|60|90|180|365] | visibility | report --command <cmd>
   metrics       overview | article <id> | traffic [--days 30|60|90|180|365]
   publish       preview <id> | deploy <id> | redeploy <id>
-  post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
+  post          analyze --url <url> | list | get <id> | import (Reddit) | approve <id> | publish <existing-id>
   reference     analyze --url <url> --media <type> | style --url <url>
   video         analyze --url <url> [--media instagram_reels|tiktok_reels]
   drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
-  products      List products in the catalog
+  products      list | discover | rescan
   product       list | add (--pdp <url>)
   image         search <query> | swap (...) | generate (--prompt <text>) | poll <jobId...> | upload
   billing       subscription | credits | ledger
@@ -952,7 +985,7 @@ var subUsage = map[string]string{
 
   list              List connected channels
   add               Add a channel (--url required, --type, --label)
-  update <id>       Update a channel (--url, --type, --label)
+  update <id>       Update a channel (--url, --type, --label, --publish-target)
   delete <id>       Delete a non-primary channel
   connect <id>      Generate OAuth URL to connect a social channel
   disconnect <id>   Disconnect OAuth integration from a channel
@@ -1026,7 +1059,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Default is the whole body; read a block when you need one part.
   review <id>       Load review workspace (article + brand + audit context)
   import            Import an agent-written draft article
-                    Required: --title, --body (or --body-file)
+                    Required: --title, --content (alias --body; or --body-file)
                     Optional: --type, --keywords (comma-separated), --language, --rationale,
                               --meta-description, --sources (JSON array)
   generate          Explicit-only Aeolo server-side generation job (costs 5 credits)
@@ -1037,6 +1070,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                               Omitted: the sole publish surface is adopted; none = refused)
                     --folder /ingredients or --folder-id <id> (managed sites; default when omitted)
                     Discover choices: aeo site folders list
+                    Overrides: --hero true|false, --hero-source gallery|generate,
+                               --hero-sweep 1-4, --article-length,
+                               --locale-fanout true|false, --locales ko,ja
+                    Omitted overrides inherit the destination's automation schedule.
   jobs              List active writing jobs
                     Optional: --all
   update <id>       Update content item
@@ -1161,19 +1198,14 @@ Notes:
                     Required: --url
                     Optional: --media instagram_reels|tiktok_reels, --mime-type
 
-  generate          Generate short-form video(s) for Reels/TikTok from a prompt
-                    (uses production credits; async — returns job IDs)
-                    Required: --prompt
-                    Optional: --model seedance-2-fast|seedance-2|kling-3|grok-video,
-                              --sweep N (1-8 candidate variations), --aspect (default 9:16),
-                              --duration, --ref url1,url2, --audio, --wait (poll until done)
+  generate          Retired 2026-07-27; returns 410. Write a blog article instead.
 
-  poll              Check status + result URLs of video generation jobs
+  poll              Read status + result URLs of previously queued video jobs
                     Usage: aeo video poll <jobId> [jobId...]
 `,
-	"products": `aeo products
+	"products": `aeo products [list | discover | rescan]
 
-  List domain products with IDs (catalog source for 'aeo image swap').
+  list              List domain products with IDs (catalog source for 'aeo image swap').
   # from the command registry — generated, do not edit by hand
   discover          Crawl the domain sitemap for candidate PDP URLs to add (read-only; flags URLs already in the catalog)
   rescan            Re-scrape every product PDP (up to 30) to backfill/refresh media, title, image, price
@@ -1224,13 +1256,13 @@ Notes:
                     Required: --url
                     Optional: --provider blog|threads|tiktok|instagram, --mode owned|reference, --limit
   get <id>          Get a channel post by ID
-  import            Import a channel post draft
+  import            Import a Reddit draft; new Threads/LinkedIn drafts are retired (410)
                     Required: --platform, --body (or --posts JSON array)
                     Optional: --title, --post-type, --target, --content-id, --channel-id
   preview <id>      Generate preview link
   delete <id>       Delete a channel post
   approve <id>      Approve a draft post for publishing
-  publish <id>      Publish an approved post to its platform
+  publish <id>      Publish an existing approved Threads/LinkedIn post on explicit request
 `,
 	"auth": `aeo auth <verb>
 
@@ -1866,12 +1898,8 @@ func main() {
 				"label": findFlag(args, "--label"),
 			}), domainID)
 		case "update":
-			requireArg(args, 2, "aeo channel update <id> [--url ...] [--type ...] [--label ...]")
-			run("/channels/"+args[2], "PATCH", buildJSON(map[string]string{
-				"url":   findFlag(args, "--url"),
-				"type":  findFlag(args, "--type"),
-				"label": findFlag(args, "--label"),
-			}), domainID)
+			requireArg(args, 2, "aeo channel update <id> [--url ...] [--type ...] [--label ...] [--publish-target ...]")
+			proxyCommand(args, domainID)
 		case "delete":
 			requireArg(args, 2, "aeo channel delete <id>")
 			run("/channels/"+args[2], "DELETE", nil, domainID)
@@ -2008,36 +2036,12 @@ func main() {
 		case "feed":
 			run("/content/feed", "GET", nil, domainID)
 		case "generate", "write":
-			prompt := findFlag(args, "--prompt")
-			if v := findFlag(args, "--prompt-file"); v != "" {
-				raw, err := os.ReadFile(v)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error reading prompt file: %s\n", err)
-					os.Exit(1)
-				}
-				prompt = string(raw)
-			}
-			prompt = strings.TrimSpace(prompt)
-			if prompt == "" {
-				fmt.Fprintln(os.Stderr, "Error: --prompt or --prompt-file is required")
+			proxyArgs, err := contentGenerateArgs(args)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error:", err)
 				os.Exit(1)
 			}
-			body := map[string]any{"prompt": prompt}
-			if v := findFlag(args, "--media"); v != "" {
-				body["media"] = v
-			}
-			if v := findFlag(args, "--language"); v != "" {
-				body["language"] = v
-			}
-			if v := findFlag(args, "--channel-voice-reference"); v != "" {
-				body["channelVoiceReference"] = v
-			}
-			// Writing requires a destination (AEO-531). v2.3.18 documented this
-			// flag but never sent it — the server adopts a sole publish surface
-			// and refuses an ambiguous one, so forward the choice.
-			applyWritingDestination(body, args)
-			b, _ := json.Marshal(body)
-			run("/content/writing-jobs", "POST", b, domainID)
+			proxyCommand(proxyArgs, domainID)
 		case "jobs":
 			path := "/content/writing-jobs"
 			all := false
@@ -2155,7 +2159,7 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Error: --title is required.\nUsage: aeo content import --title \"...\" --body \"...\" [--type blog] [--keywords \"k1,k2\"]\n")
 				os.Exit(1)
 			}
-			bodyContent := findFlag(args, "--body")
+			bodyContent := findFlag(args, "--content", "--body")
 			if v := findFlag(args, "--body-file"); v != "" {
 				raw, err := os.ReadFile(v)
 				if err != nil {
@@ -2165,7 +2169,7 @@ func main() {
 				bodyContent = string(raw)
 			}
 			if bodyContent == "" {
-				fmt.Fprintf(os.Stderr, "Error: --body or --body-file is required.\n")
+				fmt.Fprintf(os.Stderr, "Error: --content, --body or --body-file is required.\n")
 				os.Exit(1)
 			}
 			importBody := map[string]any{
@@ -2831,7 +2835,15 @@ func main() {
 
 	// ── products / product (catalog used by image swap) ──
 	case "products":
-		run("/products", "GET", nil, domainID)
+		if wantsHelp(args) {
+			printSubUsage("products")
+			return
+		}
+		if len(args) < 2 || strings.HasPrefix(args[1], "-") || args[1] == "list" {
+			run("/products", "GET", nil, domainID)
+		} else {
+			proxyCommand(args, domainID)
+		}
 
 	case "product":
 		if len(args) < 2 || wantsHelp(args) {
@@ -3031,7 +3043,15 @@ func main() {
 	case "audit-report":
 		run("/audit-report", "GET", nil, domainID)
 	case "channels":
-		run("/channels", "GET", nil, domainID)
+		if wantsHelp(args) {
+			printSubUsage("channel")
+			return
+		}
+		if len(args) < 2 || strings.HasPrefix(args[1], "-") || args[1] == "list" {
+			run("/channels", "GET", nil, domainID)
+		} else {
+			proxyCommand(args, domainID)
+		}
 	case "channel-connect":
 		if len(args) < 2 {
 			fmt.Fprintln(os.Stderr, "Usage: aeo channel connect <id>")
