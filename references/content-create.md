@@ -188,7 +188,6 @@ Search for topic-relevant material in this order:
 1. **Google Drive**: `aeo drive list` → scan folders mentioned in data_sources config → `aeo drive read <id>` for matches
 2. **Custom URLs**: If data_sources lists specific URLs, read/browse them
 3. **Brand context**: `aeo agent context` → extract relevant claims and proof points
-4. **Existing content**: `aeo content list --status=published` → check for related articles (avoid overlap, identify cross-link targets)
 
 Extract 1st-party facts: product test results (who, how many, conditions), customer testimonials, internal data.
 
@@ -345,7 +344,7 @@ Write the article using [writing-policy.md](writing-policy.md) and the approved 
 
 ### Step 4.5 — Review the draft
 
-Use [content-review.md](content-review.md) with the saved or draft version actually being reviewed. Fix factual or explicit request defects within the authorized task; keep editing suggestions and planning overlap separate. A single unsupported material claim can need correction, while several optional style suggestions do not make the facts false. Do not invent experiences, outside experts or weaknesses to satisfy a checklist. Self-review is not independent approval.
+Use [content-review.md](content-review.md) with the saved or draft version actually being reviewed. Fix factual or explicit request defects within the authorized task; keep editing suggestions separate from factual defects. A single unsupported material claim can need correction, while several optional style suggestions do not make the facts false. Do not invent experiences, outside experts or weaknesses to satisfy a checklist. Self-review is not independent approval.
 
 ### Step 5 — Save draft
 

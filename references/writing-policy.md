@@ -23,7 +23,7 @@ Source-to-claim match and Quote traceability are required before writing. A conn
 
 ## originality
 
-Compare the proposed question and substantive answer with supplied existing articles, drafts and editions. A related title alone does not establish that the commissioned question is fully answered. Inspect relevant answers and identify a substantive distinction, supported new evidence or useful decision aid within the fixed question and approved product/market scope before drafting. A new title or language is not a new reader need. Distinguish an edition from a competing original, and shared canonical facts from repeated argument. Existing articles are comparison and linking context, not independent evidence for their claims; verify factual claims against original sources. Never overwrite an existing article in this new-article job or invent novelty. If no honest distinct answer remains after checking, report the concrete overlap or evidence blocker internally; there is no implicit refresh tool or permission to change subjects. Missing inventory is not proof of no overlap. Use only verified published URLs for internal links.
+Write the commissioned article from the supplied inputs and original sources. Do not invent novelty or overwrite another article in a new-article job. Only use verified published URLs when links are supplied. An explicitly assigned edition or update may use its designated source article.
 
 ## house style
 
