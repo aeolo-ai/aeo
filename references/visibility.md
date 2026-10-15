@@ -4,7 +4,7 @@
 
 ## /aeo visibility check — Trigger a credit-metered visibility check
 
-Run a fresh check against tracked prompts using real-time NER. This reserves production credits before work starts: 2 credits per prompt x target market x engine x repeat. Scheduled subscription-funded checks have no additional credit charge.
+Run a fresh check against tracked prompts using real-time NER. This reserves production credits before work starts: 2 credits × prompt × target market × engine. Scheduled subscription-funded checks have no additional credit charge.
 
 ### Step 1 — Trigger
 
@@ -17,10 +17,12 @@ Optional:
 ```bash
 aeo visibility check run --engines=chatgpt,gemini --limit=10
 aeo visibility check run --prompt-ids=id1,id2 --engines=chatgpt
+aeo visibility check run --location JP          # one market for this run only
 ```
 
 **Flags:**
-- `--engines <list>` — comma-separated. Supported set: `chatgpt,gemini,perplexity,google-ai-mode,google-aio,amazon`. Default (when the flag is omitted) is `chatgpt,gemini,perplexity`. `amazon` (Amazon Rufus, GA as of 2026-07-01) is opt-in — pass it explicitly; it costs more credits per query than the ChatGPT/Gemini/Perplexity engines. `grok` is currently **disabled** — never pass it.
+- `--engines <list>` — comma-separated. All plans: `chatgpt`, `gemini`, `perplexity`, `google-ai-mode`, `google-aio`. Max+: `naver`. Custom only: `amazon`, `deepseek`, `claude`. An engine outside the owner's plan is refused with the list that is available. If omitted, the terminal binary sends `chatgpt,gemini,perplexity`, except when other flags such as `--location` forward the call to the server, which (like chat/MCP) defaults to ChatGPT only. Pass `--engines` explicitly to be sure. `grok` is not supported.
+- `--location <code>` — measure one market for this run only (overrides the standing target markets; the cost counts one market). Codes: see [brand.md](brand.md).
 - `--limit <n>` — cap the number of prompts checked
 - `--prompt-ids <id,id>` — check only specific prompts
 

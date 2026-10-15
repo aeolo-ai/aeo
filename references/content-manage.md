@@ -13,7 +13,15 @@ The rationale is stored in `content_history.rationale` and helps prioritize cont
 
 ---
 
-> The full `aeo content` verb set is `list | feed | get <id> | review <id> | import | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>`. This file covers list/feed/get/update/preview/deploy/redeploy; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
+> The full `aeo content` verb set is `list | feed | get <id> | review <id> | import | generate | jobs | update <id> | slug <id> <new-slug> | thumbnail <id> | preview <id> | deploy <id> | redeploy <id> | unpublish <id> | editions <id> | delete <id> | job cancel <jobId>`. This file covers list/feed/get/update/slug/preview/deploy/redeploy plus the short entries below; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
+>
+> Short entries (all writes; confirm first):
+> - `content slug <id> <new-slug>`: changes a live URL (see below). Show old and new address first.
+> - `content thumbnail <id> --url <image_url>`: pins an external thumbnail after validating image size.
+> - `content unpublish <id>`: removes a deployed article from its platform (auto-detected; `--target` to force) and resets it to draft. Live-site write.
+> - `content editions <id> --language <locale>`: writes one locale edition (production credits). Pass any family member; the canonical is resolved. Refused when that edition exists or is being written.
+> - `content delete <id>`: soft-delete (restorable). Deployed copies stay live, so `unpublish` first when the user wants them gone.
+> - `content job cancel <jobId>`: deletes a finished writing job and its events. Refused while pending/running.
 
 ## /aeo content list — List content items
 
@@ -99,8 +107,8 @@ All flags are optional — send only what you want to change.
 | Field | CLI Flag | Type | Notes |
 |-------|----------|------|-------|
 | `title` | `--title` | string | Article title |
-| `meta_description` | `--meta-description` | string (max 320) | SEO meta description |
-| `status` | `--status` | `draft` \| `review` \| `published` \| `archived` | Workflow status |
+| `meta_description` | `--meta-description` | string (max 320) | SEO meta description. Around 160 is only a display advisory |
+| `status` | `--status` | `draft` \| `review` \| `approved` \| `archived` | Workflow status. `published` is refused (set by deploy); deploy needs `approved` |
 | `deploy_status` | `--deploy-status` | string | Deployment status |
 | `target_keywords` | `--keywords` | string[] | Comma-separated: `"seo,geo,brand"` |
 | body | `--body` / `--body-file` | string / file path | Full body replacement (`--body` is the legacy `--content` alias) |
@@ -193,11 +201,11 @@ How the destination is decided: a named `channel_id` decides it from that channe
 Both apply to **every** target, and both refuse before anything is written.
 
 1. **Approved status** — Shopify requires status exactly `approved`; the other targets accept `approved` or `published`. Otherwise: "Only approved articles can be deployed." Fix with `aeo content update <id> --status approved`.
-2. **SERP metadata** — the title must be non-empty and ≤ 60 chars. A supplied meta description supports up to 500 chars; missing metadata is permitted. Around 160 chars is only a display advisory. Failures return `INVALID_TITLE_LENGTH` / `INVALID_META_DESCRIPTION` as a `**Deploy blocked — …**` message, which the connector API answers with **HTTP 422 `DEPLOY_BLOCKED`**. Fix with `aeo content update <id> --title "…"` / `--meta-description "…"`, then retry deploy.
+2. **SERP metadata** — the title must be non-empty. A title over 60 chars or a long meta description is advice, not a block. A meta description written through the CLI/connector is capped at 320 chars (`content update`/`content import` reject longer); missing metadata is permitted. Around 160 chars is only a display advisory. Blocking failures return `INVALID_TITLE_LENGTH` / `INVALID_META_DESCRIPTION`. Fix with `aeo content update <id> --title "…"` / `--meta-description "…"`, then retry deploy.
 
 Response: `{ "success": true, "data": { "shopifyArticleId": "...", "blogId": "...", "url": "..." } }`
 
-After success, show the published URL. If deploy fails because the target's channel is not connected, direct the user to Aeolo dashboard → Owned Media.
+After success, show the published URL. If deploy fails because the target's channel is not connected, direct the user to Aeolo dashboard → Sites (`/channels`).
 
 **Post-deploy hint**: After a successful deploy, suggest GSC indexing:
 > "배포 완료! 빠른 색인을 위해 `/aeo gsc index`로 GSC 색인 요청도 진행할까요? (브라우저 자동화 필요)"

@@ -41,11 +41,12 @@ This is the default external-agent writing path. Draft the article locally in th
 
 Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job.
 
-> **Destination note:** `content import` binds no channel, so an imported draft
-> must be deployed with an explicit destination (`content deploy <id> --channel
-> <id>` or `--target`). Know where the article will be published BEFORE you
-> draft it — the destination decides wording and locales, and there is no API
-> to retro-assign a channel afterwards.
+> **Destination note:** pass the destination on import: `--target-channel <id>`
+> (ids from `aeo channels list`), plus `--folder /path` or `--folder-id <id>` on
+> managed sites. Know where the article will be published BEFORE you draft it;
+> the destination decides wording and locales. Before go-live you can
+> re-address it with `aeo content update <id> --target-channel <id>`; once the
+> article is live that is refused (`DESTINATION_LOCKED`).
 
 ---
 
@@ -106,8 +107,8 @@ Ask the user (or infer from context):
 - **Topic** (required)
 - **Article type** — choose from format matrix below; `blog` is default
 - **Target keywords** (required, 1–20)
-- **Language** — `en` (default) | `ko` | `ja` | `zh` | `ar`
-- **Word count** — default about 1,500 words unless the user supplies a different target
+- **Language** — `en` (default) | `ko` | `ja` | `zh-Hans` | `zh-Hant` | `es` | `id` | `vi` | `th` | `de` | `fr` | `hi` | `ar` | `it` | `nl` | `pl` | `ru`
+- **Length**: follow an explicit request where supported; otherwise supported depth decides (no fixed word count)
 
 If brand context isn't loaded yet, fetch it first (`/aeo agent context`) — brand context shapes the entire article.
 
@@ -302,7 +303,7 @@ Collect `{ name, url, description }` for each source — these become inline cit
 #### 3.5 — Research validation gate
 
 Before proceeding to Step 4:
-- [ ] Authority sources ≥ 3 (1st-party + external combined)
+- [ ] Sources meet [writing-policy.md](writing-policy.md). Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
 - [ ] 1st-party material ≥ 1 (if available for this topic)
 - [ ] Every claim has a prepared citation
 - [ ] Competitor facts verified (for comparison/ranked_list types)
@@ -322,13 +323,13 @@ Write the article using [writing-policy.md](writing-policy.md) and the approved 
   - Open in the approved channel voice and answer the reader promptly; no compulsory summary block
   - Do not use the same text for Title and H1
   - Do not repeat the H1 text in the intro
-- **Title length ≤ 60 chars (HARD RULE — deploy gate enforces this)**:
+- **Title length ≤ 60 chars (HARD RULE — import enforces this)**:
   - This is Aeolo's current title validation constraint, not a guarantee of search display or performance.
-  - The deploy step rejects with HTTP 422 / `INVALID_TITLE_LENGTH` if `title.length > 60`, on every target — agent must shorten and retry.
+  - `content import` rejects with `INVALID_TITLE_LENGTH` if `title.length > 60`; shorten and retry. At deploy an over-long title is only advice.
   - Good: `"Best No-White-Cast SPF Sticks for Sports (2026)"` (47 chars)
   - Bad: `"What's the Best Sunscreen for NYC Half Marathon Runners in 2026? Race-Morning Picks That Won't Sting, Slip, or Leave a White Cast"` (133 chars — drop everything after the question mark)
 - **Search description** — Author it separately from the fuller opening answer. Lead with the answer and preserve the article's distinctive scope. Comparisons need the set/count and criteria; routines need roles, order and conditions; explainers need the defining distinction and how to check it. Never replace useful detail with a generic brand routine or boilerplate cautions.
-  - Omitted metadata is permitted. Nonempty metadata supports up to 500 characters, matching Aeolo's storage contract. Around 160 characters is a display advisory, not a search-engine limit or a quality score. Do not mechanically shorten an accurate, useful explanation.
+  - Omitted metadata is permitted. Through the CLI/connector a nonempty description is capped at 320 characters (import/update reject longer). Around 160 characters is a display advisory, not a search-engine limit or a quality score. Do not mechanically shorten an accurate, useful explanation.
   - Google may choose a query-dependent snippet from the body or the description. Automatic and authored descriptions can both be useful. Do not claim a guaranteed CTR increase, ranking gain, or AI citation preference from the field or its length.
   - Keep comparison counts, verified price context, distinctions and product roles when they materially answer the question. Reverify changing prices before using them; do not restore unsupported safety claims to add detail.
 - **Existing review pass** — Within the usual review, check the answer and description against body, tables and FAQ for lost scope or contradictory claims. Apply concrete corrections or acknowledge a clean draft. Do not add a review/ack loop after every edit or a separate summary report.
@@ -400,12 +401,15 @@ Flags:
 | `--keywords` | comma-separated | — | — |
 | `--language` | enum | — | `en` |
 | `--rationale` | string | — | — |
-| `--meta-description` | string, up to 500 chars | Optional; preserve answer and article scope | — |
+| `--meta-description` | string, up to 320 chars | Optional; preserve answer and article scope | — |
 | `--sources` | JSON array `[{"name":"...","url":"..."}]` | — | — |
+| `--target-channel` | channel id (from `aeo channels list`) | | |
+| `--folder` | managed-site folder path (`/guide`) | | channel default |
+| `--folder-id` | managed-site folder id (not with `--folder`) | | channel default |
 
-> **Deploy gate**: an omitted meta description is permitted. `/aeo content deploy` rejects an invalid title or a supplied description longer than 500 characters. The 160-character display advisory is not a publishing failure. Drafts may still need factual and editorial review even when length validation passes.
+> **Validation**: an omitted meta description is permitted. Import rejects a title over 60 characters or a description over 320. `/aeo content deploy` blocks only an empty title. The 160-character display advisory is not a publishing failure. Drafts may still need factual and editorial review even when length validation passes.
 
-5. On success: "Imported → View in Aeolo dashboard → Content Queue"
+5. On success: "Imported → View in Aeolo dashboard → Content (`/contents/blog`)"
 
 ---
 
@@ -438,7 +442,7 @@ Represent the publisher honestly. A first-party product explanation can stand al
 Generate the following metadata upon article completion (used in the import payload):
 
 - `title` — SEO-optimized long version (question-based, keyword-rich). **Must differ from H1** (see Step 4 HARD RULE)
-- `metaDescription` — Independently authored answer and article-specific scope, up to 500 characters; 160 is a display advisory
+- `metaDescription` — Independently authored answer and article-specific scope, up to 320 characters; 160 is a display advisory
 - `targetKeywords` — 1–20
 - `articleType` — Based on the format matrix
 - `estimatedRefreshDate` — An editorial review date based on the subject's expected change rate, not a promised citation lifespan

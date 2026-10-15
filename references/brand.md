@@ -34,7 +34,7 @@ Accepted fields:
 | `value_proposition` | string (max 2000) | Core positioning statement |
 | `key_features` | string[] (max 20) | Feature list for brand mentions |
 | `primary_language` | ISO 639-1 | e.g. `"en"`, `"ko"`, `"ja"` |
-| `target_region` | `--region` | Measured market: `KR`, `US`, `JP`, `TW`, `HK`, `CN`. Rejected if outside that list |
+| `target_region` | `--region` | Measured market, one of: `KR` `US` `JP` `TW` `HK` `CN` `GB` `ES` `MX` `ID` `VN` `TH` `DE` `FR` `IN` `SA` `AE` `CA` `AU` `IT` `NL` `PL` `RU`. Rejected if outside that list |
 | `brand_context` | string (max 50000) | Free-form brand positioning and durable notes (see template below) |
 | `description` | `--description` | Snapshot one-line description (Structured Snapshot → Description). `--value-proposition` also sets it when `--description` is absent |
 | voice | `--voice-json` | Brand Voice section: `{"tone":"...","voice":[...],"do":[...],"avoid":[...]}`, max 6 per list |
@@ -52,8 +52,7 @@ aeo domain brand update --region=KR
 ("Set the domain target region before creating prompts"). `--region` is the
 only way to clear that block from the CLI/agent surface — `domain rescan` does
 **not** set it, and onboarding only fills it when the crawled site states a
-market it recognizes (KR/JP/US), so TW/HK/CN brands and market-silent sites are
-born blocked.
+market it recognizes, so market-silent sites are born blocked.
 
 The value is handed to the measurement exit, so a wrong code does not error —
 it measures the wrong market. Confirm the market with the user before writing,
@@ -63,7 +62,7 @@ Market) first.
 `aeo diagnose visibility run --location <code>` overrides the region for a
 single run without changing the stored value.
 
-> Canonical form is `aeo domain brand update` (matches `aeo domain` help). Bare `aeo brand update` routes only on the **dashboard-chat / MCP agent surface** (the connector registry normalizes it to `domain brand update`); the raw `aeo` terminal binary does not accept it, so always use `aeo domain brand update` in shell examples.
+> Canonical form is `aeo domain brand update` (matches `aeo domain` help); the legacy `aeo brand update` also works. Prefer the canonical form in examples.
 
 Partial update — unset fields are preserved.
 
@@ -123,7 +122,7 @@ aeo prompts list
 aeo prompts list --status tracked
 ```
 
-> Use the explicit `list` verb. Bare `aeo prompts` prints sub-help in the terminal binary (it only lists via the agent surface), so `aeo prompts list` is the form that works everywhere.
+> Bare `aeo prompts` also lists, but the explicit `list` verb is clearest.
 
 Response: `text/markdown` — table grouped by stage (foundational → comparison → use-case → implementation), showing language, query form, prompt text, visibility score, and last checked date.
 
@@ -192,7 +191,7 @@ Accepted flags (binary `aeo prompts add`):
 | `--prompt` | string | ✅ unless `--prompts-json` | — | `"best project management tools"` |
 | `--prompts-json` | JSON array of objects or strings, max 30 | ✅ unless `--prompt` | — | `'[{"prompt":"...","stage":"comparison"}]'` |
 | `--stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `comparison` |
-| `--language` | `en` \| `ko` \| `ja` \| `zh` \| `ar` | — | `en` | `zh` |
+| `--language` | offered content locale: `en` `ko` `ja` `zh-Hans` `zh-Hant` `es` `id` `vi` `th` `de` `fr` `hi` `ar` `it` `nl` `pl` `ru` | | `en` | `zh-Hans` |
 | `--query-form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `long-tail` |
 | `--segment` | comma-separated tags | — | — | `foo,bar` |
 

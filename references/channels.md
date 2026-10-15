@@ -19,10 +19,10 @@ Add a new channel to the current domain. Type is auto-detected from the URL if
 `--type` is omitted.
 
 ```bash
-aeo channel add --url https://www.threads.net/@mybrand --type threads --label "Threads Main"
+aeo channel add --url https://blog.mybrand.com --type wordpress --label "Brand Blog"
 ```
 
-Types: `shopify`, `vercel`, `linkedin`, `threads`, `reddit`, `instagram`, `x`, `website`, `custom`
+Publish destinations: `wordpress`, `shopify`, `cafe24`, `pangolingo`, `custom`. `website` adds the brand's site as a crawlable reference (not a publish destination). `managed` sites are created by Aeolo, not here. Social types (`threads`, `linkedin`, `reddit`, `instagram`, `x`) receive nothing; the article lane to them is retired.
 
 **`--type custom` — connect the customer's own site as a Content Feed pull-channel.**
 Use this when they publish on a site we don't push to (their own blog, a static or
@@ -42,12 +42,14 @@ widget defeats GEO. See also `aeo content feed` for the raw feed URLs + JSON Fee
 
 ## /aeo channel update
 
-Update an existing channel's URL, type, or label. Also sets publish behavior:
-`--auto-publish true|false` and `--publish-target <id>` (shopify blog / wordpress
-category / cafe24 board, picked by the channel's platform).
+Update an existing channel's URL, type, or label, and `--publish-target <id>`
+(shopify blog / wordpress category / cafe24 board, picked by the channel's
+platform). `--auto-publish` is retired and errors: whether runs publish without
+review is set per schedule (`aeo automation schedule set --track content
+--autonomy auto|draft`).
 
 ```bash
-aeo channel update <channel-id> --label "New Label" --type linkedin
+aeo channel update <channel-id> --label "New Label"
 ```
 
 ## /aeo channel indexing
@@ -69,8 +71,9 @@ aeo channel delete <channel-id>
 
 ## /aeo channel connect
 
-Generate an OAuth URL and open the browser for social-platform authorization
-(threads, linkedin, reddit).
+Legacy: social OAuth only (threads, linkedin, reddit). Social channels receive
+no articles, so this is not part of setting up a publish destination. Generates
+an OAuth URL and opens the browser.
 
 ```bash
 aeo channel connect <channel-id>
@@ -101,7 +104,7 @@ and its page-describing head tags replaced by `<!--aeolo:head-->`. The capture
 makes exactly one judgement — which box is the content — and can get it wrong:
 longweekendhaus.com's footer grid was picked, so every article rendered on the
 footer's dark gradient. These commands let you see where the slot sits, move it,
-and step back. The dashboard's **Code** view (Channels → Site provided by Aeolo)
+and step back. The dashboard's **Code** view (Sites, `/channels`)
 is the same page with the same history.
 
 ```bash

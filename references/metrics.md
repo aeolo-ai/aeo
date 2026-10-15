@@ -2,11 +2,11 @@
 
 Track deployed article performance and site-level search traffic via Google Analytics (GA4) and Google Search Console (GSC).
 
-> **Canonical noun is `measure`; `metrics` is an accepted alias.** Verb mapping: `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The examples below use the `metrics` alias for brevity, but `measure` is the canonical form. The `measure` noun additionally carries two verbs with no `metrics` alias: `measure visibility` and `measure report` (see the bottom of this file).
+> **Canonical noun is `measure`; `metrics` is an accepted alias.** Verb mapping: `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The examples below use the `metrics` alias for brevity, but `measure` is the canonical form. The `measure` noun additionally carries `measure visibility` (no `metrics` alias). Failure diagnostics are `aeo diag report` (see the bottom of this file).
 
 ## Prerequisites
 
-- Domain must have Google Analytics and/or Search Console connected (Dashboard → Settings → Integrations)
+- Domain must have Google Analytics and/or Search Console connected and a property/site selected (connect in Traffic, `/traffic-analysis`, or `/connect/google?domain=<id>`; select with `aeo integrations google set`, see [setup.md](setup.md))
 - Articles must be deployed (`deploy_status = 'deployed'`) with a `published_url`
 
 ## Commands
@@ -87,13 +87,13 @@ aeo measure visibility [-d <domainId>]
 
 Shows the last visibility snapshot — the same data as `aeo visibility show`. Exists only under the `measure` noun (there is no `metrics visibility` alias).
 
-### `aeo measure report --command <cmd>`
+### `aeo diag report --command <cmd>`
 
 ```bash
-aeo measure report --command "<cmd>" [--status-code <code>] [--response-body <text>] [--context "<one sentence>"]
+aeo diag report --command "<cmd>" [--status-code <code>] [--response-body <text>] [--context "<one sentence>"]
 ```
 
-Submit command-execution diagnostics when a command fails. Required flag: `--command`. Optional: `--status-code`, `--response-body`, `--context`. Exists only under the `measure` noun (there is no `metrics report` alias). This is the same surface as the top-level `aeo report`.
+Submit command-execution diagnostics when a command fails. Required flag: `--command`. Optional: `--status-code`, `--response-body`, `--context`. Legacy spellings `aeo report` and `aeo measure report` reach the same command. Not the same as `report snapshot`, which creates a shareable report link.
 
 ## Connector API
 

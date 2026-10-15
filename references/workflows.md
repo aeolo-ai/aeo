@@ -16,7 +16,7 @@ Run this once per brand. Your job is to get the brand from zero to fully operati
 aeo domain setup
 ```
 
-This returns a 5-item checklist. Read it and determine what's already done.
+This returns a 7-item checklist. Read it and determine what's already done.
 
 ### Step 2: Handle what you can directly
 
@@ -47,27 +47,26 @@ You cannot click OAuth buttons or access external admin panels. For these items,
 
 **Shopify** (Blog Channel):
 ```
-1. Go to your dashboard → Channels page
+1. Go to your dashboard → Sites (/channels)
 2. Add your Shopify store and complete the OAuth connection
 3. Select which blog to publish to
 ```
 
 **GA4 + GSC** (Analytics):
 ```
-Add this email as a Viewer:
-  geoclaw@tryaeolo.iam.gserviceaccount.com
-
-Where to add it:
-  GA4: Admin → Property → Property Access Management → Add user
-  GSC: Settings → Users and permissions → Add user
+1. Connect Google in the dashboard: Traffic (/traffic-analysis)
+   or /connect/google?domain=<domain id>
+2. Then I select the property and site:
+   aeo integrations google set --ga4-property <id> --gsc-site <url>
 ```
+Verify with `aeo integrations google status` (`ready` = selected). See [setup.md](setup.md).
 
 **Google Drive** (Data Source):
 ```
 Share your brand content folder with this email (Viewer access):
   geoclaw@tryaeolo.iam.gserviceaccount.com
 
-Then paste the folder URL in the dashboard, or tell me the URL and I'll verify it.
+Then paste the folder URL in Writing settings (/contents/writing-settings), or tell me the URL and I'll verify it.
 ```
 
 After each item, run `aeo domain setup` to confirm completion.
@@ -78,7 +77,7 @@ After each item, run `aeo domain setup` to confirm completion.
 aeo domain setup
 ```
 
-All 5 items must show ✅ before starting automation loops.
+All 7 items must show ✅ before starting automation loops.
 
 If the user hasn't completed manual steps after your initial guidance, send one reminder. Don't nag — they'll get to it when they get to it.
 
@@ -86,7 +85,7 @@ If the user hasn't completed manual steps after your initial guidance, send one 
 
 - Brand profile has `brand_context` with at least: overview, audience, and 3+ key narratives
 - Strategy manifest has: positioning, content balance percentages, and at least 5 topics in priority queue
-- All 5 setup items complete
+- All 7 setup items complete
 
 ### Step 5: Bootstrap visibility data
 
@@ -178,10 +177,8 @@ Before writing, read:
 - Task-specific reference analysis or sample copy only when the user explicitly selected/provided it
 
 Default external-agent path: write locally, then import with `aeo content import`. Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job. Key requirements:
-- BLUF (Bottom Line Up Front) in first 2-3 sentences
-- Inline citations with `[Source](URL)` — minimum 3 external sources
-- Brand density 15-25% (mentions in lists and recommendations, not solo promo)
-- FAQ section at end (3-5 questions)
+- Apply [writing-policy.md](writing-policy.md). Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
+- Answer the question early; FAQ only for supported adjacent questions
 - Article type matches the gap pattern (see geo-strategy.md for the mapping)
 
 After writing, import as draft:
@@ -193,12 +190,11 @@ aeo content import --title "..." --body "..." --type blog --keywords "k1,k2,k3"
 
 Check the article against this list. If any item fails, fix it before deploying.
 
-- [ ] BLUF present in first 2-3 sentences?
-- [ ] At least 3 inline citations with real URLs?
-- [ ] FAQ section with 3+ questions?
+- [ ] Answer delivered early?
+- [ ] Sources meet [writing-policy.md](writing-policy.md) (≥3 external URLs under the `standard` reference policy)?
 - [ ] Brand mentioned in context (not forced)?
 - [ ] No factual claims without source?
-- [ ] Word count appropriate for type? (ranked_list: 2000-3000, guide: 1500-2500, how_to: 1200-2000)
+- [ ] Length follows supported depth or an explicit request (no fixed word count)?
 
 ### Step 5: Deploy
 
@@ -273,7 +269,6 @@ Compare this week vs last week across three dimensions:
 - ChatGPT weak → need more structured, encyclopedic content (avg 2800 words)
 - Gemini weak → need better Schema markup (FAQ, HowTo, Article JSON-LD)
 - Perplexity weak → need more niche expertise content, recent dates
-- Grok weak → need X/Twitter presence, trend incorporation
 
 ### Step 3: Adjust strategy
 
@@ -307,7 +302,6 @@ Generate a concise weekly summary:
 
 ### Production
 - Articles published: N
-- Channel posts distributed: N across M platforms
 
 ### Visibility
 - Overall mention rate: X% (↑/↓ Y% vs last week)
@@ -333,16 +327,16 @@ The workflows above describe **what** to do. This section describes **when**.
 
 | Loop | Default | Cron expression | Prerequisite |
 |------|---------|-----------------|-------------|
-| Daily Content | weekdays 09:00 UTC | `0 9 * * 1-5` | Setup 5/5 ✅ |
-| Weekly Report | Monday 10:00 UTC | `0 10 * * 1` | Setup 5/5 ✅ |
-| Monthly Audit | 1st of month 10:00 UTC | `0 10 1 * *` | Setup 5/5 ✅ |
+| Daily Content | weekdays 09:00 UTC | `0 9 * * 1-5` | Setup 7/7 ✅ |
+| Weekly Report | Monday 10:00 UTC | `0 10 * * 1` | Setup 7/7 ✅ |
+| Monthly Audit | 1st of month 10:00 UTC | `0 10 1 * *` | Setup 7/7 ✅ |
 
 Register these using your runtime's scheduling mechanism. Cadence lives in the automation schedules / dispatcher — not in `strategy update`, which only sets the manifest. Each schedule invokes the corresponding workflow section above.
 
 ### Activation
 
 Before enabling any automated loop:
-1. `aeo domain setup` → all 5 items must be ✅
+1. `aeo domain setup` → all 7 items must be ✅
 2. `aeo strategy show` → a manifest must exist
 
 If prerequisites aren't met, skip the cycle and check again next trigger.
@@ -378,8 +372,8 @@ Things will break. Here's how to handle it:
 
 | Error | Response |
 |-------|----------|
-| API call fails | `aeo report` (auto-submit diagnostics) → retry once → skip if still failing |
-| Deploy fails | Check Shopify connection: `aeo domain setup` → if blog ⬜, guide reconnection |
+| API call fails | `aeo diag report` (auto-submit diagnostics) → retry once → skip if still failing |
+| Deploy fails | Check the channel connection: `aeo domain setup` → if "Somewhere to publish" ⬜, guide reconnection |
 | Visibility check timeout (>10min) | Skip this week, retry next cycle |
 | Content quality gate fails | Fix the specific issue and re-check — don't deploy subpar content |
 | Rate limit / 429 | Wait 60 seconds, retry. If persistent, reduce daily frequency |

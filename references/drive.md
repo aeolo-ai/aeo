@@ -14,7 +14,7 @@ You can browse and read files from a connected Google Drive folder.
 ## Prerequisites
 
 You must connect a Google Drive folder from the Dashboard:
-1. Dashboard → Integrations → Google Drive
+1. Dashboard → Writing settings (`/contents/writing-settings`) → Google Drive
 2. Invite the SA email (`geoclaw@tryaeolo.iam.gserviceaccount.com`) to the folder as a **Viewer**
 3. Enter the folder ID → Confirm connection
 

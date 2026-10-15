@@ -13,7 +13,7 @@ Built at onboarding time from two inputs, in this order:
 ## Commands
 
 ```
-aeo market-map [--market KR|US|JP|TW|HK|CN|GB|ES|MX]   # show (latest map when --market omitted)
+aeo market-map [--market <code>]   # show (latest map when --market omitted); codes: KR US JP TW HK CN GB ES MX ID VN TH DE FR IN SA AE CA AU IT NL PL RU
 aeo market-map run [--market US]                        # build/refresh — background job, ~2-3 min
 aeo market-map poll <jobId>                             # poll the build job
 aeo market-map populate [--topics "…"] [--prompts N]    # rail → Topics; prompts follow via a job

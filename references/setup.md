@@ -220,7 +220,8 @@ aeo integrations google set --ga4-property <id> --gsc-site <url>
 selected turns the status dots green while every read still returns nothing.
 
 The OAuth grant itself needs a browser. If `status` reports not connected, ask
-the user to connect Google in dashboard Settings; you cannot do it from here.
+the user to connect Google in the dashboard on Traffic (`/traffic-analysis`) or at
+`/connect/google?domain=<domain id>`; you cannot do it from here.
 
 ### 7. Somewhere to publish
 

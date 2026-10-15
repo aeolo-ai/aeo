@@ -4,11 +4,11 @@ Three output channels are sunset. **Do not offer them to the user, and do not ca
 their output commands.** Route every content request to a blog article
 (`content generate` or draft directly + `content import` → `publish deploy`).
 
-| Retired | Commands | Instead |
-|---------|----------|---------|
-| Card news | `carousel create`, `carousel update` | blog article |
-| Channel posts / Threads | `post write`, `post import`, `post preview`, `post approve`, `post publish` | blog article |
-| Shortform video output | `video generate`, `video poll` | blog article |
+| Surface | Retired (HTTP 410) | Existing rows only (do not use for new work) | Instead |
+|---------|--------------------|-----------------------------------------------|---------|
+| Card news | `carousel create` | `carousel update` | blog article |
+| Channel posts / Threads | `post import` (and the `post write` workflow) | `post preview`, `post approve`, `post publish` | blog article |
+| Shortform video output | `video generate` | none | blog article |
 
 The loop never closed for any of the three: Threads publishing was gated on a Meta
 app review that never landed, and reels drive Google SERP discovery but not chatbot
@@ -18,14 +18,16 @@ index → citation closes inside the product.
 > **Only output generation is retired — reference input is fully live.** Analyzing
 > someone else's Reel, TikTok, or post as *reference* to brief a blog article is
 > unaffected: `diagnose references analyze`, `diagnose video analyze`,
-> `reference style`, `channel voice`, and `post analyze` all stay. So do reads and
+> `video poll` (polls queued video analysis jobs), `reference style`,
+> `channel voice`, and `post analyze` all stay. So do reads and
 > cleanup on rows that already exist (`carousel list`/`get`/`delete`,
 > `post list`/`get`/`delete`).
 
 The retired writes are deliberately **absent from the skill's CUD confirmation
 list** — they are not "confirm first" commands, they are not-at-all commands. The
-surviving verbs that still mutate (`carousel delete`, `post delete`, `post analyze`)
-stay on that list and need explicit user confirmation as usual.
+surviving verbs that still mutate (`carousel update`/`delete`, `post preview`/
+`approve`/`publish`/`delete`, `post analyze`) need explicit user confirmation as
+usual, and only ever act on rows that already exist.
 
 ## Card news (carousel) — RETIRED
 
@@ -37,7 +39,7 @@ verbs stay so existing decks remain visible and removable.
 | `/aeo carousel list [--limit N]` | List carousel decks that already exist for the domain |
 | `/aeo carousel get <jobId>` | Get an existing deck (slides + caption) by job ID |
 | `/aeo carousel create [--topic "..."]` | **RETIRED** — returns 410. Write a blog article instead. |
-| `/aeo carousel update <jobId> --caption "..."` | **RETIRED** — do not edit card news captions |
+| `/aeo carousel update <jobId> --caption "..."` | Deprecated, still works on existing decks only. Do not offer it for new work |
 | `/aeo carousel delete <jobId>` | Soft-delete a deck (cancels active work; assets stay recoverable) |
 
 ## Channel posts (social distribution) — RETIRED (output only)
@@ -56,9 +58,9 @@ cleaning up rows that already exist.
 | `/aeo post analyze --url <URL>` | **LIVE** (reference input) — analyze one channel/reference URL for voice evidence (`--provider blog\|threads\|tiktok\|instagram`, `--mode owned\|reference`, `--limit`). Detail: [tov-extract.md](tov-extract.md) |
 | `post write` | **RETIRED** — draft a blog article instead |
 | `/aeo post import` | **RETIRED** — do not import new channel-post drafts |
-| `/aeo post preview <id>` | **RETIRED** — with the post pipeline |
-| `/aeo post approve <id>` | **RETIRED** — with the post pipeline |
-| `/aeo post publish <id>` | **RETIRED** — publishing to social platforms is closed |
+| `/aeo post preview <id>` | For existing posts only (Reels rows, Reddit drafts customers already have). Do not create new channel-post output |
+| `/aeo post approve <id>` | For existing posts only. Do not create new channel-post output |
+| `/aeo post publish <id>` | Deprecated, still works on an existing approved post. No new posts are created |
 | `/aeo post list` / `/aeo post get <id>` / `/aeo post delete <id>` | Read/cleanup on existing rows (`--platform`, `--status`, `--limit`, `--offset`). Detail: [channel-washing.md](channel-washing.md) |
 
 ## Shortform video output — RETIRED
@@ -70,4 +72,4 @@ every command that *reads* an external Reel/TikTok to brief an article stays liv
 | Command | What it does |
 |---------|-------------|
 | `/aeo video generate --prompt <text>` | **RETIRED 2026-07-27** — brief a blog article instead |
-| `/aeo video poll <jobId...>` | **RETIRED** — only reaches jobs created before the sunset |
+| `/aeo video poll <jobId...>` | **LIVE** (input): polls queued video analysis jobs; creates nothing |

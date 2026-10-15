@@ -40,6 +40,11 @@ WordPress, Shopify and managed proxy destinations use the same publication servi
 
 On a revision conflict, read the current page and review the changes before another publish attempt. On a timeout, inspect publication state before retrying so an unknown transport result does not become a duplicate operation. A failure retains its error and may retain an earlier published version; report those states separately. Do not use `pages trash` as an unpublish command.
 
+## Share a preview
+
+- `pages share <pageId> --channel-id <channelId>` creates or returns a read-only `preview_url` for the current page revision; anyone with the link can view it without login. Editors only. Does not publish.
+- `pages unshare <pageId> --channel-id <channelId>` revokes the link. `pages trash` also revokes it.
+
 ## DOM comments
 
 All commands require `--page-id <pageId>` and `--channel-id <channelId>`.
