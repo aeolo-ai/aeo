@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.42"
+var version = "2.3.43"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -515,6 +515,46 @@ func hasFlag(args []string, names ...string) bool {
 	return false
 }
 
+// carriesOnly reports whether every --flag in args is one a native REST body
+// carries. The registry advertises more flags than these hand-built bodies hold,
+// and a flag the body drops is a silent no-op: `visibility check run --location
+// JP` measured the brand's default market. A command with any other flag hands
+// its whole argv to the router, which reads every registry flag. The native path
+// stays for the flags it knows so its JSON output does not change under scripts.
+func carriesOnly(args []string, known ...string) bool {
+	allowed := map[string]bool{"--domain": true, "-d": true}
+	for _, name := range known {
+		allowed[name] = true
+	}
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "-") {
+			continue
+		}
+		name, _, _ := strings.Cut(arg, "=")
+		if !allowed[name] {
+			return false
+		}
+	}
+	return true
+}
+
+// withPromptText replaces --prompt / --prompt-file with --prompt <text>, for
+// argv that goes to the router: the server cannot read a local file.
+func withPromptText(args []string, prompt string) []string {
+	out := make([]string, 0, len(args)+2)
+	for i := 0; i < len(args); i++ {
+		name, _, inline := strings.Cut(args[i], "=")
+		if name == "--prompt" || name == "--prompt-file" {
+			if !inline {
+				i++ // skip the value
+			}
+			continue
+		}
+		out = append(out, args[i])
+	}
+	return append(out, "--prompt", prompt)
+}
+
 // videoGenerateWait kicks off a video generation sweep, then polls the
 // visual-generation status endpoint until every job reaches a terminal state
 // (or a 15-minute deadline), printing result URLs as they land.
@@ -916,7 +956,7 @@ var subUsage = map[string]string{
 
   whoami            Show current user (email, tier, trial days)
   subscription      Show current subscription, tier, and credit summary
-  credits           Show current credit balance
+  credits           Show the latest credit ledger entry (balance: account subscription)
   ledger            Show credit ledger entries
                     Flags: --days (default 30), --limit (default 50)
   # from the command registry — generated, do not edit by hand
@@ -935,7 +975,8 @@ var subUsage = map[string]string{
   brand update      Update brand profile and Brand Notes (--brand-context; warnings: --force --review-token)
                     Flags: --name, --industry, --category, --value-proposition, --brand-context,
                            --key-features a,b, --language, --markets ko-KR,en-US,
-                           --region KR|US|JP|TW|HK|CN (measured market; required before 'prompts add'),
+                           --region KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU
+                           (measured market; required before 'prompts add'),
                            --family-json '[...]', --description "...",
                            --voice-json '{"tone":"...","voice":[...],"do":[...],"avoid":[...]}',
                            --competitors-json '[{"name":"...","domain":"..."}]',
@@ -967,13 +1008,15 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 `,
 	"visibility": `aeo visibility <verb>
 
-  summary           Exact mentions and samples (--market KR|US, --engine, --check-id, --format json)
+  summary           Exact mentions and samples (--market KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU,
+                    --engine, --check-id, --format json)
 
   show              Show last visibility snapshot
   history           Score over time, one row per check (--limit, default 10)
   check run         Trigger a credit-metered visibility check
                     Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
-                           also available: google-ai-mode, google-aio, amazon),
+                           also available: google-ai-mode, google-aio, amazon, naver, deepseek),
+                           --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
                            --limit, --prompt-ids
   check poll <id>   Poll check status
 `,
@@ -988,7 +1031,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   visibility        Show last visibility snapshot
   visibility run    Trigger a credit-metered visibility check
                     Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
-                           also available: google-ai-mode, google-aio, amazon),
+                           also available: google-ai-mode, google-aio, amazon, naver, deepseek),
+                           --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
                            --limit, --prompt-ids
   visibility poll <jobId>
                     Poll check status
@@ -1132,7 +1176,7 @@ Notes:
 	"billing": `aeo billing <verb>
 
   subscription      Show current subscription, tier, and credit summary
-  credits           Show current credit balance
+  credits           Show the latest credit ledger entry (balance: account subscription)
   ledger            Show credit ledger entries
                     Flags: --days (default 30), --limit (default 50)
 `,
@@ -1206,7 +1250,7 @@ Notes:
                               feature|ambient, --subject-ref url,url (reproduce exactly),
                               --style-ref url,url (look only), --ref url,url (role-free),
                               --brand-style (brand mood board; read it with 'aeo strategy visual')
-                    Optional: --model nano-banana-2-1|nano-banana-pro|gpt-image-2 (default nano-banana-2-1),
+                    Optional: --model nano-banana-2-1|nano-banana-pro|gpt-image-2|gpt-image-2-5-flare (default nano-banana-2-1),
                               --sweep N (1-8 candidates — sweep, then curate by eye),
                               --aspect (default 16:9), --resolution
                     Async — returns job IDs; poll with 'aeo image poll'
@@ -1368,6 +1412,12 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 }
 
 func runVisibilityCheck(args []string, domainID string) {
+	if !carriesOnly(args, "--engines", "--limit", "--prompt-ids", "--prompts") {
+		// --location and later registry flags. The full argv, so `diagnose
+		// visibility run` and `visibility check run` reach the router as typed.
+		proxyCommand(os.Args[1:], domainID)
+		return
+	}
 	engines := findFlag(args, "--engines")
 	if engines == "" {
 		engines = "chatgpt,gemini,perplexity"
@@ -1576,6 +1626,12 @@ func truncateForPrompt(value string) string {
 func runReportCommand(args []string, domainID string) {
 	if wantsHelp(args) {
 		printSubUsage("report")
+		return
+	}
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		// `report snapshot` and any other verb belong to the router; only the
+		// flag-only form is the diagnostics log below.
+		proxyCommand(append([]string{"report"}, args...), domainID)
 		return
 	}
 	reportCmd := findFlag(args, "--command")
@@ -1855,6 +1911,10 @@ func main() {
 			}
 			run(path, "GET", nil, domainID)
 		case "add":
+			if !carriesOnly(args, "--url", "--type", "--label") {
+				proxyCommand(args, domainID)
+				return
+			}
 			url := findFlag(args, "--url")
 			if url == "" {
 				fmt.Fprintln(os.Stderr, "Error: --url is required.\nUsage: aeo channel add --url https://... [--type threads] [--label \"My Channel\"]")
@@ -1866,7 +1926,11 @@ func main() {
 				"label": findFlag(args, "--label"),
 			}), domainID)
 		case "update":
-			requireArg(args, 2, "aeo channel update <id> [--url ...] [--type ...] [--label ...]")
+			requireArg(args, 2, "aeo channel update <id> [--url ...] [--type ...] [--label ...] [--publish-target ...]")
+			if !carriesOnly(args, "--url", "--type", "--label") {
+				proxyCommand(args, domainID)
+				return
+			}
 			run("/channels/"+args[2], "PATCH", buildJSON(map[string]string{
 				"url":   findFlag(args, "--url"),
 				"type":  findFlag(args, "--type"),
@@ -1933,14 +1997,21 @@ func main() {
 				run("/data-sources", "GET", nil, domainID)
 			}
 		default:
-			fmt.Fprintln(os.Stderr, "Unknown config subcommand:", args[1])
-			os.Exit(1)
+			// glossary, reference-policy and anything the registry adds later.
+			// This branch used to exit "Unknown config subcommand" for commands
+			// the help text listed.
+			proxyCommand(args, domainID)
 		}
 
 	// ── strategy ──
 	case "strategy":
-		if len(args) < 2 || wantsHelp(args) {
+		if wantsHelp(args) {
 			printSubUsage("strategy")
+			return
+		}
+		if len(args) < 2 {
+			// The registry's `strategy` is the read, not a usage banner.
+			run("/strategy", "GET", nil, domainID)
 			return
 		}
 		switch args[1] {
@@ -2021,6 +2092,14 @@ func main() {
 			if prompt == "" {
 				fmt.Fprintln(os.Stderr, "Error: --prompt or --prompt-file is required")
 				os.Exit(1)
+			}
+			if !carriesOnly(args, "--prompt", "--prompt-file", "--media", "--language", "--channel-voice-reference",
+				"--target-channel", "--channel", "--folder", "--folder-id") {
+				// --hero*, --article-length, --locale-fanout, --locales: the router
+				// reads them, this REST body never did. The file is read here, so
+				// the router gets its text as --prompt.
+				proxyCommand(withPromptText(args, prompt), domainID)
+				return
 			}
 			body := map[string]any{"prompt": prompt}
 			if v := findFlag(args, "--media"); v != "" {
@@ -2219,11 +2298,15 @@ func main() {
 
 	// ── prompts ──
 	case "prompts":
-		if len(args) < 2 || wantsHelp(args) {
+		if wantsHelp(args) {
 			printSubUsage("prompts")
 			return
 		}
-		switch args[1] {
+		verb := "list" // the registry's bare `prompts` is the list
+		if len(args) >= 2 && !strings.HasPrefix(args[1], "-") {
+			verb = args[1]
+		}
+		switch verb {
 		case "list":
 			path, err := buildPromptsListPath(args)
 			if err != nil {
@@ -2278,6 +2361,10 @@ func main() {
 			run("/prompts", "POST", body, domainID)
 		case "update":
 			requireArg(args, 2, "aeo prompts update <id>")
+			if !carriesOnly(args, "--prompt", "--stage", "--query-form", "--status", "--segment") {
+				proxyCommand(args, domainID) // --regions and later registry flags
+				return
+			}
 			status := findFlag(args, "--status")
 			if status != "" && status != "tracked" && status != "untracked" {
 				fmt.Fprintln(os.Stderr, "Error: --status must be tracked or untracked")
@@ -2392,14 +2479,18 @@ func main() {
 			b, _ := json.Marshal(body)
 			run("/reference-analysis/jobs", "POST", b, domainID)
 		case "style":
-			refURL := findFlag(args, "--url")
-			if refURL == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo reference style --url <url> [--provider <provider>]")
-				os.Exit(1)
+			// --url is optional: without it the server reads the domain's own
+			// channel voice for --provider (blog by default), as the registry says.
+			qs := url.Values{}
+			if refURL := findFlag(args, "--url"); refURL != "" {
+				qs.Set("url", refURL)
 			}
-			path := "/reference-style?url=" + url.QueryEscape(refURL)
 			if provider := findFlag(args, "--provider"); provider != "" {
-				path += "&provider=" + url.QueryEscape(provider)
+				qs.Set("provider", provider)
+			}
+			path := "/reference-style"
+			if len(qs) > 0 {
+				path += "?" + qs.Encode()
 			}
 			run(path, "GET", nil, domainID)
 		case "poll":
@@ -2831,7 +2922,12 @@ func main() {
 
 	// ── products / product (catalog used by image swap) ──
 	case "products":
-		run("/products", "GET", nil, domainID)
+		if len(args) < 2 || args[1] == "list" || strings.HasPrefix(args[1], "-") {
+			run("/products", "GET", nil, domainID)
+			return
+		}
+		// discover, rescan: used to fall into the list GET above.
+		proxyCommand(args, domainID)
 
 	case "product":
 		if len(args) < 2 || wantsHelp(args) {
@@ -2950,7 +3046,7 @@ func main() {
 			// when given). Everywhere else it is still the whole instruction.
 			recommend := findFlag(args, "--recommend", "--recommend-from")
 			if prompt == "" && recommend == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> | --recommend <contentId>\n              [--product <id,id>] [--subject-policy feature|ambient]\n              [--subject-ref url,url] [--style-ref url,url] [--ref url,url] [--brand-style]\n              [--model nano-banana-2-1|nano-banana-pro|gpt-image-2] [--sweep N] [--aspect 16:9] [--resolution 1024]")
+				fmt.Fprintln(os.Stderr, "Usage: aeo image generate --prompt <text> | --recommend <contentId>\n              [--product <id,id>] [--subject-policy feature|ambient]\n              [--subject-ref url,url] [--style-ref url,url] [--ref url,url] [--brand-style]\n              [--model nano-banana-2-1|nano-banana-pro|gpt-image-2|gpt-image-2-5-flare] [--sweep N] [--aspect 16:9] [--resolution 1024]")
 				os.Exit(1)
 			}
 			body := map[string]any{"prompt": prompt}
@@ -3031,7 +3127,23 @@ func main() {
 	case "audit-report":
 		run("/audit-report", "GET", nil, domainID)
 	case "channels":
-		run("/channels", "GET", nil, domainID)
+		// The registry's canonical noun. Only the list is native here; every
+		// write used to run this list GET and print it as if it had succeeded.
+		if len(args) < 2 || args[1] == "list" || strings.HasPrefix(args[1], "-") {
+			run("/channels", "GET", nil, domainID)
+			return
+		}
+		if wantsHelp(args) {
+			printSubUsage("channel")
+			return
+		}
+		if args[1] == "connect" {
+			// Opens the browser for OAuth, which the router cannot do.
+			requireArg(args, 2, "aeo channels connect <id>")
+			connectChannel(args[2], domainID)
+			return
+		}
+		proxyCommand(args, domainID)
 	case "channel-connect":
 		if len(args) < 2 {
 			fmt.Fprintln(os.Stderr, "Usage: aeo channel connect <id>")
