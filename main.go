@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.43"
+var version = "2.3.44"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"

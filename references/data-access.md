@@ -89,6 +89,21 @@ every article containing 나온다 or 돌아온다 would be told to name a treat
 never mentioned. matchKeys are matched literally; renderings also match with a
 trailing parenthetical dropped.
 
+Optional `excludeKeys` names longer words that CONTAIN a key but are a
+different word; an occurrence inside one of them does not count. Korean keys
+are only guarded on the left, because particles attach on the right, so 눈가
+(eye area) also hits 눈가림 (blinding):
+
+```json
+{ "id": "eye-area",
+  "renderings": { "ko": ["눈가"], "zh-Hans": ["眼周"] },
+  "excludeKeys": { "ko": ["눈가림", "눈가리"] } }
+```
+
+Real mentions such as 눈가에 and 눈가처럼 still count. excludeKeys apply to
+both renderings and matchKeys, when choosing the terms a source uses and when
+checking an edition; they never change `avoid`.
+
 **If a term cannot be matched honestly in any form, leave it out.** A demand the
 article can never satisfy either corrupts the text or fails the job — worse than
 not checking. Symptom to listen for: "it keeps telling us to add a word we
