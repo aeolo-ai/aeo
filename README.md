@@ -32,6 +32,12 @@ To upgrade:
 aeo update
 ```
 
+After successful commands, aeo checks for new releases at most once every 24 hours
+and prints an update notice to stderr. Checks time out after 2 seconds and failures
+are silent. Set `AEO_NO_UPDATE_CHECK=1` to disable checks and notices.
+Updates are installed only when you run `aeo update`.
+
+
 ## 60-second tour
 
 ```bash

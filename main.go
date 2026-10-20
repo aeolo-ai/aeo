@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.45"
+var version = "2.3.46"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -686,31 +686,6 @@ func editorPrompt(seed string) (string, error) {
 		out = append(out, line)
 	}
 	return strings.TrimSpace(strings.Join(out, "\n")), nil
-}
-
-// checkLatestVersion queries GitHub for the latest release and prints an
-// upgrade notice if the current binary is outdated. Fails silently.
-func checkLatestVersion() {
-	client := &http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Get("https://api.github.com/repos/aeolo-ai/aeo/releases/latest")
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return
-	}
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return
-	}
-	latest := strings.TrimPrefix(release.TagName, "v")
-	if latest != "" && latest != version {
-		fmt.Fprintf(os.Stderr, "\nUpdate available: %s → %s\n", version, latest)
-		fmt.Fprintf(os.Stderr, "  aeo update\n")
-	}
 }
 
 func buildJSON(fields map[string]string) []byte {
@@ -1814,13 +1789,15 @@ func main() {
 
 	domainID := findFlag(args, "-d", "--domain")
 	cmd := args[0]
+	if cmd != "update" && cmd != "help" && cmd != "--help" && !wantsHelp(args) {
+		defer checkLatestVersion()
+	}
 
 	switch cmd {
 	case "pages", "page":
 		runPagesCommand(args, domainID)
 	case "--version", "-V":
 		fmt.Printf("aeo %s (native)\n", version)
-		checkLatestVersion()
 	case "--help", "help":
 		fmt.Print(usage)
 
