@@ -1,6 +1,6 @@
 # Content Creation
 
-Read [writing-policy.md](writing-policy.md) before drafting. It is the shared source for evidence, format, research, originality and house style. This document owns the interactive workflow and output contract, not a second quality checklist.
+This document owns the interactive workflow and output contract, not a second quality checklist.
 
 Default draft directory: `.aeo/` in the working directory. Add to `.gitignore`.
 File naming: `{AEOLO_DOMAIN_ID}_{slug}.md`. See Step 5 for path resolution.
@@ -93,7 +93,7 @@ For Content Refresh, read the existing article via `/aeo content get <id>` and c
 - [ ] Target engine(s)
 ```
 
-If Brand Ammunition is empty, refer to **[brand-ammunition.md](brand-ammunition.md)**:
+If Brand Ammunition is empty:
 - Brand Claims → Extract from `/aeo agent context` + session documents, then convert to Ammunition format
 - Competitor Context → Web research or request from user
 
@@ -303,7 +303,7 @@ Collect `{ name, url, description }` for each source — these become inline cit
 #### 3.5 — Research validation gate
 
 Before proceeding to Step 4:
-- [ ] Sources meet [writing-policy.md](writing-policy.md). Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
+- [ ] Every claim traces to a source you actually read. Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
 - [ ] 1st-party material ≥ 1 (if available for this topic)
 - [ ] Every claim has a prepared citation
 - [ ] Competitor facts verified (for comparison/ranked_list types)
@@ -312,7 +312,7 @@ Before proceeding to Step 4:
 
 ### Step 4 — Write
 
-Write the article using [writing-policy.md](writing-policy.md) and the approved channel requirements. Output rules:
+Write the article to the approved channel requirements. Output rules:
 - **Apply the Tone Profile extracted in Step 1.5 consistently across all sections** — including heading naming, sentence length, and tone
 - **Title ≠ H1 (HARD RULE)** — These two titles must always be separate:
   - **Title** (`/aeo content import` title parameter): SEO-optimized long version (question-based, keyword-rich)
@@ -417,13 +417,13 @@ Flags:
 
 ### Format Selection Matrix
 
-Choose a form that resolves the reader's decision using available evidence. No default listicle, citation-rate quota or engine-specific word count is justified here. Use the decision table in [geo-strategy.md](geo-strategy.md#gap--content-decision-framework); supported depth determines length.
+Choose a form that resolves the reader's decision using available evidence. No default listicle, citation-rate quota or engine-specific word count is justified here. Supported depth determines length.
 
-When editing the inputs themselves, use [writing-inputs.md](writing-inputs.md). The rules below include Aeolo output conventions, not proven requirements for AI citation.
+The rules below include Aeolo output conventions, not proven requirements for AI citation.
 
 ### Shared writing criteria
 
-Read [writing-policy.md](writing-policy.md). Evidence, format, research, originality and house style are generated from the same policy used by the automatic writer; do not add local quotas or assume a structure guarantees AI citations.
+Do not add local quotas or assume a structure guarantees AI citations.
 
 ### Output conventions
 

@@ -1,6 +1,6 @@
 # Content Review
 
-Review an existing article using [writing-policy.md](writing-policy.md), the approved reader request, channel rules and actual source material. Keep factual findings, request compliance and editorial suggestions separate. A style preference or related topic is not a factual error.
+Review an existing article using the approved reader request, channel rules and actual source material. Keep factual findings, request compliance and editorial suggestions separate. A style preference or related topic is not a factual error.
 
 ## Answer and scope — within the existing review
 
@@ -11,7 +11,7 @@ Check the saved title, metadata and every body paragraph, list item, table and c
 ### Flow
 
 1. Read the actual saved article with `aeo content get <id>` and brand context with `aeo agent context`. Load the approved channel instructions, corrections and allowed sources through the available reference tools. A context summary or source listing is not the full source. Prefer the exact source text delivered during writing when it is available; identify any later evidence separately.
-2. Read [writing-policy.md](writing-policy.md). Apply the factual and request checks below. If required source material is inaccessible, report what is missing and which conclusions remain unverified. Do not silently substitute a smaller evidence packet.
+2. Apply the factual and request checks below. If required source material is inaccessible, report what is missing and which conclusions remain unverified. Do not silently substitute a smaller evidence packet.
 3. Return concise findings using the report below. Suggest targeted edits; review itself does not authorize editing, deleting, overwriting or publishing. Apply only changes already authorized by the user.
 
 ### Review Checklist

@@ -89,7 +89,7 @@ aeo strategy visual update \
 
 ## Manifest Template
 
-Use [writing-inputs.md](writing-inputs.md) for the boundary between facts, voice and strategy. Replace prompts below with decisions before saving; do not copy the brand introduction or accumulate a worklog.
+Replace prompts below with decisions before saving; do not copy the brand introduction or accumulate a worklog.
 
 ```markdown
 ## Reader Decision

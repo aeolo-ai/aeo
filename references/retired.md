@@ -61,7 +61,7 @@ cleaning up rows that already exist.
 | `/aeo post preview <id>` | For existing posts only (Reels rows, Reddit drafts customers already have). Do not create new channel-post output |
 | `/aeo post approve <id>` | For existing posts only. Do not create new channel-post output |
 | `/aeo post publish <id>` | Deprecated, still works on an existing approved post. No new posts are created |
-| `/aeo post list` / `/aeo post get <id>` / `/aeo post delete <id>` | Read/cleanup on existing rows (`--platform`, `--status`, `--limit`, `--offset`). Detail: [channel-washing.md](channel-washing.md) |
+| `/aeo post list` / `/aeo post get <id>` / `/aeo post delete <id>` | Read/cleanup on existing rows (`--platform`, `--status`, `--limit`, `--offset`) |
 
 ## Shortform video output — RETIRED
 

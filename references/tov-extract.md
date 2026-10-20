@@ -201,5 +201,4 @@ only durable, brand-wide rules into `brand_context` after explicit review.
 
 ---
 
-*For channel-specific writing rules, see [channel-washing.md](channel-washing.md).*
-*Post generation itself is retired (2026-07-27) — [post-create.md](post-create.md) is reference only. This analysis feeds blog-article briefs.*
+*Post generation is retired (2026-07-27). This analysis feeds blog-article briefs.*

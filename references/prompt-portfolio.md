@@ -72,7 +72,7 @@ Rules:
 For the proposed final set, check:
 
 - **Validity** — each Prompt is a real, non-leading, brand-answerable question with a
-  clear Topic fidelity. Reuse the judgment model in [prompt-audit.md](prompt-audit.md).
+  clear Topic fidelity.
 - **Duplication** — no two tracked Prompts are near-duplicates (same intent /
   paraphrase). Drop or merge before preview.
 - **Claim safety** — no Prompt asserts or presupposes a claim the brand can't support

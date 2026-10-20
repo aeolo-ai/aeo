@@ -172,14 +172,13 @@ This is the most important decision you make each day. Use this priority queue:
 
 Before writing, read:
 - [content-create.md](content-create.md) — writing guidelines and pre-flight checklist
-- [geo-strategy.md](geo-strategy.md) — GEO optimization principles
 - The brand's `brand_context` via `aeo agent context`
 - Task-specific reference analysis or sample copy only when the user explicitly selected/provided it
 
 Default external-agent path: write locally, then import with `aeo content import`. Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job. Key requirements:
-- Apply [writing-policy.md](writing-policy.md). Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
+- Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
 - Answer the question early; FAQ only for supported adjacent questions
-- Article type matches the gap pattern (see geo-strategy.md for the mapping)
+- Article type matches the reader's decision
 
 After writing, import as draft:
 ```bash
@@ -191,7 +190,7 @@ aeo content import --title "..." --body "..." --type blog --keywords "k1,k2,k3"
 Check the article against this list. If any item fails, fix it before deploying.
 
 - [ ] Answer delivered early?
-- [ ] Sources meet [writing-policy.md](writing-policy.md) (≥3 external URLs under the `standard` reference policy)?
+- [ ] Every claim traces to a source you read (≥3 external URLs under the `standard` reference policy)?
 - [ ] Brand mentioned in context (not forced)?
 - [ ] No factual claims without source?
 - [ ] Length follows supported depth or an explicit request (no fixed word count)?
@@ -208,7 +207,7 @@ Verify deployment succeeded. Note the published URL.
 
 **Skip this step.** Channel-post distribution (Threads, card news, shortform video) is retired —
 the loop never closed for those channels, and the blog article is now the whole deliverable. Do
-not draft, import, approve, or publish channel posts; see [post-create.md](post-create.md).
+not draft, import, approve, or publish channel posts.
 
 Instead, finish the cycle on the article itself: get it indexed — `aeo channel indexing <id> --enabled true`
 for IndexNow, or the GSC flow in [gsc-indexing.md](gsc-indexing.md) — then let the weekly loop

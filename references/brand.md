@@ -98,7 +98,7 @@ The keys in `--voice-json` match what `agent context` prints (Tone / Voice / Do
 
 ### brand_context template
 
-Use [writing-inputs.md](writing-inputs.md) for input ownership. Keep canonical identity in the brand profile, product/service details in the catalog and supporting documents, voice in voice settings, and priorities in strategy. `brand_context` holds durable supplemental facts and scoped corrections that those fields cannot represent.
+Keep canonical identity in the brand profile, product/service details in the catalog and supporting documents, voice in voice settings, and priorities in strategy. `brand_context` holds durable supplemental facts and scoped corrections that those fields cannot represent.
 
 ```markdown
 ## Supplemental brand facts
@@ -269,5 +269,4 @@ domain is persisted in `~/.config/aeo/config.json`.
 aeo domain audit
 ```
 
-Response: `text/markdown` — audit scores and recommendations. See
-[geo-strategy.md](geo-strategy.md) for how to interpret audit data.
+Response: `text/markdown` — audit scores and recommendations.

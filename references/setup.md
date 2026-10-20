@@ -176,11 +176,6 @@ The deeper lane is the market map (`aeo market-map run` → `populate`), which i
 grounded in market terrain rather than the brand snapshot. See
 [market-map.md](market-map.md).
 
-> `aeo topics candidates` is NOT `/aeo topics suggest`. The latter is an
-> agent-only workflow where you read live context and judge a 3–5 Topic
-> architecture ([topic-suggest.md](topic-suggest.md)). Same word, different
-> product.
-
 ### 4. Prompts
 
 ```bash
