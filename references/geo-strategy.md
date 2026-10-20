@@ -61,6 +61,21 @@ Use the customer's configured measurement scope and priorities. Compare only mea
 
 ---
 
+## What Aeolo's Own Measurements Show
+
+Observed on Aeolo customer data (2026-08 to 2026-10). These are measured patterns, not guarantees. When you explain why a material, a fact or a planning change helps AI search, say only what this section supports, tie it to the brand's own numbers (tracked questions, their mention rate, what a material covers), and say plainly when something is unknown.
+
+1. **AI engines never see the planning documents.** Brand Notes, Content Strategy, Source Guide and the status on each fact line (확인 / 공개 / 기록 / 충돌) are internal. They decide what the brand's articles may state as fact and how. Raising a line from 기록 to 확인 lets an article state it; it does not make any engine trust the brand more. Engines only see published pages.
+2. **Engines cite pages, and a brand's own official pages are often its most cited pages.** In one measured brand, ChatGPT cited the home, about and promotion pages far more than any article, while Google-family engines and DeepSeek picked up the articles. Read citation coverage per engine, never as one average. An official page that states a fact clearly is both a 공개 source for Brand Notes and a citation target, so keeping it accurate matters.
+3. **Effects travel through sources.** When the brand's content first appears among one engine's cited sources, the other engines' cited sources and mentions of the brand rise over the following weeks; mention changes without a source change were close to zero. A material helps when it becomes, or improves, a page engines can read. A fact that stays only in internal notes moves nothing by itself.
+4. **What did and did not predict citation.** The domain itself was the largest single factor. Within a domain, a higher brand mention rate on the target question before publishing, English, and the canonical original (rather than a locale edition) predicted earlier citation. Outbound link count, a first-party-only link policy, article length, number of targeted prompts and llms.txt did not.
+5. **Access is measured, not declared.** A robots.txt that allows everything can still sit behind a firewall that blocks citation crawlers (OAI-SearchBot, PerplexityBot, ClaudeBot) on article pages. GPTBot is a training crawler; reaching it proves nothing about citation.
+6. **Citation rarely turns into a visit.** AI referral visits from cited pages were a low single-digit percentage. Talk about mentions and citations as the outcome; do not promise traffic or sales from a planning change.
+
+How to use this in planning: when the user asks why a material or fact matters, answer with (a) which tracked questions it helps answer, (b) those questions' current mention rate, and (c) whether it would become or inform a published page. Do not claim any other effect.
+
+---
+
 ## Gap → Content Decision Framework
 
 > **Gaps are just one of many content triggers.** Client briefs, specific prompt targets, existing content refreshes (rewriting on the same topic), and other paths exist. Regardless of the path, all converge into the Pre-flight → Outline flow in `content-create.md`.

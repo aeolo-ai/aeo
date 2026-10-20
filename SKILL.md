@@ -2,12 +2,12 @@
 name: aeo
 description: |
   Aeolo is an organic content engine: turn deep brand understanding into marketing
-  content that compounds without ad spend. One supported output channel — blog articles
+  content that compounds without ad spend. One output channel — blog articles
   cited in AI search (GEO: ChatGPT, Perplexity, Gemini). Reels/TikToks and competitor
   posts stay in scope as reference input you analyze to brief those articles, never as
-  output. Start from the brand, then write, deploy, and measure. It loads real
-  Aeolo brand data and writes back changes (brand updates, article generation, Shopify
-  deployment) to run the full organic content cycle autonomously.
+  output. It loads real Aeolo brand data and writes back changes (brand updates,
+  article generation, Shopify deployment) to run the full organic content cycle
+  autonomously.
   Use whenever the user mentions brand understanding, organic content, content strategy,
   article writing or performance, AI-search visibility, audit scores, brand tone,
   short-form/Reel/TikTok analysis, content deployment, or GSC indexing. Triggers: /aeo,
@@ -108,7 +108,7 @@ Before editing brand documents, read [document-roles.md](references/document-rol
 
 When authoring or cleaning saved writing inputs, use [writing-inputs.md](references/writing-inputs.md) for ownership, scope and examples.
 
-Before writing or reviewing content, read [writing-policy.md](references/writing-policy.md), the shared authoring criteria generated from the runtime policy. For topic planning, also read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md). Writing, factual review, editorial suggestions and publishing decisions have separate roles; use [content-review.md](references/content-review.md) for that boundary.
+Before writing or reviewing content, read [writing-policy.md](references/writing-policy.md), the shared authoring criteria generated from the runtime policy. For topic planning, also read [geo-strategy.md](references/geo-strategy.md) and [strategy.md](references/strategy.md). Before explaining why a material, a fact or a planning change helps AI search, read geo-strategy.md and say only what it supports. Writing, factual review, editorial suggestions and publishing decisions have separate roles; use [content-review.md](references/content-review.md) for that boundary.
 
 ---
 
