@@ -200,7 +200,7 @@ How the destination is decided: a named `channel_id` decides it from that channe
 
 Both apply to **every** target, and both refuse before anything is written.
 
-1. **Approved status** — Shopify requires status exactly `approved`; the other targets accept `approved` or `published`. Otherwise: "Only approved articles can be deployed." Fix with `aeo content update <id> --status approved`.
+1. **Approved status** — Shopify requires status exactly `approved`; the other targets accept `approved` or `published`. Otherwise: "Only approved articles can be deployed." Run `aeo content approval <id>` to read the current fingerprint and blockers. After the user approves that exact version, run `aeo content approve <id> --fingerprint <fingerprint> --confirm` using the returned fingerprint. This records dashboard publication approval and applies the normal approved-state gates; it does not publish. Read approval back before retrying deploy.
 2. **SERP metadata** — the title must be non-empty. A title over 60 chars or a long meta description is advice, not a block. A meta description written through the CLI/connector is capped at 320 chars (`content update`/`content import` reject longer); missing metadata is permitted. Around 160 chars is only a display advisory. Blocking failures return `INVALID_TITLE_LENGTH` / `INVALID_META_DESCRIPTION`. Fix with `aeo content update <id> --title "…"` / `--meta-description "…"`, then retry deploy.
 
 Response: `{ "success": true, "data": { "shopifyArticleId": "...", "blogId": "...", "url": "..." } }`
