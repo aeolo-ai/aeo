@@ -2,6 +2,20 @@
 
 Review an existing article using the approved reader request, channel rules and actual source material. Keep factual findings, request compliance and editorial suggestions separate. A style preference or related topic is not a factual error.
 
+## Run an independent server review (staff only)
+
+`aeo content review <id>` reads the review workspace; it does not start a reviewer.
+To review an existing saved article without generating, rewriting or publishing it:
+
+```bash
+aeo content review-run <id> --key <uuid> --domain <domain-id>
+aeo content review-result <id> --job <job-id> --domain <domain-id>
+```
+
+Choose one UUID key per intended review. Reuse that exact key after a timeout or uncertain response; do not submit a new key to retry the same request. Execution returns `jobId` and queue state. Pass the returned `jobId` as `--job` to read that exact run; omit it to read the latest run. Inspect `latestReviewJob.editorialQuality` for that run, not an earlier article verdict. Result reads return `latestReviewJob`, the article's current `contentHash`, and the saved `editorialQuality`. A pending/failed job, missing result, or verdict whose `contentHash` differs from the current article is not a current passing review. Job completion alone is not a pass.
+
+These commands require staff identity and domain editing access; execution also requires a write-capable token. They reuse the internal review worker and reserve no customer credits. Review remains advisory and does not grant publication approval. After inspecting the current verdict and obtaining any required approval, use the existing `content deploy` or `content redeploy` command and verify the public page. This feature does not publish automatically or accept repair/model overrides.
+
 ## Answer and scope — within the existing review
 
 Check the saved title, metadata and every body paragraph, list item, table and caption. Compare the answer with the requested question and conditions. Do not review only quotations and numbers. Track unexamined units and missing inputs internally; missing evidence must not become a clean result.

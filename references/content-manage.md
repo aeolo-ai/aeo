@@ -13,7 +13,7 @@ The rationale is stored in `content_history.rationale` and helps prioritize cont
 
 ---
 
-> The full `aeo content` verb set is `list | feed | get <id> | review <id> | import | generate | jobs | update <id> | slug <id> <new-slug> | thumbnail <id> | preview <id> | deploy <id> | redeploy <id> | unpublish <id> | editions <id> | delete <id> | job cancel <jobId>`. This file covers list/feed/get/update/slug/preview/deploy/redeploy plus the short entries below; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
+> The full `aeo content` verb set is `list | feed | get <id> | review <id> | review-run <id> --key <uuid> | review-result <id> | import | generate | jobs | update <id> | slug <id> <new-slug> | thumbnail <id> | preview <id> | deploy <id> | redeploy <id> | unpublish <id> | editions <id> | delete <id> | job cancel <jobId>`. This file covers list/feed/get/update/slug/preview/deploy/redeploy plus the short entries below; `content generate`/`content jobs`/`content import` live in [content-create.md](content-create.md) and `content review` in [content-review.md](content-review.md).
 >
 > Short entries (all writes; confirm first):
 > - `content slug <id> <new-slug>`: changes a live URL (see below). Show old and new address first.
