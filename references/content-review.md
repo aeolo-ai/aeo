@@ -16,6 +16,22 @@ Choose one UUID key per intended review. Reuse that exact key after a timeout or
 
 These commands require staff identity and domain editing access; execution also requires a write-capable token. They reuse the internal review worker and reserve no customer credits. Review remains advisory and does not grant publication approval. After inspecting the current verdict and obtaining any required approval, use the existing `content deploy` or `content redeploy` command and verify the public page. This feature does not publish automatically or accept repair/model overrides.
 
+## Approve the reviewed version and publish
+
+After the user authorizes approval of the saved article, use the same version-bound approval journal as the dashboard:
+
+```bash
+aeo content approval <id> --domain <domain-id>
+aeo content approve <id> --fingerprint <fingerprint-from-approval> --confirm --domain <domain-id>
+aeo content deploy <id> --domain <domain-id>
+```
+
+`approval` is read-only and returns `fingerprint`, `approved`, actor/time `approvalEvents`, `approvalRequired`, `changesRequested`, and `blockingReason`. The publication fingerprint is 32 hex characters from the server; do not use the independent review's 64-character `contentHash` or manufacture a fingerprint.
+
+`approve` requires domain editing rights, a write-capable token and explicit user authorization. It records the current version and authenticated approver, moves a draft/review article to `approved` through the existing photo/revision/family checks, and independently reads the result. It never publishes. `CONTENT_CHANGED` requires rereading and reviewing the current article; never silently approve a new fingerprint. `APPROVAL_RECORDED_STATUS_PENDING` means the receipt was saved but a later status step failed: read `approval`, resolve the reported blocker and retry the same reviewed version. Repeated approval uses the existing receipt identity; published articles stay published.
+
+Unlike independent review execution, publication approval is available to authorized brand editors, not only staff. It does not substitute for a professional/legal approval required by the brand. Check `publicationAllowed`/`blockingReason`, then publish through the existing destination path and inspect the actual public URL. `content update --status approved` alone does not create this approval receipt.
+
 ## Answer and scope — within the existing review
 
 Check the saved title, metadata and every body paragraph, list item, table and caption. Compare the answer with the requested question and conditions. Do not review only quotations and numbers. Track unexamined units and missing inputs internally; missing evidence must not become a clean result.

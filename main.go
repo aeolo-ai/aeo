@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.47"
+var version = "2.3.48"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -898,7 +898,7 @@ COMMANDS:
   visibility    show | check run | check poll <jobId>
   audit         run | poll <jobId>
   strategy      show | update
-  content       list | get <id> | review <id> | review-run <id> --key UUID | review-result <id> [--job UUID] | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
+  content       list | get <id> | review <id> | review-run <id> --key UUID | review-result <id> [--job UUID] | approval <id> | approve <id> --fingerprint <hash> --confirm | generate | jobs | update <id> | preview <id> | deploy <id> | redeploy <id>
   prompts       list | generate | add | update <id> | delete <id>
   topics        list | create | update <id> | archive <id> | restore <id> | assign-prompts <id>
   segments      list
@@ -1055,6 +1055,10 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Required: --key <UUID> (stable idempotency key; reuse on retry)
   review-result <id>  Read quality review status and result (staff only)
                     Optional: --job <UUID> (exact job returned by review-run)
+  approval <id>     Read current publication approval, fingerprint and blockers
+  approve <id>      Record approval for the exact version and apply normal approval gates
+                    Required: --fingerprint <32 lowercase hex>, --confirm (bare flag)
+                    Uses the dashboard approval journal; does not publish.
   import            Import an agent-written draft article
                     Required: --title, --body (or --body-file)
                     Optional: --type, --keywords (comma-separated), --language, --rationale,
@@ -1785,7 +1789,7 @@ func runPublishCommand(args []string, domainID string) {
 }
 
 func main() {
-	args := os.Args[1:]
+	args := normalizeContentApprovalArgs(os.Args[1:])
 	if len(args) == 0 {
 		fmt.Print(usage)
 		return
@@ -2126,7 +2130,7 @@ func main() {
 		case "review":
 			requireArg(args, 2, "aeo content review <id>")
 			run("/content/"+args[2]+"/review", "GET", nil, domainID)
-		case "review-run", "review-result":
+		case "review-run", "review-result", "approval", "approve":
 			runContentReviewCommand(args, domainID)
 		case "update":
 			requireArg(args, 2, "aeo content update <id>")
