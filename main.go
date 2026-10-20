@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var version = "2.3.44"
+var version = "2.3.45"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
 const trafficRangeChoices = "30|60|90|180|365"
@@ -965,6 +965,13 @@ var subUsage = map[string]string{
 	"agent": `aeo agent <verb>
 
   context           Show default agent runtime context for the active domain
+  ask "<message>"   Ask the Aeolo agent for a judgment (next article, Topic architecture,
+                    Prompt audit, why visibility moved). Read-only. Paid plans (Starter+).
+                    Flags: --thread <id> (continue), --wait N (seconds per read, max 55),
+                           --no-follow (return the turnId instead of waiting)
+  approve "<approval>" --thread <id>
+                    Run the change the agent proposed in that thread, after the user approved it
+  result <turnId>   Read the answer of a turn that was still working
 `,
 	"domain": `aeo domain <verb>
 
@@ -1830,6 +1837,8 @@ func main() {
 		switch args[1] {
 		case "context":
 			run("/brand-profile", "GET", nil, domainID)
+		case "ask", "approve", "result":
+			runAgentConversation(args, domainID)
 		default:
 			// Unknown verb for a noun this binary knows. The command registry lives
 			// on the server and can grow without this table; hand it to the router
