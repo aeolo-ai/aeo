@@ -79,6 +79,27 @@ Requires Google Search Console connected.
 - **Top queries** show what people actually search to find the article — compare with `target_keywords`
 - **Site-level traffic** (`metrics traffic`) shows overall search presence — useful for spotting new keyword opportunities and tracking GEO impact across all pages
 
+### `aeo traffic <card>` — the Traffic screen, card by card
+
+Each read returns what one part of the dashboard's Traffic page shows, through the same loader and window. Window: `--days 30|60|90|180|365` (ends 3 days ago, like the screen's period picker) or `--start YYYY-MM-DD --end YYYY-MM-DD`. Add `--format json` for the full payload. No credits.
+
+| Screen | Command |
+|---|---|
+| Overview: GA4 users/sessions/page views, daily trend, channels, countries, AI-assistant sessions by engine + Search Console totals | `aeo traffic summary` |
+| Detail cards: sources, landing pages by source, top pages, countries, devices, funnel | `aeo traffic details` |
+| AI engine traffic: source → landing → next page, landing ownership | `aeo traffic journey [--view journey\|ownership] [--mode ai\|all]` |
+| Purchase/traffic events: summary, recent rows, breakdowns | `aeo traffic events [--kind purchase\|traffic] [--rows true] [--breakdown page\|country\|source\|device]` |
+| Custom tracked events | `aeo traffic tracked-events` |
+| Published page performance | `aeo traffic pages [--published-only true]` |
+| Store inflow from Aeolo content | `aeo traffic attribution [--detail campaign\|key-events\|purchase-trend\|conversions\|content-touches]` |
+| AI citations per published article | `aeo traffic citations [--days N]` |
+| Indexing tab | `aeo traffic indexing [--verdict <v>] [--q text]` |
+| GSC tab: AI Overview / AI Mode impressions | `aeo traffic ai-overview` |
+| GSC and GA4 tabs: explorer rankings | `aeo traffic explore --kind gsc\|ga4 [--dimension query\|page\|source\|device] [--country XX]` |
+| Managed site / hosted blog / customer-site tracker | `aeo traffic site` |
+
+GA4 detail, journey and event reports are built by a background job, as on the screen. When one is not built yet the read says so and returns the job id; read again in a minute rather than retrying in a loop. `diagnose traffic` remains the Search Console query table with `--query` search.
+
 ### `aeo measure visibility`
 
 ```bash

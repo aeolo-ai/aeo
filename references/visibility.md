@@ -86,4 +86,22 @@ Use `aeo visibility summary --market KR --format json` and `aeo visibility summa
 
 The read returns `state`, `checkId`, `checkedAt`, `scope`, `totalResults`, `mentionedResults`, `mentionRate`, `promptsChecked`, `byEngine`, `byMarket`, and `availableMarkets`. These are stored answer-sample counts, not the composite visibility score. Repeated samples remain separate. Actual `tested_location` determines market; unknown historical markets stay null. `empty_scope` and `no_completed_check` are distinct from a measured 0% rate. Failures return an error, never zero. No credits or new checks are used. Use the shared `aeo` execute-command tool in MCP/Mastra for this scoped read.
 
+## The AI search tab, lens by lens
+
+Each read below returns what one part of the dashboard's AI search tab shows, through the same server loader, so a number you quote is the number the user sees. All are reads; none uses credits. Add `--format json` for the full payload.
+
+| Screen | Command |
+|---|---|
+| Summary: score, per-engine rates and change, trend, prompts won/contested | `aeo visibility insights --lens overview` |
+| Share of Voice ranking (mentions include citations) with rank moves | `aeo visibility insights --lens sov` |
+| Cited sources (paged) | `aeo visibility insights --lens sources [--limit 25] [--offset 0]` |
+| One source's cited pages, prompts and engines | `aeo visibility source <domain>` |
+| Brand × engine / market / topic matrices | `aeo visibility insights --lens compare` |
+| Engine score card change (only cells both checks measured) | `aeo visibility compare [--check-id] [--compare-to] [--engines] [--markets]` |
+| Fan-out: searches engines ran, by query | `aeo visibility fanout [--query text] [--engine chatgpt] [--brand own|other|none] [--limit 50]` |
+| Our pages AI cited, per prompt × engine | `aeo visibility own-citations` |
+| One prompt's answers per engine (text, brands, searches, citations) | `aeo prompts results <promptId> [--full]` |
+
+`visibility insights` with no `--lens` prints all four lenses. Fan-out folds the last 10 checks like the tab; `--checks N` widens it and `--check-id` pins one. Its brand column uses our name and aliases plus registered and brand-layer competitors, so `--brand own` lists the searches that already name us.
+
 `aeo visibility check poll <jobId>` includes recorded progress, current step and last heartbeat while running. Missing telemetry is reported as unavailable. Cancellation is terminal; a percentage alone never means completion. Completed reports use paged results, including runs above 1,000 samples.
