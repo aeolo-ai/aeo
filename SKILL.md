@@ -51,7 +51,7 @@ Names only, on purpose: flags, credit costs, sharp edges, and output contracts l
 | `post` | `analyze --url` (LIVE reference input) · `list` / `get <id>` / `delete <id>` (read/cleanup) | [tov-extract.md](references/tov-extract.md) |
 | `reference` / `video` | `reference analyze --url --media` · `reference style [--url <url>] [--provider <p>]` (no `--url` = the domain's own channel voice) · `reference poll <jobId>` · `reference delete <jobId>` · `video analyze --url` (15 credits, synchronous) | [tov-extract.md](references/tov-extract.md), [polling.md](references/polling.md) |
 | `measure` (alias `metrics`) | `overview` · `content <id>` · `traffic` · `visibility` | [metrics.md](references/metrics.md) |
-| `traffic` | `summary` · `details` · `journey` · `events` · `tracked-events` · `pages` · `attribution` · `citations` · `indexing` · `ai-overview` · `explore` · `site` (the Traffic screen, card by card) | [metrics.md](references/metrics.md) |
+| `traffic` | `summary` · `details` · `journey` · `events` · `tracked-events` · `pages` · `attribution` · `citations` · `indexing` · `ai-overview` · `explore` · `site` · `hero` (the Traffic screen, card by card) | [metrics.md](references/metrics.md) |
 | `diag` | `report` (command-failure diagnostics; legacy `aeo report`, `aeo measure report`; distinct from `report snapshot`) | [metrics.md](references/metrics.md) |
 | `report` | `snapshot` — freeze a rendered report into a secret/password share link (requires the rendered `--html`; the connector does not render server-side) | this file |
 | `market-map` | bare `market-map` (show) · `run` · `poll <jobId>` · `populate` (rail → Topics; prompts follow via a background job) | [market-map.md](references/market-map.md) |
