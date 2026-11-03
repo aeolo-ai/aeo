@@ -101,6 +101,10 @@ Each read below returns what one part of the dashboard's AI search tab shows, th
 | Fan-out: searches engines ran, by query | `aeo visibility fanout [--query text] [--engine chatgpt] [--brand own|other|none] [--limit 50]` |
 | Our pages AI cited, per prompt × engine | `aeo visibility own-citations` |
 | One prompt's answers per engine (text, brands, searches, citations) | `aeo prompts results <promptId> [--full]` |
+| Sentiment lens: tone per prompt × engine × market | `aeo visibility sentiment [--limit 30]` |
+| Atlas (staff and Atlas pilot brands only) | `aeo visibility atlas`, `aeo visibility atlas-opportunity --market <code>` |
+
+Sentiment is a per-answer model judgment that changes when the same question is asked again: every row carries how many of its samples got each label. Quote those counts with any verdict, say "mixed" when the samples disagree, and never present tone as a score; it is not part of the GEO score.
 
 `visibility insights` with no `--lens` prints all four lenses. Fan-out folds the last 10 checks like the tab; `--checks N` widens it and `--check-id` pins one. Its brand column uses our name and aliases plus registered and brand-layer competitors, so `--brand own` lists the searches that already name us.
 
