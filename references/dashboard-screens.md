@@ -314,6 +314,8 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo channels shopify blogs <channelId>` — The Shopify shop's blogs, to pick a publish target.
 - `aeo channels shopify detect --url <url>` — The myshopify host behind a store URL.
 - `aeo channels shopify status <channelId>` — A Shopify destination's connection: connected, shop and target blog.
+- `aeo channels shopify access <channelId> --shop-domain <shop>.myshopify.com` — State of a Shopify app-setup request and, once ready, the install link.
+- `aeo channels shopify access request <channelId> --shop-domain <shop>.myshopify.com` — Ask the Aeolo team to set up the store-specific Shopify app (the connect modal's request step). _(external)_
 
 ## site click-preview — Managed site click map
 
@@ -677,6 +679,19 @@ Each command below reads or changes one dashboard screen through the same route 
 ## report snapshot-full — Dashboard screen
 
 - `aeo report snapshot-full --input-json '{"reportType":"…","locale":"…","htmlContent":"…","accessMode":"…","expiresInDays":30,"rotate":true,"ogMeta":{…}}'` — Create or rotate a shared report link with every option the screen sends. _(external)_
+
+## posts update — Edit a social post
+
+- `aeo posts update <postId> --input-json '{"title":"…","body":"…","status":"…","target":"…","postType":"…"}'` — Edit a social post as its detail panel saves it. _(write)_
+
+## agent card — Agent context card
+
+- `aeo agent card` — The agent context card: this week's published and awaiting-approval counts, connected sources and their health, and the inbox.
+
+## agent voice — Agent language and tone
+
+- `aeo agent voice` — How the agent speaks to this user: language and tone.
+- `aeo agent voice set --lang ko|en [--tone "…"]` — Change the agent's language and tone for this user (also re-languages existing agent rooms). _(write)_
 
 ## Not reachable on purpose
 
