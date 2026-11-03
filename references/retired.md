@@ -57,7 +57,9 @@ cleaning up rows that already exist.
 | `/aeo post analyze --url <URL>` | **LIVE** (reference input) — analyze one channel/reference URL for voice evidence (`--provider blog\|threads\|tiktok\|instagram`, `--mode owned\|reference`, `--limit`). Detail: [tov-extract.md](tov-extract.md) |
 | `post write` | **RETIRED** — draft a blog article instead |
 | `/aeo post import` | **RETIRED** — do not import new channel-post drafts |
-| `/aeo post preview` / `approve` / `publish <id>` | **RETIRED** (2026-11-03) — return an error. Publishing only ever reached Threads/LinkedIn |
+| `/aeo post preview <id>` | **RETIRED** (2026-11-03) — returns an error |
+| `/aeo post approve <id>` | **RETIRED** (2026-11-03) — returns an error |
+| `/aeo post publish <id>` | **RETIRED** (2026-11-03) — returns an error. Publishing only ever reached Threads/LinkedIn |
 | `/aeo post list` / `/aeo post get <id>` / `/aeo post delete <id>` | Read/cleanup on existing rows (`--platform`, `--status`, `--limit`, `--offset`) |
 
 ## Shortform video output — RETIRED
