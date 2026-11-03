@@ -148,8 +148,10 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo review journal [--queue]` — Publication review journal: what was reviewed, changed and approved, or (--queue) what waits for review.
 - `aeo review approve <contentId> --fingerprint <f>` — The review journal's general publication approval for an article (not the professional legal approval). Fingerprint from content legal. _(write)_
 
-## writing — Writing inputs and web research scope
+## writing — Writing inputs, web research scope, per-site review language
 
+- `aeo writing review-language --channel-id <id>` — The language reviewers read one blog destination's drafts in (the brand default unless that site overrides it).
+- `aeo writing review-language set --channel-id <id> --language <locale>` — Override the review language for one blog destination (the brand default is brand settings set writing_review_language). _(write)_
 - `aeo writing inputs` — Which inputs writing uses (brand notes, strategy, sources, web search…) and their state.
 - `aeo writing inputs set <node> --input-json '{...}'` — Turn one writing input on/off or change it, as the screen's switchboard. _(write)_
 - `aeo writing web-search` — Web research scope for writing (allowed/blocked sources).
