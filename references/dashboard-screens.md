@@ -19,6 +19,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo invitations mine` — Invitations addressed to the signed-in user, across domains (the Home invitation banner).
 - `aeo invitations decline <invitationId>` — Decline an invitation addressed to the signed-in user. _(write)_
+- `aeo invitations accept --token <token>` — Accept an invitation from its link token (joins that brand). _(write)_
 
 ## account chat-usage — Agent chat usage meter
 
@@ -73,6 +74,8 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo planning preview --method coverage|competition|external --language <l>` — Next-topic candidates for one planning method, as the Planning screen previews them.
 - `aeo planning choices` — Topics queued as the next articles (the Planning screen's queue).
 - `aeo planning theses --language <l> --market <code>` — Build (or read cached) topic theses for a language and market, as the Planning screen does. May take minutes. _(execute)_
+- `aeo planning strategist [--before-revision N]` — The planning strategist's plan and its conversation (/contents/strategist).
+- `aeo planning strategist ask --input-json '{"requestId":"uuid","expectedRevision":N,"message":"…","language":"ko|en"}'` — One turn of the planning strategist (it may revise the plan). _(execute)_
 
 ## competitors — Competitor ranking and playbooks
 
@@ -82,6 +85,10 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo competitors activate <competitorKey>` — Activate a competitor playbook. _(write)_
 - `aeo competitors archive <competitorKey>` — Archive a competitor playbook. _(write)_
 - `aeo competitors plan --input-json '{"planId":"…","checkId":"…",…}'` — Create a content plan from a competitor (as the screen's "plan from competitor"). _(execute)_
+- `aeo competitors merges` — Competitor merge groups (names merged into one brand), revision and rebuild job.
+- `aeo competitors merge --input-json '{"checkId":"…","memberKeys":["a","b"],"representativeKey":"a","expectedRevision":N}'` — Merge competitor names into one brand, as the rankings card. _(write)_
+- `aeo competitors unmerge <mergeId> --expected-revision N` — Undo a competitor merge. _(write)_
+- `aeo competitors track --input-json '{"name":"…","domain":"example.com"}'` — Track a competitor for comparison (the comparison picker's add). _(write)_
 
 ## content history — Article revision history
 
@@ -119,7 +126,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 ## content batch — Bulk article change/delete
 
-- `aeo content batch --input-json '{"ids":["…"],"status":"…"}'` — Change several articles at once, as the Articles screen's selection bar does. _(write)_
+- `aeo content batch --input-json '{"ids":["…"],"updates":{"status":"…"}}'` — Change several articles at once, as the Articles screen's selection bar does. _(write)_
 - `aeo content batch delete --input-json '{"ids":["…"]}'` — Delete several articles at once. Confirm the list first. _(write)_
 
 ## content legal — Regulatory/legal review state
@@ -145,6 +152,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo writing inputs set <node> --input-json '{...}'` — Turn one writing input on/off or change it, as the screen's switchboard. _(write)_
 - `aeo writing web-search` — Web research scope for writing (allowed/blocked sources).
 - `aeo writing web-search set --input-json '{...}'` — Save the web research scope. Read `writing web-search` first. _(write)_
+- `aeo writing models` — Which AI vendor writes each writing stage.
 
 ## brand settings — Regulatory profile, measured targets, store link UTM, OG template
 
@@ -213,22 +221,30 @@ Each command below reads or changes one dashboard screen through the same route 
 ## index — Sitemap submit and IndexNow key
 
 - `aeo index sitemap submit [--channel-id <id>]` — Submit the sitemap to Google Search Console for one site. _(external)_
-- `aeo index indexnow key [--channel-id <id>]` — Adopt the IndexNow key for a site (as the Indexing screen's key step). _(write)_
+- `aeo index indexnow key --key <key> [--channel-id <id>]` — Adopt the IndexNow key a site already serves (as the Indexing screen's key step). _(write)_
+- `aeo index indexnow submit [--channel-id <id>]` — Send a site's article URLs to IndexNow now (any site, managed ones included). _(external)_
 
-## sources — Source library: channels, documents, suggestions
+## sources — Source library: channels, documents, suggestions, Drive
 
 - `aeo sources list` — The source library: registered channels (owned/other, on/off) the writer may draw from.
 - `aeo sources documents [--channel-id <id>]` — Ingested source documents (articles, videos, Drive docs).
 - `aeo sources document <documentId>` — One ingested source document.
 - `aeo sources suggestions` — Suggested source candidates and which are reserved.
 - `aeo sources add --input <url-or-handle> [--owned true|false] [--scope <s>]` — Register a source channel (site, YouTube, Instagram…). _(write)_
-- `aeo sources update <sourceId> [--owned true|false] [--enabled true|false]` — Mark a source owned/not owned (--owned) or switch it on/off for writing (--enabled). _(write)_
+- `aeo sources update <sourceId> --owned true|false` — Mark a source as the brand's own channel or someone else's. _(write)_
+- `aeo sources usage <sourceId> --enabled true|false` — Switch a source on or off for writing. _(write)_
 - `aeo sources delete <sourceId>` — Remove a source channel from the library. _(write)_
 - `aeo sources article --url <url> [--channel-id <sourceId>]` — Ingest one web article as a source document. _(execute)_
 - `aeo sources video --video-id <id> [--channel-id <sourceId>]` — Ingest one video (transcript) as a source document. _(execute)_
 - `aeo sources convert <documentId> --input-json '{...}'` — Turn a source document into an article draft, as the screen's convert. _(execute)_
 - `aeo sources reserve <candidateId>` — Reserve a suggested source for the next article. _(write)_
 - `aeo sources unreserve <candidateId>` — Release a reserved source. _(write)_
+- `aeo sources videos <sourceId> [--continuation <token>]` — A source channel's videos with ingest state (the video picker).
+- `aeo sources collect <sourceId>` — Collect an Instagram source channel now. _(execute)_
+- `aeo sources reserve-item --input-json '{"channelRowId":"…","externalId":"…","url":"…","title":"…"}'` — Reserve a source item that has no candidate row yet. _(write)_
+- `aeo sources brief <documentId> [--input-json '{"targetPromptId":"…","topicId":"…"}']` — Pull a writing brief out of a source document. _(execute)_
+- `aeo sources drive-folder --folder-id <id>` — Register a Google Drive folder as a source channel. _(write)_
+- `aeo sources drive-document --file-id <id> [--channel-id <sourceId>]` — Import one Google Drive document as a source document. _(execute)_
 
 ## pages all — Every page across destinations
 
@@ -266,9 +282,10 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo brand competitors` — Brand setup's competitor discovery status and the competitors it found.
 - `aeo brand competitors discover` — Start or continue brand setup's competitor discovery; save the picks with brand update --competitors-json. _(execute)_
 
-## integrations drive — Google Drive connection
+## integrations drive — Google Drive folder connect/disconnect
 
 - `aeo integrations drive disconnect` — Disconnect Google Drive from this brand (Brand › Sources). _(write)_
+- `aeo integrations drive connect --folder-id <id>` — Check a shared Drive folder and save it as the brand's folder. _(write)_
 
 ## channels preview — Destination previews
 
@@ -289,6 +306,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo channels shopify locale-blog create <channelId> --language <l> --title "…"` — Create a Shopify blog for one language. _(external)_
 - `aeo channels shopify locale-blog set <channelId> --language <l> --blog-id <id>` — Use an existing Shopify blog for one language. _(write)_
 - `aeo channels shopify locale-blog template <channelId> --language <l> --template-suffix <s>` — Set the Shopify template suffix for one language's blog. _(external)_
+- `aeo channels shopify blogs <channelId>` — The Shopify shop's blogs, to pick a publish target.
 
 ## site click-preview — Managed site click map
 
@@ -297,6 +315,125 @@ Each command below reads or changes one dashboard screen through the same route 
 ## content topic-preview — Composer next topic
 
 - `aeo content topic-preview --language <l> --channel-id <id>` — The topic the composer would write next for one language and destination.
+
+## content family — Article language family
+
+- `aeo content family <id>` — An article's language family: the original and every edition with status (the edition switcher).
+
+## content schema — Article structured data
+
+- `aeo content schema <id>` — The structured data (JSON-LD) the article ships with.
+
+## content images — Images linked to an article
+
+- `aeo content images <id> [--limit 40]` — Images linked to an article (the thumbnail picker).
+
+## content pull-wordpress — Pull the live WordPress post back
+
+- `aeo content pull-wordpress <id>` — Copy the live WordPress post back into the article (the fix when a redeploy refuses with REMOTE_MODIFIED). _(write)_
+
+## content unpublish-pangolingo — Unpublish from Pango Lingo
+
+- `aeo content unpublish-pangolingo <id>` — Withdraw an article and its editions from a Pango Lingo newsroom (content unpublish does not reach Pango Lingo). _(external)_
+
+## audit history — Site audit history
+
+- `aeo audit history [--limit 10] [--channel-id <id>]` — Past site-audit runs, optionally for one site (the audit tab's history).
+
+## report check — Stored report for one check
+
+- `aeo report check <checkId>` — The stored report for one visibility check (reads the stored copy; does not generate).
+
+## report saved — Saved AI-written reports
+
+- `aeo report saved [<sessionId>]` — Saved AI-written reports; with an id, open one.
+
+## report opportunities — Visibility × Search Console opportunities
+
+- `aeo report opportunities [--limit 20]` — Opportunities that cross AI visibility with Search Console (the traffic report's gap-first list).
+
+## prompts deleted — Deleted and untracked prompts
+
+- `aeo prompts deleted [--q text] [--offset N]` — Deleted and untracked prompts (the restore list).
+
+## prompts restore — Restore a prompt
+
+- `aeo prompts restore <promptId>` — Restore a deleted or untracked prompt. _(write)_
+
+## prompts research — Prompt research context
+
+- `aeo prompts research <promptId>` — A prompt's topic and market-map context for its region and language.
+
+## prompts coverage — Tracked-prompt quota
+
+- `aeo prompts coverage` — Tracked-prompt quota (used/limit) and which prompts count toward measurement.
+
+## prompts experiments — Prompt experiments
+
+- `aeo prompts experiments [<jobId>] [--prompt-id <id>]` — Prompt experiment runs and their results (when experiments are on for this brand).
+
+## visibility atlas-products — Atlas product assignment
+
+- `aeo visibility atlas-products --country <code> --concern-id <id>` — Which catalog products Atlas assigns to a concern in a country (staff and Atlas pilot brands, as on screen).
+
+## traffic ai-impressions — Collect Google AI impressions
+
+- `aeo traffic ai-impressions check` — Ask for Google AI impressions to be collected now (the report is traffic ai-overview). _(execute)_
+- `aeo traffic ai-impressions disconnect` — Stop collecting Google AI impressions. _(write)_
+
+## reference jobs — Reference analysis jobs
+
+- `aeo reference jobs --media <type>` — Reference analysis jobs for one media type (visual_asset, instagram_reels, …), as the reference panels list them.
+
+## brand product — Edit or remove a product
+
+- `aeo brand product update <productId> --input-json '{"title":"…","og_image_url":"…","price":"…"}'` — Override a product's scraped title, image or price. _(write)_
+- `aeo brand product delete <productId>` — Remove a product from the catalog. _(write)_
+
+## channels request — Request an integration
+
+- `aeo channels request --input-json '{"channel_types":["…"],"other_channel":"…"}'` — Ask the Aeolo team to add an integration (the Pro+ request button). _(external)_
+
+## channels expansion — Channel recommendations from cited sources
+
+- `aeo channels expansion --input-json '{"citedSources":[{"domain":"…","citations":N}],"language":"ko"}'` — Recommend more channels from the sources AI cites (the citation moments panel). _(execute)_
+
+## channels social-profile — Connected social profile
+
+- `aeo channels social-profile <channelId>` — The connected social account's profile.
+
+## channels custom-site — Custom site verification tag and check
+
+- `aeo channels custom-site tag <channelId>` — The verification meta tag to paste into a custom site's <head>.
+- `aeo channels custom-site check <channelId>` — Check whether a custom site serves our newest article.
+
+## channels wordpress — WordPress site info
+
+- `aeo channels wordpress site <channelId>` — A WordPress site's languages, default edition and translation linking (live probe).
+- `aeo channels wordpress categories <channelId>` — The WordPress site's categories, to pick a publish target.
+
+## channels cafe24 — Cafe24 boards, language routes and store SEO
+
+- `aeo channels cafe24 boards <channelId> [--shop-no 1]` — The Cafe24 shop's boards, to pick a publish target.
+- `aeo channels cafe24 routes set <channelId> --input-json '{"routes":[{"locale":"ko","language_code":"ko","shop_no":1,"board_no":N,"domain":"…"}],"link_sitemap":true}'` — Route each language to a Cafe24 shop board. _(external)_
+- `aeo channels cafe24 seo <channelId>` — The Cafe24 store's SEO settings (title, meta, robots, llms.txt, sitemap).
+- `aeo channels cafe24 seo set <channelId> --input-json '{"shop_no":1,"settings":{…}}'` — Save the Cafe24 store's SEO settings (live store). _(external)_
+- `aeo channels cafe24 seo restore <channelId> --shop-no N` — Restore the Cafe24 store's original SEO settings from the saved backup. _(external)_
+- `aeo channels cafe24 seo link-sitemap <channelId>` — Add our sitemap line to each Cafe24 shop's robots.txt. _(external)_
+- `aeo channels cafe24 shops <channelId>` — The Cafe24 mall's shops (languages) for routing and SEO.
+
+## brand social-links — Brand social profile links
+
+- `aeo brand social-links` — The brand's social profile links (sameAs URLs in structured data).
+- `aeo brand social-links set --links https://…,https://…` — Replace the brand's social profile links. _(write)_
+
+## audit show — One audit run
+
+- `aeo audit show <auditId>` — One past site-audit run in full.
+
+## channels requests — Integration requests
+
+- `aeo channels requests` — Integration requests sent to the Aeolo team and their state.
 
 ## Not reachable on purpose
 
