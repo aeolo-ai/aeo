@@ -229,7 +229,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo index sitemap submit [--channel-id <id>]` — Submit the sitemap to Google Search Console for one site. _(external)_
 - `aeo index indexnow key --key <key> [--channel-id <id>]` — Adopt the IndexNow key a site already serves (as the Indexing screen's key step). _(write)_
 - `aeo index indexnow submit [--channel-id <id>]` — Send a site's article URLs to IndexNow now (any site, managed ones included). _(external)_
-- `aeo index status [--query channelId=…|source=hosted_blog&statuses=0]` — The Indexing screen's scope status: connection, sitemap linked in robots, on-read sitemap reconcile.
+- `aeo index status [--query channelId=…&statuses=0]` — The Indexing screen's scope status: connection, sitemap linked in robots, on-read sitemap reconcile.
 
 ## sources — Source library: channels, documents, suggestions, Drive
 
@@ -586,10 +586,6 @@ Each command below reads or changes one dashboard screen through the same route 
 ## content publish-at — Dashboard screen
 
 - `aeo content publish-at <id> --input-json '{"channel_id":"…"|"target":"hosted"|"published_url":"…","platform":"…"}'` — Publish to a destination, or mark the article published at an external URL. _(external)_
-
-## content unpublish-blog — Dashboard screen
-
-- `aeo content unpublish-blog <id>` — Unpublish from the Aeolo-hosted blog and withdraw its weekly slot, as the screen. _(external)_
 
 ## image — Dashboard screen
 

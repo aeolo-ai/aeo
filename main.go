@@ -1163,7 +1163,6 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   draft                 Create a blank draft (the New article button).
   approve-deploy        Approve and deploy an article in one step, as the Articles screen.
   publish-at            Publish to a destination, or mark the article published at an external URL.
-  unpublish-blog        Unpublish from the Aeolo-hosted blog and withdraw its weekly slot, as the screen.
   comments agent        Ask the editor's AI to answer a comment thread with a proposed patch (chat-metered).
 `,
 	"prompts": `aeo prompts <verb>
