@@ -46,17 +46,11 @@ Display the visibility report. Then:
 
 ---
 
-## /aeo visibility show — Show last visibility snapshot
+## Latest check — `aeo visibility insights`
 
-Use the latest snapshot to understand current gap context.
+The snapshot read `visibility show` (also `diagnose visibility`, bare `visibility`) was retired 2026-11-03. Those spellings now return `aeo visibility insights`, the AI search tab as the customer sees it: score and per-engine rates with change, prompts won and contested, Share of Voice with rank moves, cited sources, and brand × engine/market/topic matrices. For gaps, read the contested and lost prompts there, or `aeo prompts results <id>` for one prompt.
 
-```bash
-aeo visibility show
-```
-
-Response: `text/markdown` — **overall composite score + per-engine scores**, mention rate by engine (with avg position), stage breakdown, **Share of Voice** (which brands AI recommends, incl. competitors — populated even at 0% mentions), **citation-type distribution**, visibility gaps, cited sources, top queries, competitors. Enough to narrate the full score breakdown ("X% of AI recommendations go to CeraVe, Pure'AM 0%").
-
-If the response is empty or shows no check has been run, ask whether to run `/aeo visibility check run`.
+If no check has been run, ask whether to run `/aeo visibility check run`.
 
 ## Visibility over time
 
@@ -64,7 +58,7 @@ If the response is empty or shows no check has been run, ask whether to run `/ae
 
 One row per check: date, the stored overall score, and each engine's mention
 rate. Use it whenever the question is about a trend — "is it improving", "how
-has it changed", "compare to last month" — instead of reading `visibility`
+has it changed", "compare to last month" — instead of reading `visibility insights`
 repeatedly, which only ever returns the latest check.
 
 It reads the same server-side aggregate the dashboard chart and the ChatGPT

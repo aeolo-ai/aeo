@@ -92,7 +92,7 @@ If the user hasn't completed manual steps after your initial guidance, send one 
 After onboarding is complete, check if a visibility snapshot exists:
 
 ```bash
-aeo visibility show
+aeo visibility insights
 ```
 
 If no data exists, ask the user: "Would you like me to run an initial visibility check? This takes 3-8 minutes and gives me gap data to prioritize your first articles. Or I can start writing based on your strategy and brand context alone."
@@ -113,7 +113,7 @@ Run these in parallel to understand the current state:
 ```bash
 aeo topics next          # One angle + the evidence for it (same picker the writing cron uses)
 aeo strategy show        # What's the plan?
-aeo visibility show      # Where are the gaps?
+aeo visibility insights  # Where are the gaps?
 aeo content list --status=published --limit=20   # What already exists?
 ```
 
@@ -143,13 +143,13 @@ This is the most important decision you make each day. Use this priority queue:
 
 **Priority A — Gap-based (reactive)**
 - Condition: Visibility gaps exist — queries where the brand has 0% citation
-- How to find gaps: `aeo visibility show` output has a "Gaps" section listing queries where the brand was not mentioned by any engine. Look for queries grouped under headings like "Not Mentioned" or with 0% mention rate. Focus on `comparison` and `foundational` stage queries first (highest impact).
+- How to find gaps: `aeo visibility insights` lists the prompts the brand did not win (contested or lost). Look for queries grouped under headings like "Not Mentioned" or with 0% mention rate. Focus on `comparison` and `foundational` stage queries first (highest impact).
 - Cluster related gaps into one article when possible ("best X", "top X for Y" → single ranked_list)
 - Why first: You're invisible here. Any content is better than nothing.
 
 **Priority B — Hub-spoke expansion (proactive)**
 - Condition: Hub articles exist but lack supporting spokes
-- How to identify hubs: Run `aeo content list --status=published` and `aeo metrics overview` to see traffic. Hub articles are broad-topic pieces — typically `ranked_list` ("Best X Tools"), `guide` ("Complete Guide to X"), or `faq` type. They cover an umbrella topic rather than a specific comparison or use-case. High-traffic articles are usually hubs.
+- How to identify hubs: Run `aeo content list --status=published` and `aeo traffic pages --published-only true` to see traffic. Hub articles are broad-topic pieces — typically `ranked_list` ("Best X Tools"), `guide` ("Complete Guide to X"), or `faq` type. They cover an umbrella topic rather than a specific comparison or use-case. High-traffic articles are usually hubs.
 - How to identify spoke opportunities: Look at a hub's subheadings, list items, or FAQ questions. Each one is a potential spoke article. If "Best Project Management Tools" is a hub, "Asana vs Monday.com" or "Project Management for Remote Teams" are spokes.
 - Pick the hub with most traffic → generate a subtopic spoke
 - The spoke MUST link back to the hub (canonical cross-link)
@@ -236,8 +236,8 @@ aeo visibility check run --engines=chatgpt,gemini,perplexity
 This takes 3-8 minutes. While waiting, gather metrics:
 
 ```bash
-aeo metrics overview              # All deployed articles with GA4 + GSC
-aeo metrics traffic --days=30     # Site-level: top queries, pages, countries
+aeo traffic pages --published-only true  # Published pages with GA4 + GSC
+aeo traffic search-console --days 30     # Site-level: top queries, pages, countries
 ```
 
 Then poll the visibility check:
@@ -247,7 +247,7 @@ aeo visibility check poll <jobId>
 
 Once complete:
 ```bash
-aeo visibility show               # Fresh visibility snapshot
+aeo visibility insights           # Latest visibility check
 ```
 
 ### Step 2: Analyze
@@ -409,7 +409,7 @@ Fetch agent context, audit report, and visibility data in parallel:
 ```bash
 aeo agent context  > /tmp/aeo_brand.md &
 aeo domain audit  > /tmp/aeo_audit.md &
-aeo visibility show > /tmp/aeo_visibility.md &
+aeo visibility insights > /tmp/aeo_visibility.md &
 wait
 ```
 

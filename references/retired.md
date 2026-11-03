@@ -72,3 +72,14 @@ every command that *reads* an external Reel/TikTok to brief an article stays liv
 |---------|-------------|
 | `/aeo video generate --prompt <text>` | **RETIRED 2026-07-27** — brief a blog article instead |
 | `/aeo video poll <jobId...>` | **LIVE** (input): polls queued video analysis jobs; creates nothing |
+
+## Folded reads (2026-11-03)
+
+Three duplicate reads were folded into their screen-parity reads on 2026-11-03.
+The old spellings still answer, with the new read's output:
+
+| Old read | Answers with |
+|----------|--------------|
+| `visibility show`, `diagnose visibility`, `measure visibility`, bare `visibility` | `visibility insights` |
+| `diagnose traffic`, `measure traffic`, `metrics traffic` | `traffic search-console` (no `--query` filter) |
+| `measure overview`, `metrics overview`, bare `metrics` | `traffic pages` |

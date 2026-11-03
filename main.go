@@ -22,7 +22,6 @@ import (
 var version = "2.3.48"
 
 const segmentPauseDeprecatedMessage = "Tag-level pause is deprecated. Tags are metadata/filtering only. Use prompt status (tracked or untracked) to control measurement."
-const trafficRangeChoices = "30|60|90|180|365"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -935,7 +934,12 @@ var subUsage = map[string]string{
   ledger            Show credit ledger entries
                     Flags: --days (default 30), --limit (default 50)
   # from the command registry — generated, do not edit by hand
-  feedback          Report a support request, bug, or idea to the Aeolo team; returns a receipt and notification outcome
+  feedback           Report a support request, bug, or idea to the Aeolo team; returns a receipt and notification outcome
+  chat-usage         Agent chat usage meter for the selected domain (used/limit and reset), as on Settings › Billing.
+  plans              Purchasable plans with prices and credits, as on the Plans screen
+  me                 The signed-in user: id, role, avatar, created.
+  subscription-full  The whole subscription: status, period, usage, billing source.
+  ledger-full        The credit ledger with totals and summary, by member and dates.
 `,
 	"agent": `aeo agent <verb>
 
@@ -967,9 +971,18 @@ var subUsage = map[string]string{
   audit             Show Lighthouse scores, technical SEO evidence, and separate legacy readiness
   channels          List connected channels
   # from the command registry — generated, do not edit by hand
-  add               Onboard a new brand: crawl the site and build its brand understanding (runs in the background; check with 'domain setup')
-  brand aliases     Show the brand-family roster plus fresh alias candidates for the selected markets (suggests only; write with 'brand update --family-json')
-  rescan            Re-crawl the domain and refresh its brand snapshot (name, category, value prop, typography/colors)
+  add                          Onboard a new brand: crawl the site and build its brand understanding (runs in the background; check with 'domain setup')
+  rescan                       Re-crawl the domain and refresh its brand snapshot (name, category, value prop, typography/colors)
+  setup publish-skip           Skip the publish step of brand setup (connect a destination later).
+  onboarding-channel           The brand-setup destination choice and its connection state.
+  onboarding-channel set       Save the brand-setup destination choice (send the revision you read).
+  onboarding-channel complete  Finish the brand-setup destination step.
+  onboarding-channel retry     Retry connecting the brand-setup destination.
+  list-full                    Brands with the cap-lock flag, as the brand switcher.
+  entitlements                 What this brand may use: engines, features, who is billed.
+  capacity                     How many brands this account may add (used, limit, remaining).
+  create                       Create a brand without starting a crawl (the Settings add-brand form).
+  claim                        Claim an onboarding draft with the edited preview.
 `,
 	"channel": `aeo channel <verb>
 
@@ -984,16 +997,13 @@ Types: shopify, cafe24, wordpress, vercel, linkedin, threads, reddit, instagram,
 
 --type custom connects your own site as a Content Feed pull-channel: returns a
 read API key + authed feed URL (with ?base) to render Aeolo articles on your domain.
-  # from the command registry — generated, do not edit by hand
-  indexing          Toggle IndexNow auto-indexing on a channel (--backfill submits existing articles)
-  voice             Read selected channel-voice / reference-style evidence (same surface as 'reference style')
 `,
 	"visibility": `aeo visibility <verb>
 
   summary           Exact mentions and samples (--market KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU,
                     --engine, --check-id, --format json)
 
-  show              Show last visibility snapshot
+  show              Retired; same output as "visibility insights"
   history           Score over time, one row per check (--limit, default 10)
   check run         Trigger a credit-metered visibility check
                     Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
@@ -1001,16 +1011,43 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
                            --limit, --prompt-ids
   check poll <id>   Poll check status
+  # from the command registry — generated, do not edit by hand
+  insights            The AI search tab as the customer sees it (latest check): score + per-engine rates and change, score trend, prompts won/contested, Share of Voice ranking (mentions incl
+  source              One cited source domain drilled down: the exact pages AI answers cited, which engines and prompts, whether those answers also named us, and which other brands they named (Sources / SoV side panel)
+  own-citations       Which of OUR pages AI answers cited, per prompt × engine — "named" (named us and cited us) vs "cited" (cited our page without naming us), and which are Aeolo-published articles
+  compare             Change between two checks counted only on cells both measured (the engine score card delta): overall and per-engine score/mention-rate change, brand rank moves; --format json adds engine/market/topic matrices
+  sentiment           How AI describes us when it names us (the Sentiment lens, ?tab=visibility-sentiment): per prompt × engine × market tone over the last 20 checks with "m of n" counts, mixed slots and contradictions
+  fanout              Query fan-out — the web searches AI engines ran while answering tracked prompts, one row per query with count, engines, brands named (ours vs competitors), site: filters, and the prompts that produced it
+  atlas               The Atlas tab (staff and Atlas pilot brands only): latest market snapshots with catalog, readiness, market states and the running job
+  atlas-opportunity   The Atlas tab's article-opportunity and revenue-scenario cards for one market (staff and Atlas pilot brands only)
+  atlas-products      Which catalog products Atlas assigns to a concern in a country (staff and Atlas pilot brands, as on screen).
+  sources             Cited sources with the Sources lens filters (engine, market, language) for any check.
+  competitor-options  The brands a check can be compared against (the comparison picker); their ids feed visibility matrices --competitor-ids.
+  matrices            Head-to-head engine/market/topic matrices for chosen competitors on any check, with run-over-run deltas against --compare-to.
+  quote               The free credit quote before a visibility check: prompts, engines, credits.
+  active-job          The running visibility check, if any: phase, progress, estimate.
+  export              The raw AI answers of checks as the CSV the screen downloads.
+  change              Comparable change between two checks with the screen's brand/engine/market/language filters
+  dashboard           The AI search dashboard payload in any of its views and periods
+  checks              Check history as the screen loads it
+  latest              The latest check the screen shows (active pointer) and any running job.
+  run-screen          Run a visibility check exactly as the screen's button (no engines = the automation's engines; refused while an experiment runs)
+  experiment          Run a prompt experiment or targeted check with every option the screen sends
 `,
 	"audit": `aeo audit <verb>
 
   run               Start a site foundation audit
                     Flags: --max-pages (default 10, range 1–50; credits scale with pages), --channel-id
   poll <jobId>      Poll a background audit job
+  # from the command registry — generated, do not edit by hand
+  history           Past site-audit runs, optionally for one site (the audit tab's history).
+  show              One past site-audit run in full.
+  run-screen        Run a site audit as the screen (no channel = the primary site)
+  latest            The latest audit for one site, as the audit tab.
 `,
 	"diagnose": `aeo diagnose <area>
 
-  visibility        Show last visibility snapshot
+  visibility        Retired; same output as "visibility insights"
   visibility run    Trigger a credit-metered visibility check
                     Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
                            also available: google-ai-mode, google-aio, amazon, naver, deepseek),
@@ -1024,11 +1061,9 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   audit poll <jobId>
                     Poll a background audit job
   # from the command registry — generated, do not edit by hand
-  traffic             Site-level GSC traffic: top queries (default 20, --limit up to 1000), pages, country, device
   references analyze  Start reference analysis for a URL (uses production credits)
   references poll     Poll a reference analysis job
   video analyze       Analyze a short-form video URL (uses production credits)
-  video poll          Check status and result URLs of previously queued video jobs (one or more IDs; reads only — no new video jobs are created)
 `,
 	"strategy": `aeo strategy <verb>
 
@@ -1038,6 +1073,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   # from the command registry — generated, do not edit by hand
   visual            Show the visual style guide: description, keywords, the brand mood board (image URLs + per-image definitions), and each product board's size
   visual update     Update the visual style guide steering image generation
+  visual full       The whole visual style with cover settings, saved looks and the brand-snapshot preview.
+  visual save       Save the visual style with every field the screen edits.
 `,
 	"content": `aeo content <verb>
 
@@ -1088,12 +1125,46 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                            --channel <id> (its type decides the target when --target is omitted)
   redeploy <id> [--force]  Push the current article back in place (destination auto-detected)
   # from the command registry — generated, do not edit by hand
-  editions          Write one locale edition of an article (--language en|ko|ja|zh-Hans|zh-Hant|es|id|vi|th|de|fr|hi|ar|it|nl|pl|ru required; uses production credits)
-  slug              Change an article's URL slug
-  thumbnail         Pin an external thumbnail URL after validating image size
-  unpublish         Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo, auto-detected; --target to force) and reset it to draft
-  delete            Soft-delete an article (drops out of lists; restorable)
-  job cancel        Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
+  editions              Write one locale edition of an article (--language en|ko|ja|zh-Hans|zh-Hant|es|id|vi|th|de|fr|hi|ar|it|nl|pl|ru required; uses production credits)
+  slug                  Change an article's URL slug
+  unpublish             Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo, auto-detected; --target to force) and reset it to draft
+  delete                Soft-delete an article (drops out of lists; restorable)
+  job cancel            Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
+  history               An article's revision history (who/when/what changed).
+  revision              One stored revision of an article.
+  revision restore      Restore an article to a stored revision (the current text is kept as a new revision).
+  comments              Comment threads on an article (anchors, messages, status).
+  comments create       Start a comment thread on a quoted passage.
+  comments reply        Reply in a comment thread.
+  comments update       Resolve/reopen or edit a comment thread.
+  comments delete       Delete a comment thread.
+  schedule              Book timed publishing for articles (the Articles screen's schedule)
+  unschedule            Cancel booked timed publishing.
+  job stop              Stop a writing job that is still running (content job cancel only deletes finished jobs).
+  job retry             Retry a failed writing job with its original inputs (credit-metered).
+  edition manual        Add an empty locale edition to write by hand (no credits; content editions generates one).
+  batch                 Change several articles at once, as the Articles screen's selection bar does.
+  batch delete          Delete several articles at once
+  legal                 An article's regulatory/legal review state: submissions, findings and who approved.
+  og-assets             The cover frame and sharing-card template assets (logo, background, frame).
+  og-preview            Render the sharing-card/cover template preview for a sample title.
+  topic-preview         The topic the composer would write next for one language and destination.
+  family                An article's language family: the original and every edition with status (the edition switcher).
+  schema                The structured data (JSON-LD) the article ships with.
+  images                Images linked to an article (the thumbnail picker).
+  pull-wordpress        Copy the live WordPress post back into the article (the fix when a redeploy refuses with REMOTE_MODIFIED).
+  unpublish-pangolingo  Withdraw an article and its editions from a Pango Lingo newsroom (content unpublish does not reach Pango Lingo).
+  search                The Articles list with every filter, sort and page the screen uses
+  detail                The whole article row as the editor loads it, with its source documents.
+  performance           An article's performance panel: citations, traffic, Search Console, reading.
+  jobs all              Writing jobs as the screen lists them, with events and config.
+  patch                 Edit an article with every field the editor saves.
+  begin-edit            Open a review revision of an approved article without touching the live version.
+  draft                 Create a blank draft (the New article button).
+  approve-deploy        Approve and deploy an article in one step, as the Articles screen.
+  publish-at            Publish to a destination, or mark the article published at an external URL.
+  unpublish-blog        Unpublish from the Aeolo-hosted blog and withdraw its weekly slot, as the screen.
+  comments agent        Ask the editor's AI to answer a comment thread with a proposed patch (chat-metered).
 `,
 	"prompts": `aeo prompts <verb>
 
@@ -1104,6 +1175,16 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     or many at once (--prompts-json='[{"prompt":"...","stage":"comparison"}]', max 30)
   update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked)
   delete <id>       Delete a prompt
+  # from the command registry — generated, do not edit by hand
+  results           One prompt's measured answers per engine/market (latest check by default): whether we were named and where, other brands named, searches the engine ran, cited URLs, and the AI answer text (trimmed unless --full)
+  deleted           Deleted and untracked prompts (the restore list).
+  restore           Restore a deleted or untracked prompt.
+  research          A prompt's topic and market-map context for its region and language.
+  coverage          Tracked-prompt quota (used/limit) and which prompts count toward measurement.
+  experiments       Prompt experiment runs and their results (when experiments are on for this brand).
+  add-full          Add prompts with topic and regions, as the screen.
+  generate-full     Generate prompts with stages and business context, as the screen.
+  delete-many       Delete several prompts at once.
 `,
 	"topics": `aeo topics <verb>
 
@@ -1138,20 +1219,16 @@ Notes:
 `,
 	"metrics": `aeo metrics <verb>
 
-  overview          Article performance overview
   article <id>      Detailed article stats
-  traffic           Site-level GSC traffic (--days=30|60|90|180|365)
-                    Flags: --limit 1-1000 query rows (default 20),
-                           --query "term1,term2" keep queries containing any term
+  overview          Retired; same output as "traffic pages"
+  traffic           Retired; same output as "traffic search-console"
 `,
 	"measure": `aeo measure <verb>
 
-  overview          Article performance overview
   content <id>      Detailed article stats
-  traffic           Site-level GSC traffic (--days=30|60|90|180|365)
-                    Flags: --limit 1-1000 query rows (default 20),
-                           --query "term1,term2" keep queries containing any term
-  visibility        Show last visibility snapshot
+  overview          Retired; same output as "traffic pages"
+  traffic           Retired; same output as "traffic search-console"
+  visibility        Retired; same output as "visibility insights"
   report            Submit command execution diagnostics
                     Flags: --command (required), --status-code, --response-body, --context
 `,
@@ -1162,6 +1239,10 @@ Notes:
                     Flags: --target shopify|blog|wordpress|cafe24|pangolingo,
                            --channel <id> (its type decides the target when --target is omitted)
   redeploy <id> [--force]  Push the current article back in place (destination auto-detected)
+  # from the command registry — generated, do not edit by hand
+  thumbnail         Push only the cover image to the live post (body and title untouched).
+  batch             Deploy several articles to one destination at once.
+  shopify           Deploy to Shopify as the screen (also hosted-published articles).
 `,
 	"billing": `aeo billing <verb>
 
@@ -1188,6 +1269,7 @@ Notes:
   poll <jobId>      Poll a reference analysis job
   # from the command registry — generated, do not edit by hand
   delete            Delete a reference analysis job (or a reference-style/channel-voice job — auto-detected)
+  jobs              Reference analysis jobs for one media type (visual_asset, instagram_reels, …), as the reference panels list them.
 `,
 	"video": `aeo video <verb>
 
@@ -1249,6 +1331,10 @@ Notes:
   # from the command registry — generated, do not edit by hand
   gallery           List generated gallery assets for the domain (--type image|video, default image; --limit N, default 20)
   gallery delete    Delete a generated gallery asset by ID
+  generate-full     Generate images with every option the composer sends, linked to an article
+  import            Bring an outside image into the gallery and link it to an article (the stock-photo pick).
+  link              Link a gallery image to an article in a role (thumbnail candidate, selected, related).
+  gallery browse    The gallery with the screen's paging and date filters.
 `,
 	"post": `aeo post <verb>
 
@@ -1285,6 +1371,13 @@ Notes:
   Flags: --command (required), --status-code, --response-body, --context
   # from the command registry — generated, do not edit by hand
   snapshot          Create a shareable report link — freeze a rendered report (--type audit|visibility|traffic|prompts|performance, --html required) and mint a secret/password share URL (--access-mode, --password, --expires 7|30|90|never, --locale)
+  monthly           The stored report on the Reports screen for a month (default: this month, UTC) or a date range: score, trend, what changed, traffic, work completed, index status, per-engine scores
+  delivery          Report email delivery: on/off and recipients.
+  delivery set      Turn report emails on/off and replace recipients, language and time zone
+  check             The stored report for one visibility check (reads the stored copy; does not generate).
+  saved             Saved AI-written reports; with an id, open one.
+  opportunities     Opportunities that cross AI visibility with Search Console (the traffic report's gap-first list).
+  snapshot-full     Create or rotate a shared report link with every option the screen sends.
 `,
 	"feedback": `aeo feedback [<message>]
 
@@ -1349,7 +1442,8 @@ func runAccountCommand(args []string) {
 func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 	if len(args) < 1 {
 		if defaultShow {
-			run("/visibility", "GET", nil, domainID)
+			// The snapshot read was retired 2026-11-03; `visibility insights` is the AI search tab.
+			proxyCommand([]string{"visibility", "insights"}, domainID)
 		} else {
 			printSubUsage("visibility")
 		}
@@ -1363,7 +1457,7 @@ func runVisibilityCommand(args []string, domainID string, defaultShow bool) {
 	case "summary":
 		proxyCommand(append([]string{"visibility"}, args...), domainID)
 	case "show":
-		run("/visibility", "GET", nil, domainID)
+		proxyCommand(append([]string{"visibility", "insights"}, args[1:]...), domainID)
 	case "history":
 		path := "/visibility/history"
 		if limit := findFlag(args, "--limit"); limit != "" {
@@ -1476,66 +1570,19 @@ func runMetricsCommand(args []string, domainID string) {
 	}
 	switch args[0] {
 	case "overview":
-		run("/metrics/overview", "GET", nil, domainID)
+		// `metrics overview` and `metrics traffic` were retired 2026-11-03 into
+		// the Traffic screen reads.
+		proxyCommand(append([]string{"traffic", "pages"}, args[1:]...), domainID)
 	case "article", "content":
 		requireArg(args, 1, "aeo measure content <id>")
 		run("/metrics/article/"+args[1], "GET", nil, domainID)
 	case "traffic":
-		path, err := buildMetricsTrafficPath(args)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-		run(path, "GET", nil, domainID)
+		proxyCommand(append([]string{"traffic", "search-console"}, args[1:]...), domainID)
 	default:
 		// Unknown verb for a noun this binary knows. The command registry lives
 		// on the server and can grow without this table; hand it to the router
 		// that has the whole list instead of guessing it is a typo.
 		proxyCommand(append([]string{"metrics"}, args...), domainID)
-	}
-}
-
-func buildMetricsTrafficPath(args []string) (string, error) {
-	rangeArgs := args
-	if len(rangeArgs) > 0 && rangeArgs[0] == "traffic" {
-		rangeArgs = rangeArgs[1:]
-	}
-
-	params := url.Values{}
-	if hasFlag(rangeArgs, "--days") {
-		days := findFlag(rangeArgs, "--days")
-		if !isSupportedTrafficRange(days) {
-			return "", fmt.Errorf("--days must be one of %s", trafficRangeChoices)
-		}
-		params.Set("days", days)
-	}
-	if hasFlag(rangeArgs, "--limit") {
-		limit, err := strconv.Atoi(findFlag(rangeArgs, "--limit"))
-		if err != nil || limit < 1 || limit > 1000 {
-			return "", fmt.Errorf("--limit must be an integer from 1 to 1000")
-		}
-		params.Set("limit", strconv.Itoa(limit))
-	}
-	if hasFlag(rangeArgs, "--query") {
-		query := strings.TrimSpace(findFlag(rangeArgs, "--query"))
-		if query == "" {
-			return "", fmt.Errorf("--query needs at least one term")
-		}
-		params.Set("query", query)
-	}
-	if len(params) == 0 {
-		return "/metrics/traffic", nil
-	}
-	// Encode sorts keys, so a lone --days keeps the long-standing URL.
-	return "/metrics/traffic?" + params.Encode(), nil
-}
-
-func isSupportedTrafficRange(value string) bool {
-	switch value {
-	case "30", "60", "90", "180", "365":
-		return true
-	default:
-		return false
 	}
 }
 
@@ -2417,7 +2464,7 @@ func main() {
 		case "overview", "content", "article", "traffic":
 			runMetricsCommand(args[1:], domainID)
 		case "visibility":
-			run("/visibility", "GET", nil, domainID)
+			proxyCommand(append([]string{"visibility", "insights"}, args[2:]...), domainID)
 		case "report":
 			runReportCommand(args[2:], domainID)
 		default:

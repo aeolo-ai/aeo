@@ -11,7 +11,7 @@ These are available to all aeo users without configuration:
 | Google Drive | `aeo drive list`, `aeo drive read <id>` | Product specs, test results, customer feedback, internal docs |
 | Brand Context | `aeo agent context` | Value proposition, key features, competitors |
 | Published Content | `aeo content list --status=published` | Existing articles (avoid overlap, find cross-link targets) |
-| Visibility Data | `aeo visibility show` | Gap queries, competitor mentions |
+| Visibility Data | `aeo visibility insights` | Prompts won and lost, Share of Voice, competitors |
 | Next topic | `aeo topics next` | One article angle ranked by citation gap, with the evidence behind it (free, read-only, deterministic) |
 
 ## Custom sources (per-domain)

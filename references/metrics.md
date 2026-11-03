@@ -2,7 +2,9 @@
 
 Track deployed article performance and site-level search traffic via Google Analytics (GA4) and Google Search Console (GSC).
 
-> **Canonical noun is `measure`; `metrics` is an accepted alias.** Verb mapping: `metrics overview` = `measure overview`, `metrics article <id>` = `measure content <id>`, `metrics traffic` = `measure traffic`. The examples below use the `metrics` alias for brevity, but `measure` is the canonical form. The `measure` noun additionally carries `measure visibility` (no `metrics` alias). Failure diagnostics are `aeo diag report` (see the bottom of this file).
+> **Canonical noun is `measure`; `metrics` is an accepted alias.** `metrics article <id>` = `measure content <id>`. The examples below use the `metrics` alias. Failure diagnostics are `aeo diag report` (see the bottom of this file).
+>
+> **Retired 2026-11-03:** `measure overview` / `metrics overview`, `measure traffic` / `metrics traffic` / `diagnose traffic`, and `measure visibility`. The spellings still answer, with `traffic pages`, `traffic search-console` and `visibility insights` respectively. Call those directly.
 
 ## Prerequisites
 
@@ -11,21 +13,7 @@ Track deployed article performance and site-level search traffic via Google Anal
 
 ## Commands
 
-### `aeo metrics overview`
-
-```bash
-aeo metrics overview [-d <domainId>]
-```
-
-Returns a markdown table of all deployed articles (up to 20) with:
-- **Page Views** (GA4)
-- **Clicks** (GSC)
-- **Impressions** (GSC)
-- Published date
-
-Period: last 30 days.
-
-If Google is not connected, shows article list without stats + a setup prompt.
+For every published page with GA4 and Search Console numbers, use `aeo traffic pages --published-only true`. For site-level queries, pages, countries and devices, use `aeo traffic search-console` (both below).
 
 ### `aeo metrics article <contentId>`
 
@@ -51,33 +39,12 @@ Period: last 30 days.
 - **High impressions + low clicks** = ranking but not getting clicked → improve title/meta
 - **Top queries** show what people actually search to find the article — compare with `target_keywords`
 
-### `aeo metrics traffic`
-
-```bash
-aeo metrics traffic [-d <domainId>] [--days=30] [--limit=20] [--query "term1,term2"]
-```
-
-Site-level GSC traffic overview (not per-article). Returns:
-
-**Top Queries** — queries driving clicks/impressions to the entire site
-**Top Pages** — pages receiving the most search traffic
-**Country Breakdown** — traffic by country
-**Device Breakdown** — desktop vs mobile vs tablet
-
-`--days` accepts 30, 60, 90, 180 (6 months), or 365 (1 year). Default: 30. Other values are rejected so traffic requests reuse the shared cache windows.
-
-`--limit` sets how many query rows come back, 1-1000 (default 20). The Summary totals cover exactly the listed rows, so a small limit undercounts the site.
-
-`--query` keeps only queries that contain any of the comma-separated terms (case-insensitive, literal match). The filter runs at Search Console before the row cap, so a term outside the top N still shows up, and the pages, country and device tables are narrowed to that same traffic. Spell every script you care about, e.g. `--query "울쎄라,ulthera,ウルセラ,音波拉提"`.
-
-Requires Google Search Console connected.
-
 ## Interpreting Results
 
 - **AI traffic**: Look for `sourceMedium` containing `chatgpt`, `perplexity`, `gemini`, or `you.com` in the traffic sources table (article-level)
 - **High impressions + low clicks** = ranking but not getting clicked → improve title/meta
 - **Top queries** show what people actually search to find the article — compare with `target_keywords`
-- **Site-level traffic** (`metrics traffic`) shows overall search presence — useful for spotting new keyword opportunities and tracking GEO impact across all pages
+- **Site-level traffic** (`traffic search-console`) shows overall search presence — useful for spotting new keyword opportunities and tracking GEO impact across all pages
 
 ### `aeo traffic <card>` — the Traffic screen, card by card
 
@@ -100,15 +67,7 @@ Each read returns what one part of the dashboard's Traffic page shows, through t
 | Search Console tab: full report (queries, pages, countries, devices, daily, Discover) | `aeo traffic search-console [--source <gscSiteUrl>] [--limit 25]` |
 | Managed site / customer-site tracker | `aeo traffic site` |
 
-GA4 detail, journey and event reports are built by a background job, as on the screen. When one is not built yet the read says so and returns the job id; read again in a minute rather than retrying in a loop. `diagnose traffic` remains the Search Console query table with `--query` search.
-
-### `aeo measure visibility`
-
-```bash
-aeo measure visibility [-d <domainId>]
-```
-
-Shows the last visibility snapshot — the same data as `aeo visibility show`. Exists only under the `measure` noun (there is no `metrics visibility` alias).
+GA4 detail, journey and event reports are built by a background job, as on the screen. When one is not built yet the read says so and returns the job id; read again in a minute rather than retrying in a loop.
 
 ### `aeo diag report --command <cmd>`
 
@@ -122,8 +81,6 @@ Submit command-execution diagnostics when a command fails. Required flag: `--com
 
 | Endpoint | Method |
 |----------|--------|
-| `/v2/connector/domains/:domainId/metrics/overview` | GET |
 | `/v2/connector/domains/:domainId/metrics/article/:contentId` | GET |
-| `/v2/connector/domains/:domainId/metrics/traffic?days=N` | GET |
 
 All are read-only (all token scopes).

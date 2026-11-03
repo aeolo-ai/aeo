@@ -58,7 +58,7 @@ Use `aeo content generate` only when the user explicitly wants Aeolo to run a se
 
 | Path | Trigger | Already Available | Additionally Needed |
 |------|---------|-------------------|---------------------|
-| **Gap-driven** | `aeo visibility show` gap + content strategy priority | Brand context, target prompts, gap context | Competitor facts |
+| **Gap-driven** | `aeo visibility insights` gap + content strategy priority | Brand context, target prompts, gap context | Competitor facts |
 | **Client-brief** | User provides client materials/meeting notes/appeal points | Angle, materials (raw state) | Claims extraction, competitor context |
 | **Prompt-targeted** | "I want us to show up for this prompt" | Target prompt | Brand claims, competitors |
 | **Content Refresh** | Changed information or an unanswered reader need in an existing article | Existing article structure + content | Latest data, updated competitor context |
