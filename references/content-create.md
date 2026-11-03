@@ -25,8 +25,8 @@ locale set, and reference policy, so it cannot be picked after the text exists:
   not guess and do not retry blind — the refusal costs nothing (it fires before
   credits are reserved).
 - **No publish surface at all → refused** (`NO_ACTIVE_CHANNEL`). The fix is a
-  channel: guide the user to connect one (or activate the hosted blog — an
-  explicit user action in the dashboard). Never work around this by importing a
+  channel: guide the user to connect one (an explicit user action in the
+  dashboard). Never work around this by importing a
   channel-less draft instead; that just moves the dead end to deploy time.
 
 The background job must treat reference material, voice examples, and broad
@@ -228,7 +228,7 @@ body images. If any check fails, keep the article text-only.
 
 Two inline blocks are allowed besides the catalog image, both **verified-only
 and optional**. The author supplies data; Aeolo renders the markup on every
-surface (hosted blog, Cafe24/Shopify/WordPress/Pango Lingo deploys, feeds,
+surface (managed site, Cafe24/Shopify/WordPress/Pango Lingo deploys, feeds,
 export) — never hand-write iframes or card HTML, never add `style`/`class` of
 your own.
 

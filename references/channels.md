@@ -159,66 +159,11 @@ Both marks must survive an edit exactly once each, and the page must carry no
 script, frame, inline handler, `<base>` or `http-equiv` — the same gate the edge
 runs before storing. A page that fails it is refused with the reason.
 
-## /aeo blog show
-
-Report the hosted Aeolo blog for the active domain: its home URL, any bound custom
-host, and — when a host is bound but not yet verified — the DNS record still to add.
-
-```bash
-aeo blog show
-```
-
-The hosted blog is opt-in. If it was never created this says so rather than minting
-a URL that 404s; create it from **Channels** in the dashboard or by deploying an
-article with `aeo content deploy <id> --target blog`.
-
-## /aeo blog bind
-
-Serve the hosted blog on a host the customer owns, e.g. `pages.yourbrand.com`.
-
-```bash
-aeo blog bind pages.yourbrand.com
-```
-
-Returns the CNAME record to add at their DNS provider. **The customer adds that
-record themselves** — it lives in their DNS zone, and nothing we run can write it
-for them. Until it resolves, the command reports `waiting for DNS`; that is pending,
-not failed, so do not unbind and retry. Re-run `aeo blog show` to check.
-
-Three things to tell them:
-
-- **On Cloudflare, keep the record DNS only (grey cloud).** Proxying it makes
-  certificate verification need an extra TXT record, and Cloudflare then caches the
-  HTML so our page-view and AI-crawler telemetry stops recording hits.
-- **Their main site is untouched.** This is a separate subdomain record, so it works
-  whether they run Shopify, Cafe24, WordPress, or anything else.
-- Once bound, the host becomes the canonical address: every canonical tag, `og:url`,
-  sitemap entry, and newly published article URL uses it. The `{sub}.aeolo.blog`
-  address keeps resolving and permanently redirects, so anything an AI engine
-  already cited still reaches the article.
-
-This is a subdomain binding, not subdirectory hosting. Serving at
-`brand.com/blog/*` needs a reverse proxy inside the customer's own edge, which we
-cannot provision for them — if they publish on their own CMS, connect it as a
-channel instead (`aeo channel add`) and publish there directly.
-
-## /aeo blog unbind
-
-Stop serving on the custom host. The blog reverts to `{sub}.aeolo.blog` rather than
-going dark — the reserved name is never released, which is why re-binding later
-returns the same address.
-
-```bash
-aeo blog unbind
-```
-
-Tell them to remove the CNAME record afterwards; it no longer points anywhere we serve.
 
 > **CUD Rule applies** to `channel add`, `channel update`, `channel delete`,
-> `channel connect`, `channel disconnect`, `channel indexing`, `blog bind`, and
-> `blog unbind`. Show what you are about to change and ask "Proceed?" before calling.
+> `channel connect`, `channel disconnect`, and `channel indexing`. Show what you are about to change and ask "Proceed?" before calling.
 
 
 ## /aeo site folders list — writing destinations
 
-`aeo site folders list` lists the managed proxy site's folder names, paths, IDs and default. Create or rename folders in site management. Use `--folder /ingredients` or `--folder-id <id>` on `content generate` and `content import`, alongside `--target-channel <managed-channel-id>`. Omission uses the default folder. Folder selection is unavailable for WordPress, Shopify, other CMS and legacy hosted blogs. Invalid/deleted selections fail with available paths; never retry by silently dropping the user's folder choice.
+`aeo site folders list` lists the managed proxy site's folder names, paths, IDs and default. Create or rename folders in site management. Use `--folder /ingredients` or `--folder-id <id>` on `content generate` and `content import`, alongside `--target-channel <managed-channel-id>`. Omission uses the default folder. Folder selection is unavailable for WordPress, Shopify, and other CMS. Invalid/deleted selections fail with available paths; never retry by silently dropping the user's folder choice.

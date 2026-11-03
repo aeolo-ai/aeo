@@ -224,8 +224,7 @@ the user to connect Google in the dashboard on Traffic (`/traffic-analysis`) or 
 aeo channel add --url <site>
 ```
 
-Wider than "a push integration": a `custom` channel publishes by pull, and the
-hosted Aeolo blog publishes with no channel row at all. See
+Wider than "a push integration": a `custom` channel publishes by pull. See
 [channels.md](channels.md).
 
 ## After 7/7

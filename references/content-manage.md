@@ -50,7 +50,7 @@ Returns your published articles as a delivery contract you can render on the cus
 - **Item shape** — standard **JSON Feed 1.1** + `_geo` extension: `content_html` (server-rendered body), `title`/`summary`/`image`/`date_published`/`tags`, `_geo.slug`, `_geo.schema_jsonld` (inline-ready schema.org Article), `_geo.canonical`.
 - **How to consume** — fetch server-side (SSR/SSG), render `content_html` in your layout, inline the JSON-LD, set the page canonical to your own URL. A client-only widget defeats GEO; the body must be in server HTML on your origin. Incremental pulls: `?limit=&since=`.
 
-Use this when the customer wants Aeolo articles on their existing site in their own design rather than the hosted `*.aeolo.blog` blog or a Shopify deploy.
+Use this when the customer wants Aeolo articles on their existing site in their own design rather than a Shopify deploy.
 
 ---
 
@@ -146,7 +146,7 @@ The slug is normalized the way a title is (lowercase, letters and digits in any 
 What happens depends on where the article lives:
 
 - **Never published** — the slug simply changes.
-- **Aeolo-served surface** (managed site `pages.{domain}` / `{sub}.aeolo.site`, or `{sub}.aeolo.blog`) — the old address keeps answering with a **301** to the new one, and `published_url` follows. The old slug stays reserved for this article; moving back to it later is allowed.
+- **Aeolo-served surface** (managed site `pages.{domain}` / `{sub}.aeolo.site`) — the old address keeps answering with a **301** to the new one, and `published_url` follows. The old slug stays reserved for this article; moving back to it later is allowed.
 - **WordPress** — the post's slug changes on the site; WordPress itself 301s the old address. Our row adopts whatever slug WordPress assigned (it may append `-2`) and the permalink it returned.
 - **Shopify** — the article's handle changes and a URL redirect from the old path is created (Shopify does not do that by itself). `published_url` follows.
 - **Cafe24 / Pango Lingo / custom feed** — refused with `SLUG_LOCKED_BY_CHANNEL`: Cafe24 board posts have no slug, Pango Lingo has no address API, and a custom feed's addresses are decided by the site that renders it.
@@ -187,7 +187,7 @@ aeo content deploy <id> --target wordpress
 | Target | Destination | Channel required |
 |--------|-------------|------------------|
 | `shopify` | the connected Shopify blog | yes — auto-resolved when the brand has exactly one store |
-| `blog` | the hosted Aeolo blog | no — always available |
+| `blog` | the managed site (`*.aeolo.site` or the bound host); the name is historical | yes (managed site enabled) |
 | `wordpress` | a connected WordPress site | yes |
 | `cafe24` | a connected Cafe24 mall board | yes |
 | `pangolingo` | a connected Pango Lingo newsroom — ships the article **and every locale edition as one unit** | yes |
@@ -225,10 +225,9 @@ Use when:
 - A bug was fixed in the rendering pipeline (e.g., markdown → HTML conversion)
 - Schema or metadata needs updating
 
-**Destination is auto-detected**, read off `deploy_metadata` in this order: `shopify_article_id` → `wp_post_id` → `cafe24_article_no` → `pangolingo_article_id`, then `blog` if the article is `published`. Nothing detected means it was never deployed — run `content deploy` first. The `aeo` CLI sends no `--target` on redeploy (auto-detect only); the agent/MCP surface accepts one.
+**Destination is auto-detected**, read off `deploy_metadata` in this order: `shopify_article_id` → `wp_post_id` → `cafe24_article_no` → `pangolingo_article_id`. Nothing detected means it was never deployed — run `content deploy` first. The `aeo` CLI sends no `--target` on redeploy (auto-detect only); the agent/MCP surface accepts one.
 
 Target-specific notes:
-- `blog` — the hosted blog renders straight from the article, so there is nothing to push; the edit is already live once the page cache rolls over.
 - `pangolingo` — the Korean original body is create-only on their API, so only the locale editions are pushed.
 - `wordpress` — **a post edited on the site since our last write is refused** (`[code:REMOTE_MODIFIED]`, HTTP 409 on the REST routes), with the edit time and the wp-admin URL. Every write we make fingerprints what the site holds; a mismatch means a person changed the post there. Two ways out, and you do not pick one for the user: they pull the site's version into the article from the dashboard (article → Update → "Pull their version"), or they discard it with `content redeploy <id> --force`. A post published before the fingerprint existed goes through once and is stamped.
 
