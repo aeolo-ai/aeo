@@ -67,7 +67,7 @@ Each command below reads or changes one dashboard screen through the same route 
 ## planning — Planning allocation, settings, preview, queue, theses
 
 - `aeo planning allocation [--channel-id <id>]` — Planning allocation: the topic mix ratios, expected revision and per-channel overrides.
-- `aeo planning allocation set --input-json '{"ratios":{...},"expectedRevision":N}' [--channel-id <id>]` — Save the planning allocation (send the revision you read). _(write)_
+- `aeo planning allocation set --input-json '{"ratios":{...},"expectedRevision":N,"expectedDefaultRevision":N}' [--channel-id <id>] [--query settingsOnly=true]` — Save the planning allocation (send the revisions you read; both are required for a channel override). _(write)_
 - `aeo planning allocation reset --channel-id <id> --input-json '{"expectedRevision":N}'` — Drop a channel's allocation override back to the domain default. _(write)_
 - `aeo planning settings [--channel-id <id>]` — The composer's planning settings (method, language, channel defaults).
 - `aeo planning settings set --input-json '{...}' [--channel-id <id>]` — Save the composer's planning settings. Read `planning settings` first. _(write)_
@@ -89,6 +89,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo competitors merge --input-json '{"checkId":"…","memberKeys":["a","b"],"representativeKey":"a","expectedRevision":N}'` — Merge competitor names into one brand, as the rankings card. _(write)_
 - `aeo competitors unmerge <mergeId> --expected-revision N` — Undo a competitor merge. _(write)_
 - `aeo competitors track --input-json '{"name":"…","domain":"example.com"}'` — Track a competitor for comparison (the comparison picker's add). _(write)_
+- `aeo competitors tracked` — Tracked competitors as the comparison picker lists them.
 
 ## content history — Article revision history
 
@@ -106,6 +107,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo content comments reply <id> <threadId> --body "…"` — Reply in a comment thread. _(write)_
 - `aeo content comments update <id> <threadId> --input-json '{"status":"resolved"}'` — Resolve/reopen or edit a comment thread. _(write)_
 - `aeo content comments delete <id> <threadId>` — Delete a comment thread. _(write)_
+- `aeo content comments agent <id> <threadId> --block-html '<p>…</p>'` — Ask the editor's AI to answer a comment thread with a proposed patch (chat-metered). _(execute)_
 
 ## content schedule — Timed publishing
 
@@ -153,6 +155,8 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo writing web-search` — Web research scope for writing (allowed/blocked sources).
 - `aeo writing web-search set --input-json '{...}'` — Save the web research scope. Read `writing web-search` first. _(write)_
 - `aeo writing models` — Which AI vendor writes each writing stage.
+- `aeo writing documents` — The three writing documents (notes, strategy, policy) and their snapshot hash.
+- `aeo writing documents save --input-json '{"action":"review|save","kind":"notes|strategy|policy","value":"…","snapshotHash":"…","reviewToken":"…"}'` — Review or save one writing document with the screen's stale-check. _(write)_
 
 ## brand settings — Regulatory profile, measured targets, store link UTM, OG template
 
@@ -223,6 +227,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo index sitemap submit [--channel-id <id>]` — Submit the sitemap to Google Search Console for one site. _(external)_
 - `aeo index indexnow key --key <key> [--channel-id <id>]` — Adopt the IndexNow key a site already serves (as the Indexing screen's key step). _(write)_
 - `aeo index indexnow submit [--channel-id <id>]` — Send a site's article URLs to IndexNow now (any site, managed ones included). _(external)_
+- `aeo index status [--query channelId=…|source=hosted_blog&statuses=0]` — The Indexing screen's scope status: connection, sitemap linked in robots, on-read sitemap reconcile.
 
 ## sources — Source library: channels, documents, suggestions, Drive
 
@@ -307,6 +312,8 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo channels shopify locale-blog set <channelId> --language <l> --blog-id <id>` — Use an existing Shopify blog for one language. _(write)_
 - `aeo channels shopify locale-blog template <channelId> --language <l> --template-suffix <s>` — Set the Shopify template suffix for one language's blog. _(external)_
 - `aeo channels shopify blogs <channelId>` — The Shopify shop's blogs, to pick a publish target.
+- `aeo channels shopify detect --url <url>` — The myshopify host behind a store URL.
+- `aeo channels shopify status <channelId>` — A Shopify destination's connection: connected, shop and target blog.
 
 ## site click-preview — Managed site click map
 
@@ -411,6 +418,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo channels wordpress site <channelId>` — A WordPress site's languages, default edition and translation linking (live probe).
 - `aeo channels wordpress categories <channelId>` — The WordPress site's categories, to pick a publish target.
+- `aeo channels wordpress category set <channelId> --input-json '{"category_id":N|null,"category_name":"…"}'` — Set or clear the WordPress category. _(write)_
 
 ## channels cafe24 — Cafe24 boards, language routes and store SEO
 
@@ -421,6 +429,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo channels cafe24 seo restore <channelId> --shop-no N` — Restore the Cafe24 store's original SEO settings from the saved backup. _(external)_
 - `aeo channels cafe24 seo link-sitemap <channelId>` — Add our sitemap line to each Cafe24 shop's robots.txt. _(external)_
 - `aeo channels cafe24 shops <channelId>` — The Cafe24 mall's shops (languages) for routing and SEO.
+- `aeo channels cafe24 board set <channelId> --input-json '{"board_no":N,"board_name":"…"}'` — Set the Cafe24 board, updating the default shop's language routes too. _(write)_
 
 ## brand social-links — Brand social profile links
 
@@ -434,6 +443,240 @@ Each command below reads or changes one dashboard screen through the same route 
 ## channels requests — Integration requests
 
 - `aeo channels requests` — Integration requests sent to the Aeolo team and their state.
+
+## visibility sources — Cited sources with filters
+
+- `aeo visibility sources [--check-id <id>] [--engines chatgpt,gemini] [--locales KR,US] [--langs ko,en]` — Cited sources with the Sources lens filters (engine, market, language) for any check.
+
+## visibility competitor-options — Comparison picker brands
+
+- `aeo visibility competitor-options --check-id <id>` — The brands a check can be compared against (the comparison picker); their ids feed visibility matrices --competitor-ids.
+
+## visibility matrices — Head-to-head matrices
+
+- `aeo visibility matrices <checkId> --competitor-ids a,b [--compare-to <checkId>] [--engines …] [--locales …] [--langs …]` — Head-to-head engine/market/topic matrices for chosen competitors on any check, with run-over-run deltas against --compare-to.
+
+## channels detect — Dashboard screen
+
+- `aeo channels detect --url <url>` — What platform/stack a site runs (the add-site form's detection).
+
+## channels all — Dashboard screen
+
+- `aeo channels all` — Destinations exactly as the Sites screen lists them (all columns; managed sites only where enabled).
+
+## visibility quote — Dashboard screen
+
+- `aeo visibility quote [--engines chatgpt,gemini]` — The free credit quote before a visibility check: prompts, engines, credits.
+
+## visibility active-job — Dashboard screen
+
+- `aeo visibility active-job` — The running visibility check, if any: phase, progress, estimate.
+
+## visibility export — Dashboard screen
+
+- `aeo visibility export --check-ids a,b` — The raw AI answers of checks as the CSV the screen downloads.
+
+## visibility change — Dashboard screen
+
+- `aeo visibility change <checkId> [--query compareTo=…&brands=a,b&engines=…&locales=…&langs=…]` — Comparable change between two checks with the screen's brand/engine/market/language filters. Any other screen parameter goes in --query 'a=1&b=2'.
+
+## visibility dashboard — Dashboard screen
+
+- `aeo visibility dashboard [--query view=summary|prompts|report&month=YYYY-MM&timeZone=…]` — The AI search dashboard payload in any of its views and periods. Any other screen parameter goes in --query 'a=1&b=2'.
+
+## visibility checks — Dashboard screen
+
+- `aeo visibility checks [--query limit=10&includeResults=true&view=report|fanout&rows=packed]` — Check history as the screen loads it. Any other screen parameter goes in --query 'a=1&b=2'.
+
+## visibility latest — Dashboard screen
+
+- `aeo visibility latest [--query view=summary&fresh=1]` — The latest check the screen shows (active pointer) and any running job.
+
+## visibility run-screen — Dashboard screen
+
+- `aeo visibility run-screen [--engines chatgpt,gemini]` — Run a visibility check exactly as the screen's button (no engines = the automation's engines; refused while an experiment runs). Credit-metered. _(execute)_
+
+## visibility experiment — Dashboard screen
+
+- `aeo visibility experiment --input-json '{"promptIds":[…],"engines":[…],"mode":"experiment","requestId":"uuid","repeat":N}'` — Run a prompt experiment or targeted check with every option the screen sends. Credit-metered. _(execute)_
+
+## traffic ga-events — Dashboard screen
+
+- `aeo traffic ga-events --query propertyId=…&startDate=…&endDate=…[&siteHost=…]` — The GA4 event catalog (every event name and count) the event picker shows.
+
+## traffic ga-event — Dashboard screen
+
+- `aeo traffic ga-event --query propertyId=…&startDate=…&endDate=…&eventName=…&scope=all|aeolo_campaign|article_context` — One GA4 event's report with the screen's scope.
+
+## traffic ga-overview — Dashboard screen
+
+- `aeo traffic ga-overview --query propertyId=…&startDate=…&endDate=…` — Live GA4 overview: totals, sources, top landing pages, over time.
+
+## traffic report — Dashboard screen
+
+- `aeo traffic report --query startDate=YYYY-MM-DD&endDate=YYYY-MM-DD[&view=ai-growth]` — The full traffic report the Traffic screen builds (GA4 + Search Console).
+
+## traffic page-ga — Dashboard screen
+
+- `aeo traffic page-ga --query propertyId=…&pageUrl=…&startDate=…&endDate=…` — GA4 stats for any page URL and dates.
+
+## traffic page-gsc — Dashboard screen
+
+- `aeo traffic page-gsc --query siteUrl=…&pageUrl=…&startDate=…&endDate=…` — Search Console stats for any page URL and dates.
+
+## traffic history — Dashboard screen
+
+- `aeo traffic history [--query days=30&sourceId=…]` — Managed-site traffic history for a source.
+
+## integrations google — Dashboard screen
+
+- `aeo integrations google channel <channelId>` — Google connection and bindings for one site (inherited or its own).
+- `aeo integrations google properties-for <channelId>` — GA4 properties selectable for one site.
+- `aeo integrations google sites-for <channelId>` — Search Console sites selectable for one site.
+
+## site articles — Dashboard screen
+
+- `aeo site articles [--query limit=…&cursor=…&q=…&counts=1]` — What the managed site actually serves, with folder counts.
+
+## site template — Dashboard screen
+
+- `aeo site template example` — The managed site's rendered example page (inspect view).
+- `aeo site template write --input-json '{"html":"…","expected_revision":N,"note":"…"}'` — Write the whole managed-site template (site template edit patches parts). _(write)_
+
+## pages published — Dashboard screen
+
+- `aeo pages published` — Non-article pages Aeolo published (traffic attribution list).
+
+## content search — Dashboard screen
+
+- `aeo content search [--query status=…&article_type=…&search=…&date_from=…&date_to=…&deploy_target=…&group=family&sort_by=…&limit=…&offset=…]` — The Articles list with every filter, sort and page the screen uses. Any other screen parameter goes in --query 'a=1&b=2'.
+
+## content detail — Dashboard screen
+
+- `aeo content detail <id>` — The whole article row as the editor loads it, with its source documents.
+
+## content performance — Dashboard screen
+
+- `aeo content performance <id> [--days 30]` — An article's performance panel: citations, traffic, Search Console, reading.
+
+## content jobs — Dashboard screen
+
+- `aeo content jobs all [--query media=blog&active=false]` — Writing jobs as the screen lists them, with events and config.
+
+## content patch — Dashboard screen
+
+- `aeo content patch <id> --input-json '{"patches":[{"find":"…","replace":"…"}],"content_format":"markdown|html","expected_updated_at":"…","apply_to_locale_family":true,"schema_types":[…],"cta":{…},"thumbnail_crop":{…}}'` — Edit an article with every field the editor saves. _(write)_
+
+## content begin-edit — Dashboard screen
+
+- `aeo content begin-edit <id> --expected-updated-at ISO` — Open a review revision of an approved article without touching the live version. _(write)_
+
+## content draft — Dashboard screen
+
+- `aeo content draft [--title …] [--article-type …] [--language …]` — Create a blank draft (the New article button). _(write)_
+
+## content approve-deploy — Dashboard screen
+
+- `aeo content approve-deploy <id>` — Approve and deploy an article in one step, as the Articles screen. _(external)_
+
+## content publish-at — Dashboard screen
+
+- `aeo content publish-at <id> --input-json '{"channel_id":"…"|"target":"hosted"|"published_url":"…","platform":"…"}'` — Publish to a destination, or mark the article published at an external URL. _(external)_
+
+## content unpublish-blog — Dashboard screen
+
+- `aeo content unpublish-blog <id>` — Unpublish from the Aeolo-hosted blog and withdraw its weekly slot, as the screen. _(external)_
+
+## image — Dashboard screen
+
+- `aeo image generate-full --input-json '{"prompt":"…","styleProductId":"…","moodReferenceJobId":"…","productUseCards":[…],"linkTarget":{"targetType":"blog_article","targetId":"…","role":"thumbnail_candidate","autoSelect":true}}'` — Generate images with every option the composer sends, linked to an article. Credit-metered. _(execute)_
+- `aeo image import --input-json '{"url":"…","targetType":"blog_article","targetId":"…","role":"selected_thumbnail"}'` — Bring an outside image into the gallery and link it to an article (the stock-photo pick). _(write)_
+- `aeo image link --input-json '{"outputId":"…","targetType":"blog_article","targetId":"…","role":"selected_thumbnail"}'` — Link a gallery image to an article in a role (thumbnail candidate, selected, related). _(write)_
+- `aeo image gallery browse [--query media=visual_asset&limit=60&offset=…&createdAfter=…&createdBefore=…]` — The gallery with the screen's paging and date filters.
+
+## media — Dashboard screen
+
+- `aeo media curated [--query page=1&perPage=…]` — Curated stock photos the picker shows before a search.
+
+## publish — Dashboard screen
+
+- `aeo publish thumbnail <contentId> --platform shopify|wordpress` — Push only the cover image to the live post (body and title untouched). _(external)_
+- `aeo publish batch --platform shopify|wordpress|cafe24 --input-json '{"channel_id":"…","content_ids":[…]}'` — Deploy several articles to one destination at once. _(external)_
+- `aeo publish shopify <contentId> --channel-id <id>` — Deploy to Shopify as the screen (also hosted-published articles). _(external)_
+
+## strategy — Dashboard screen
+
+- `aeo strategy visual full` — The whole visual style with cover settings, saved looks and the brand-snapshot preview.
+- `aeo strategy visual save --input-json '{…coverTitleRequired, coverTitleRenderer, coverAspectRatio, coverLogoOverlay, coverTemplate, moodReferenceJobId, savedLooks…}'` — Save the visual style with every field the screen edits. _(write)_
+
+## prompts add-full — Dashboard screen
+
+- `aeo prompts add-full --input-json '{"prompts":[{"stage":"…","query_form":"…","canonical":"…","prompt":"…","topic_id":"…","regions":[…]}]}'` — Add prompts with topic and regions, as the screen. _(write)_
+
+## prompts generate-full — Dashboard screen
+
+- `aeo prompts generate-full --input-json '{"stages":[…],"languages":[…],"bizContext":"…","instruction":"…"}'` — Generate prompts with stages and business context, as the screen. _(execute)_
+
+## prompts delete-many — Dashboard screen
+
+- `aeo prompts delete-many --ids a,b,c` — Delete several prompts at once. _(write)_
+
+## channels create — Dashboard screen
+
+- `aeo channels create --input-json '{"url":"…","type":"…","label":"…","detected_stack":{…}}'` — Add a destination as the Sites screen (reuses an unserved row, stamps the stack, auto-verifies custom sites). _(write)_
+
+## audit run-screen — Dashboard screen
+
+- `aeo audit run-screen [--channel-id <id>] [--max-pages N]` — Run a site audit as the screen (no channel = the primary site). Credit-metered. _(execute)_
+
+## audit latest — Dashboard screen
+
+- `aeo audit latest [--channel-id <id>]` — The latest audit for one site, as the audit tab.
+
+## domain list-full — Dashboard screen
+
+- `aeo domain list-full` — Brands with the cap-lock flag, as the brand switcher.
+
+## domain entitlements — Dashboard screen
+
+- `aeo domain entitlements` — What this brand may use: engines, features, who is billed.
+
+## domain capacity — Dashboard screen
+
+- `aeo domain capacity` — How many brands this account may add (used, limit, remaining).
+
+## domain create — Dashboard screen
+
+- `aeo domain create --host <host> [--name …]` — Create a brand without starting a crawl (the Settings add-brand form). _(write)_
+
+## domain claim — Dashboard screen
+
+- `aeo domain claim <draftId> --input-json '{"preview":{…}}'` — Claim an onboarding draft with the edited preview. _(write)_
+
+## account me — Dashboard screen
+
+- `aeo account me` — The signed-in user: id, role, avatar, created.
+
+## account subscription-full — Dashboard screen
+
+- `aeo account subscription-full` — The whole subscription: status, period, usage, billing source.
+
+## account ledger-full — Dashboard screen
+
+- `aeo account ledger-full [--query start=…&end=…&limit=500&offset=…&actor=…]` — The credit ledger with totals and summary, by member and dates.
+
+## brand products — Dashboard screen
+
+- `aeo brand products catalog [--query fresh=1]` — The full product catalog with sync status.
+- `aeo brand products bulk --pdp-urls a,b` — Add up to 50 products by PDP URL at once. _(external)_
+
+## market-map — Dashboard screen
+
+- `aeo market-map state [--query market=…&jobId=…]` — The market map with job progress and dialable markets.
+
+## report snapshot-full — Dashboard screen
+
+- `aeo report snapshot-full --input-json '{"reportType":"…","locale":"…","htmlContent":"…","accessMode":"…","expiresInDays":30,"rotate":true,"ogMeta":{…}}'` — Create or rotate a shared report link with every option the screen sends. _(external)_
 
 ## Not reachable on purpose
 
