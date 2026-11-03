@@ -68,6 +68,7 @@ Names only, on purpose: flags, credit costs, sharp edges, and output contracts l
 | `config` | `data-sources [update]` · `glossary [update]` · `reference-policy [update]` | [data-access.md](references/data-access.md) |
 | `auth` | `login` · `status` · `logout` | [setup.md](references/setup.md) |
 | `account` (alias `billing`/`whoami`) | `whoami` · `subscription` · `credits` · `ledger` | this file |
+| dashboard screens | `members` · `invitations` · `report monthly`/`delivery` · `automation calendar`/`slack`/`email` · `research` · `planning` · `competitors` · `content history`/`comments`/`schedule`/`job stop` · `review` · `writing` · `brand settings`/`locations` · `site host`/`indexing`/`folders` · `channels settings`/`html`/`tone` · `index` · `sources` · `pages revisions` — what each screen shows, through the screen's own route; a group alone prints its commands | [dashboard-screens.md](references/dashboard-screens.md) |
 | — | bare `/aeo` (full GEO context) · `/aeo report` (error reporting — see below) | [workflows.md](references/workflows.md) |
 
 ---
