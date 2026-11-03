@@ -6,8 +6,8 @@ their output commands.** Route every content request to a blog article
 
 | Surface | Retired (HTTP 410) | Existing rows only (do not use for new work) | Instead |
 |---------|--------------------|-----------------------------------------------|---------|
-| Card news | `carousel create` | `carousel update` | blog article |
-| Channel posts / Threads | `post import` (and the `post write` workflow) | `post preview`, `post approve`, `post publish` | blog article |
+| Card news | `carousel create`, `carousel update` (2026-11-03) | none | blog article |
+| Channel posts / Threads | `post import` (and the `post write` workflow), `post preview`, `post approve`, `post publish` (2026-11-03) | none | blog article |
 | Shortform video output | `video generate` | none | blog article |
 
 The loop never closed for any of the three: Threads publishing was gated on a Meta
@@ -25,9 +25,8 @@ index → citation closes inside the product.
 
 The retired writes are deliberately **absent from the skill's CUD confirmation
 list** — they are not "confirm first" commands, they are not-at-all commands. The
-surviving verbs that still mutate (`carousel update`/`delete`, `post preview`/
-`approve`/`publish`/`delete`, `post analyze`) need explicit user confirmation as
-usual, and only ever act on rows that already exist.
+surviving verbs that still mutate (`carousel delete`, `post delete`, `post analyze`)
+need explicit user confirmation as usual, and only ever act on rows that already exist.
 
 ## Card news (carousel) — RETIRED
 
@@ -39,7 +38,7 @@ verbs stay so existing decks remain visible and removable.
 | `/aeo carousel list [--limit N]` | List carousel decks that already exist for the domain |
 | `/aeo carousel get <jobId>` | Get an existing deck (slides + caption) by job ID |
 | `/aeo carousel create [--topic "..."]` | **RETIRED** — returns 410. Write a blog article instead. |
-| `/aeo carousel update <jobId> --caption "..."` | Deprecated, still works on existing decks only. Do not offer it for new work |
+| `/aeo carousel update <jobId>` | **RETIRED** (2026-11-03) — returns an error; captions of existing decks are no longer edited |
 | `/aeo carousel delete <jobId>` | Soft-delete a deck (cancels active work; assets stay recoverable) |
 
 ## Channel posts (social distribution) — RETIRED (output only)
@@ -58,9 +57,7 @@ cleaning up rows that already exist.
 | `/aeo post analyze --url <URL>` | **LIVE** (reference input) — analyze one channel/reference URL for voice evidence (`--provider blog\|threads\|tiktok\|instagram`, `--mode owned\|reference`, `--limit`). Detail: [tov-extract.md](tov-extract.md) |
 | `post write` | **RETIRED** — draft a blog article instead |
 | `/aeo post import` | **RETIRED** — do not import new channel-post drafts |
-| `/aeo post preview <id>` | For existing posts only (Reels rows, Reddit drafts customers already have). Do not create new channel-post output |
-| `/aeo post approve <id>` | For existing posts only. Do not create new channel-post output |
-| `/aeo post publish <id>` | Deprecated, still works on an existing approved post. No new posts are created |
+| `/aeo post preview` / `approve` / `publish <id>` | **RETIRED** (2026-11-03) — return an error. Publishing only ever reached Threads/LinkedIn |
 | `/aeo post list` / `/aeo post get <id>` / `/aeo post delete <id>` | Read/cleanup on existing rows (`--platform`, `--status`, `--limit`, `--offset`) |
 
 ## Shortform video output — RETIRED

@@ -1261,10 +1261,7 @@ Notes:
   import            Import a channel post draft
                     Required: --platform, --body (or --posts JSON array)
                     Optional: --title, --post-type, --target, --content-id, --channel-id
-  preview <id>      Generate preview link
   delete <id>       Delete a channel post
-  approve <id>      Approve a draft post for publishing
-  publish <id>      Publish an approved post to its platform
 `,
 	"auth": `aeo auth <verb>
 
@@ -2853,18 +2850,9 @@ func main() {
 			applyWritingDestination(importBody, args)
 			importJSON, _ := json.Marshal(importBody)
 			run("/channel-posts", "POST", importJSON, domainID)
-		case "preview":
-			requireArg(args, 2, "aeo post preview <id>")
-			run("/channel-posts/"+args[2]+"/preview-link", "POST", nil, domainID)
 		case "delete":
 			requireArg(args, 2, "aeo post delete <id>")
 			run("/channel-posts/"+args[2], "DELETE", nil, domainID)
-		case "approve":
-			requireArg(args, 2, "aeo post approve <id>")
-			run("/channel-posts/"+args[2]+"/approve", "POST", nil, domainID)
-		case "publish":
-			requireArg(args, 2, "aeo post publish <id>")
-			run("/channel-posts/"+args[2]+"/publish", "POST", nil, domainID)
 		default:
 			// Unknown verb for a noun this binary knows. The command registry lives
 			// on the server and can grow without this table; hand it to the router

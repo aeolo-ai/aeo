@@ -33,7 +33,7 @@ Names only, on purpose: flags, credit costs, sharp edges, and output contracts l
 
 > **Aliases** (legacy spellings work on every surface: the CLI handles them or forwards them to the router; prefer canonical forms in new examples): `diagnose` = `visibility`/`audit` · `measure` = `metrics` · `account` = `billing`/`whoami` · `publish` mirrors `content deploy|redeploy|preview`. Noun-first plurals (`posts`, `channels`) and legacy verbs (`brand update`) route too.
 
-> **Retired surfaces (2026-07-27)** — 410: `carousel create`, `post import` (and the `post write` workflow), `video generate`. **Never offer or call these** — route every content request to a blog article. Existing rows only, never for new work: `carousel update`, `post preview/approve/publish`. Analysis input stays live (`post analyze`, `reference *`, `video analyze`, `video poll`), as do read/cleanup verbs. [retired.md](references/retired.md)
+> **Retired surfaces (2026-07-27)** — 410: `carousel create`, `post import` (and the `post write` workflow), `video generate`; since 2026-11-03 also `carousel update`, `post preview/approve/publish`. **Never offer or call these** — route every content request to a blog article. Analysis input stays live (`post analyze`, `reference *`, `video analyze`, `video poll`), as do read/cleanup verbs. [retired.md](references/retired.md)
 
 | Area | Commands | Reference |
 |------|----------|-----------|
