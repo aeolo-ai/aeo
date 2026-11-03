@@ -100,6 +100,7 @@ Each read below returns what one part of the dashboard's AI search tab shows, th
 | Engine score card change (only cells both checks measured) | `aeo visibility compare [--check-id] [--compare-to] [--engines] [--markets]` |
 | Fan-out: searches engines ran, by query | `aeo visibility fanout [--query text] [--engine chatgpt] [--brand own|other|none] [--limit 50]` |
 | Our pages AI cited, per prompt × engine | `aeo visibility own-citations` |
+| Citation performance: AI citations per published article | `aeo traffic citations [--days 60]` |
 | One prompt's answers per engine (text, brands, searches, citations) | `aeo prompts results <promptId> [--full]` |
 | Sentiment lens: tone per prompt × engine × market | `aeo visibility sentiment [--limit 30]` |
 | Atlas (staff and Atlas pilot brands only) | `aeo visibility atlas`, `aeo visibility atlas-opportunity --market <code>` |
