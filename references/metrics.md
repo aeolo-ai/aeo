@@ -97,6 +97,7 @@ Each read returns what one part of the dashboard's Traffic page shows, through t
 | GSC tab: AI Overview / AI Mode impressions | `aeo traffic ai-overview` |
 | GSC and GA4 tabs: explorer rankings | `aeo traffic explore --kind gsc\|ga4 [--dimension query\|page\|source\|device] [--country XX]` |
 | All tab: headline chart split | `aeo traffic hero [--breakdown channel\|device\|country\|subfolder\|device-daily] [--metric sessions\|totalSessions\|searchSessions\|proxySessions]` |
+| Search Console tab: full report (queries, pages, countries, devices, daily, Discover) | `aeo traffic search-console [--source <gscSiteUrl>] [--limit 25]` |
 | Managed site / hosted blog / customer-site tracker | `aeo traffic site` |
 
 GA4 detail, journey and event reports are built by a background job, as on the screen. When one is not built yet the read says so and returns the job id; read again in a minute rather than retrying in a loop. `diagnose traffic` remains the Search Console query table with `--query` search.
