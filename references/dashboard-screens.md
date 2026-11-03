@@ -160,8 +160,8 @@ Each command below reads or changes one dashboard screen through the same route 
 
 ## brand settings — Regulatory profile, measured targets, store link UTM, OG template
 
-- `aeo brand settings` — Brand screen settings brand update does not show: regulatory_profile, prompt_targets (measured region × languages), store_link_params, og_template and the curated brand visual assets.
-- `aeo brand settings set --input-json '{"regulatory_profile":{…}|"prompt_targets":[…]|"store_link_params":{…}|"og_template":{…}}'` — Save one or more of those Brand screen settings. Only these keys are accepted; everything else stays with brand update. _(write)_
+- `aeo brand settings` — Brand screen settings brand update does not show: regulatory_profile, prompt_targets (measured region × languages), store_link_params, og_template, writing_review_language (the language reviewers read drafts in) and the curated brand visual assets.
+- `aeo brand settings set --input-json '{"regulatory_profile":{…}|"prompt_targets":[…]|"store_link_params":{…}|"og_template":{…}|"writing_review_language":"ko"}'` — Save one or more of those Brand screen settings. Only these keys are accepted; everything else stays with brand update. _(write)_
 
 ## brand visual-assets — Curated brand visual assets
 
