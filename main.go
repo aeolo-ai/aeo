@@ -748,6 +748,16 @@ func applyWritingDestination(body map[string]any, args []string) {
 	}
 }
 
+// applyEditionOf carries --edition-of <canonical id> on `content import`: the
+// draft is a hand-written locale edition of that canonical. The server checks
+// the id (same domain, another language, editor only) and links the edition
+// at insert as a draft that is approved with its canonical (AEO-1400).
+func applyEditionOf(body map[string]any, args []string) {
+	if v := findFlag(args, "--edition-of"); v != "" {
+		body["editionOf"] = v
+	}
+}
+
 // buildDeployBody assembles the POST /content/<id>/deploy payload.
 //
 // --target has to travel. This body carried channel_id ONLY until 2026-08-03,
@@ -1140,7 +1150,9 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   import            Import an agent-written draft article
                     Required: --title, --body (or --body-file)
                     Optional: --type, --keywords (comma-separated), --language, --rationale,
-                              --meta-description, --sources (JSON array)
+                              --meta-description, --sources (JSON array),
+                              --edition-of <canonical id> (this draft is that article's
+                              locale edition in --language; editors only)
   generate          Explicit-only Aeolo server-side generation job (costs 5 credits)
                     Required: --prompt (or --prompt-file)
                     Optional: --media, --language,
@@ -2364,6 +2376,7 @@ func main() {
 				importBody["sources"] = sources
 			}
 			applyWritingDestination(importBody, args)
+			applyEditionOf(importBody, args)
 			importJSON, _ := json.Marshal(importBody)
 			run("/content/import", "POST", importJSON, domainID)
 		default:
