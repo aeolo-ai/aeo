@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -278,6 +279,7 @@ func callAuthenticatedJSON(reqURL, method string, body []byte, apiKey string) (s
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Client-Version", version)
+	req.Header.Set("Accept", "application/json, application/problem+json;q=0.9, text/markdown;q=0.8")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -288,6 +290,16 @@ func callAuthenticatedJSON(reqURL, method string, body []byte, apiKey string) (s
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
+	}
+
+	if resp.StatusCode == http.StatusPaymentRequired {
+		var problem struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		}
+		if json.Unmarshal(respBody, &problem) == nil && problem.Code == "INSUFFICIENT_CREDITS" {
+			return "", &insufficientCreditsError{message: problem.Message, body: respBody}
+		}
 	}
 
 	if resp.StatusCode >= 400 {
@@ -463,11 +475,37 @@ func redeployBody(args []string) []byte {
 	return nil
 }
 
+// exitCodeInsufficientCredits lets a script tell "buy credits" from a failure.
+const exitCodeInsufficientCredits = 3
+
+// insufficientCreditsError carries the server's Problem Details body.
+type insufficientCreditsError struct {
+	message string
+	body    []byte
+}
+
+func (e *insufficientCreditsError) Error() string { return e.message }
+
+// failCommand prints err and exits. With --format json, an out-of-credits refusal
+// prints the server's structured body on stdout, where scripts read results.
+func failCommand(err error, args []string) {
+	var credits *insufficientCreditsError
+	if errors.As(err, &credits) {
+		if findFlag(args, "--format") == "json" {
+			fmt.Println(string(credits.body))
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		}
+		os.Exit(exitCodeInsufficientCredits)
+	}
+	fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+	os.Exit(1)
+}
+
 func run(path, method string, body []byte, domainID string) {
 	result, err := callConnector(path, method, body, domainID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(1)
+		failCommand(err, os.Args[1:])
 	}
 	fmt.Println(result)
 }
@@ -475,8 +513,7 @@ func run(path, method string, body []byte, domainID string) {
 func runAPI(path, method string, body []byte) {
 	result, err := callAPI(path, method, body)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(1)
+		failCommand(err, os.Args[1:])
 	}
 	fmt.Println(result)
 }
@@ -951,6 +988,10 @@ var subUsage = map[string]string{
   approve "<approval>" --thread <id>
                     Run the change the agent proposed in that thread, after the user approved it
   result <turnId>   Read the answer of a turn that was still working
+  # from the command registry — generated, do not edit by hand
+  card              The agent context card: this week's published and awaiting-approval counts, connected sources and their health, and the inbox.
+  voice             How the agent speaks to this user: language and tone.
+  voice set         Change the agent's language and tone for this user (also re-languages existing agent rooms).
 `,
 	"domain": `aeo domain <verb>
 
@@ -1331,7 +1372,6 @@ Notes:
   gallery           List generated gallery assets for the domain (--type image|video, default image; --limit N, default 20)
   gallery delete    Delete a generated gallery asset by ID
   generate-full     Generate images with every option the composer sends, linked to an article
-  import            Bring an outside image into the gallery and link it to an article (the stock-photo pick).
   link              Link a gallery image to an article in a role (thumbnail candidate, selected, related).
   gallery browse    The gallery with the screen's paging and date filters.
 `,
@@ -1369,10 +1409,14 @@ Notes:
   Report command execution to the server.
   Flags: --command (required), --status-code, --response-body, --context
   # from the command registry — generated, do not edit by hand
+  share             Issue a protected share URL using the same cards, charts and layout as Reports (latest period and default layout unless specified)
   snapshot          Create a shareable report link — freeze a rendered report (--type audit|visibility|traffic|prompts|performance, --html required) and mint a secret/password share URL (--access-mode, --password, --expires 7|30|90|never, --locale)
   monthly           The stored report on the Reports screen for a month (default: this month, UTC) or a date range: score, trend, what changed, traffic, work completed, index status, per-engine scores
   delivery          Report email delivery: on/off and recipients.
   delivery set      Turn report emails on/off and replace recipients, language and time zone
+  layouts           Saved report layout presets for the selected brand
+  layout-create     Save a report layout preset: {name,spec:{version:2,blocks:[{id,type:"section",section,width:"full"|"half"}]}}
+  layout-update     Update a report layout preset
   check             The stored report for one visibility check (reads the stored copy; does not generate).
   saved             Saved AI-written reports; with an id, open one.
   opportunities     Opportunities that cross AI visibility with Search Console (the traffic report's gap-first list).
