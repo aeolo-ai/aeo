@@ -8,7 +8,6 @@ These are available to all aeo users without configuration:
 
 | Source | Command | What to look for |
 |--------|---------|-----------------|
-| Google Drive | `aeo drive list`, `aeo drive read <id>` | Product specs, test results, customer feedback, internal docs |
 | Brand Context | `aeo agent context` | Value proposition, key features, competitors |
 | Published Content | `aeo content list --status=published` | Existing articles (avoid overlap, find cross-link targets) |
 | Visibility Data | `aeo visibility insights` | Prompts won and lost, Share of Voice, competitors |
@@ -124,7 +123,7 @@ the full term list, not a delta.
 When researching for an article:
 
 1. **Read custom sources** — `aeo config data-sources` → follow each pointer
-2. **Search Drive** — `aeo drive list` with topic-relevant keywords
+2. **Read available source material** — use already imported documents or material supplied by the user; legacy SA Drive folder access is retired.
 3. **Check brand context** — `aeo agent context` for claims and positioning
 4. **Ask the user** — if 1st-party material is insufficient for the topic
 5. **External research** — web search, authority sources, competitor sites

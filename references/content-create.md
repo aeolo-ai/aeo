@@ -186,7 +186,7 @@ Read the configured sources. If none exist, use the default sources from data-ac
 
 Search for topic-relevant material in this order:
 
-1. **Google Drive**: `aeo drive list` → scan folders mentioned in data_sources config → `aeo drive read <id>` for matches
+1. **Provided documents**: read available imported source passages and user-provided material. Legacy SA Drive folder access is retired; do not request reconnection.
 2. **Custom URLs**: If data_sources lists specific URLs, read/browse them
 3. **Brand context**: `aeo agent context` → extract relevant claims and proof points
 
@@ -220,7 +220,7 @@ first explanatory paragraph for that product:
 
 If the draft already contains an image, do not add another. Treat the image as
 presentation, never as evidence for a claim or a replacement for an inline
-citation. Do not use `aeo image search`, `aeo image generate`, web-search image
+citation. Do not use `aeo image generate`, web-search image
 results, stock images, marketplace PDPs, or arbitrary external URLs for inline
 body images. If any check fails, keep the article text-only.
 

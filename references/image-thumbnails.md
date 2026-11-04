@@ -2,7 +2,7 @@
 
 A blog cover is produced by **generating candidates and picking one**, not by describing a picture and hoping. The brand's own visual style guide steers the look; a catalog product, when there is one, is carried in as a *subject* the model must reproduce rather than invent.
 
-> **Cost**: every rendered candidate is 5 credits (`image generate`, `image swap` alike). `--sweep 4` is 20 credits. Failed renders are refunded. Tier gate: `content-create` (Starter+). `image search`, `image upload`, `image gallery`, and `products` are open to any member with edit access.
+> **Cost**: every rendered candidate is 5 credits (`image generate`, `image swap` alike). `--sweep 4` is 20 credits. Failed renders are refunded. Tier gate: `content-create` (Starter+). `image upload`, `image gallery`, and `products` are open to any member with edit access.
 >
 > **Size gate, every path**: images must be **≤25 megapixels** (Shopify's article-attachment limit). Enforced at `image upload`, `content update --thumbnail-url`, and on generated output. Oversized returns `IMAGE_TOO_LARGE` (HTTP 422) with the dimensions. Resize with `sips -Z 4800 <in> --out <out>`.
 
@@ -105,8 +105,7 @@ Series consistency comes from **same grammar, different body part** (heel / fore
 ## `/aeo image swap` — one product into one scene
 
 ```bash
-aeo image search "kitchen counter natural light" --per-page 12
-aeo image swap --content <id> --product <id> --reference "https://images.pexels.com/…"
+aeo image swap --content <id> --product <id> --reference "<uploaded_reference_url>"
 ```
 
 Async: returns a job ID, poll with `aeo image poll`. Persists to `content_history.thumbnail_url` on success; `--no-persist` previews without committing.
@@ -119,7 +118,7 @@ When it does apply, the reference scene decides the result. Filter candidates in
 2. **Same shape category** — stick → stick/marker, tube → tube, jar → jar. Cross-form-factor swaps morph the silhouette.
 3. **Matching body part / setting** — a face-serum article needs a face scene, not legs.
 
-If no first-page result clears all three, refine the query rather than settling; every attempt costs credits.
+Choose a reference from your uploaded images or Google Drive that meets all three criteria; every attempt costs credits.
 
 **With no clean standalone product cut, do not use swap.** `image generate --product <id> --sweep 4` with "no packaging, no box, no labels, no text" in the prompt is the answer.
 
@@ -190,7 +189,6 @@ Lists the domain's generated and uploaded assets. Use it to find URLs for `--sub
 
 - `GET  /v2/connector/domains/:domainId/products`
 - `POST /v2/connector/domains/:domainId/products` — `{ pdpUrl }`
-- `GET  /v2/connector/image/search?q=…&perPage=…&page=…`
 - `POST /v2/connector/domains/:domainId/image/upload` — `{ base64, mimeType, contentId? }`
 - `POST /v2/connector/domains/:domainId/image/swap` — `{ contentId, productId, referenceUrl, persist? }` (async → `{ jobId }`)
 - `POST /v2/connector/domains/:domainId/image/generate` — `{ prompt, model?, aspectRatio?, resolution?, count?, applyBrandStyle?, referenceUrls?, subjectReferenceUrls?, styleReferenceUrls?, styleProductIds?, subjectPolicy?, recommendFromContentId? }` (async → `{ jobs, taskIds }`)

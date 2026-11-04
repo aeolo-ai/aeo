@@ -351,6 +351,18 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo audit history [--limit 10] [--channel-id <id>]` — Past site-audit runs, optionally for one site (the audit tab's history).
 
+## report layouts — Dashboard screen
+
+- `aeo report layouts` — Saved report layout presets for the selected brand. Element order and widths only; data follows the selected report period.
+
+## report layout-create — Dashboard screen
+
+- `aeo report layout-create --input-json <json>` — Save a report layout preset: {name,spec:{version:2,blocks:[{id,type:"section",section,width:"full"|"half"}]}}. Requires editor access. _(write)_
+
+## report layout-update — Dashboard screen
+
+- `aeo report layout-update <layoutId> --input-json <json>` — Update a report layout preset. Read report layouts first; send name, spec, and expectedUpdatedAt from the stored preset. Conflicting edits are rejected. _(write)_
+
 ## report check — Stored report for one check
 
 - `aeo report check <checkId>` — The stored report for one visibility check (reads the stored copy; does not generate).
@@ -593,10 +605,6 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo image import --input-json '{"url":"…","targetType":"blog_article","targetId":"…","role":"selected_thumbnail"}'` — Bring an outside image into the gallery and link it to an article (the stock-photo pick). _(write)_
 - `aeo image link --input-json '{"outputId":"…","targetType":"blog_article","targetId":"…","role":"selected_thumbnail"}'` — Link a gallery image to an article in a role (thumbnail candidate, selected, related). _(write)_
 - `aeo image gallery browse [--query media=visual_asset&limit=60&offset=…&createdAfter=…&createdBefore=…]` — The gallery with the screen's paging and date filters.
-
-## media — Dashboard screen
-
-- `aeo media curated [--query page=1&perPage=…]` — Curated stock photos the picker shows before a search.
 
 ## publish — Dashboard screen
 
