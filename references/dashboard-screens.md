@@ -9,11 +9,11 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo members list` — Team members of this domain with role and join date. Same data and rules as the dashboard screen.
 - `aeo members invitations` — Pending invitations of this domain (email, role, expiry). Same data and rules as the dashboard screen.
-- `aeo members invite --email <email> --role editor|viewer|owner` — Invite a person by email (sends the invitation mail). Owner/editor rules as on the Members screen. Confirm the address and role with the user first. _(external)_
-- `aeo members invite-link --role editor|viewer [--expires-in-days N]` — Create a shareable invite link for a role (anyone holding it can join). Confirm with the user first. _(write)_
+- `aeo members invite --email <email> --role editor|viewer|owner` — In a domain group this joins every domain of the group; the response lists them in group_domains. Invite a person by email (sends the invitation mail). Owner/editor rules as on the Members screen. Confirm the address and role with the user first. _(external)_
+- `aeo members invite-link --email <email> --role editor|viewer` — Create an invite link addressed to one email, without sending mail. In a domain group it joins every domain of the group. _(write)_
 - `aeo members invite-cancel <invitationId>` — Cancel a pending invitation. _(write)_
 - `aeo members role <memberId> --role owner|editor|viewer` — Change a member's role (owners only; the last owner cannot be demoted). memberId is the row id from `members list`. _(write)_
-- `aeo members remove <memberId>` — Remove a member from this domain, or leave it yourself (your own member id). Irreversible for that member's access; confirm first. _(write)_
+- `aeo members remove <memberId>` — In a domain group this removes the person from every domain of the group. Remove a member from this domain, or leave it yourself (your own member id). Irreversible for that member's access; confirm first. _(write)_
 
 ## invitations — Invitations addressed to you
 
