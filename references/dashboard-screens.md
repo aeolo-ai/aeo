@@ -70,7 +70,6 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo planning allocation set --input-json '{"ratios":{...},"expectedRevision":N,"expectedDefaultRevision":N}' [--channel-id <id>] [--query settingsOnly=true]` — Save the planning allocation (send the revisions you read; both are required for a channel override). _(write)_
 - `aeo planning allocation reset --channel-id <id> --input-json '{"expectedRevision":N}'` — Drop a channel's allocation override back to the domain default. _(write)_
 - `aeo planning settings [--channel-id <id>]` — The composer's planning settings (method, language, channel defaults).
-- `aeo planning settings set --input-json '{...}' [--channel-id <id>]` — Save the composer's planning settings. Read `planning settings` first. _(write)_
 - `aeo planning preview --method coverage|competition|external --language <l>` — Next-topic candidates for one planning method, as the Planning screen previews them.
 - `aeo planning choices` — Topics queued as the next articles (the Planning screen's queue).
 - `aeo planning theses --language <l> --market <code>` — Build (or read cached) topic theses for a language and market, as the Planning screen does. May take minutes. _(execute)_
@@ -600,7 +599,6 @@ Each command below reads or changes one dashboard screen through the same route 
 ## image — Dashboard screen
 
 - `aeo image generate-full --input-json '{"prompt":"…","styleProductId":"…","moodReferenceJobId":"…","productUseCards":[…],"linkTarget":{"targetType":"blog_article","targetId":"…","role":"thumbnail_candidate","autoSelect":true}}'` — Generate images with every option the composer sends, linked to an article. Credit-metered. _(execute)_
-- `aeo image import --input-json '{"url":"…","targetType":"blog_article","targetId":"…","role":"selected_thumbnail"}'` — Bring an outside image into the gallery and link it to an article (the stock-photo pick). _(write)_
 - `aeo image link --input-json '{"outputId":"…","targetType":"blog_article","targetId":"…","role":"selected_thumbnail"}'` — Link a gallery image to an article in a role (thumbnail candidate, selected, related). _(write)_
 - `aeo image gallery browse [--query media=visual_asset&limit=60&offset=…&createdAfter=…&createdBefore=…]` — The gallery with the screen's paging and date filters.
 
@@ -704,4 +702,4 @@ Each command below reads or changes one dashboard screen through the same route 
 - Settings › Billing checkout, credit packs, customer portal, store billing sync: Purchases and payment-method changes are never made by the agent.
 - Settings › Account dashboard language: Client-only preference of the viewer's browser.
 - Article professional legal approval (legal-publication-review approvals): Approval by a qualified reviewer must be that person's own act; content approve states it does not grant it.
-- Gallery file upload: Needs the file bytes from the viewer's device; the agent imports images by URL through image tools instead.
+- Gallery file upload: Needs the file bytes from the viewer's device; the agent pins an image by URL with media set-thumbnail instead.
