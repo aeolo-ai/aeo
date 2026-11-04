@@ -9,11 +9,18 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo members list` — Team members of this domain with role and join date. Same data and rules as the dashboard screen.
 - `aeo members invitations` — Pending invitations of this domain (email, role, expiry). Same data and rules as the dashboard screen.
-- `aeo members invite --email <email> --role editor|viewer|owner` — In a domain group this joins every domain of the group; the response lists them in group_domains. Invite a person by email (sends the invitation mail). Owner/editor rules as on the Members screen. Confirm the address and role with the user first. _(external)_
-- `aeo members invite-link --email <email> --role editor|viewer` — Create an invite link addressed to one email, without sending mail. In a domain group it joins every domain of the group. _(write)_
+- `aeo members teams` — What the signed-in person belongs to: the team they own (members, pending invitations), teams they joined, and domains they were invited to alone. Each owner has one team, and its members reach all the owner's domains.
+- `aeo members team-name --name <name>` — Rename the team you own. The default name is "{Owner}'s Team". _(write)_
+- `aeo members team-invite --email <email> --role editor|viewer` — Invite a person to the team you own (sends the invitation mail). They reach ALL your domains, including future ones; to share one domain use `members invite`. Confirm first; the response lists them in team_domains. _(external)_
+- `aeo members team-invite-cancel <invitationId>` — Cancel a pending invitation to your team. _(write)_
+- `aeo members team-role <userId> --role editor|viewer` — Change a team member's role on all your domains. _(write)_
+- `aeo members team-remove <userId>` — Remove a person from your team and all your domains. Confirm first. _(write)_
+- `aeo members team-leave --owner-id <ownerId>` — Leave a team you joined (owner_id from `members teams`). You lose all its domains. Confirm first. _(write)_
+- `aeo members invite --email <email> --role editor|viewer|owner` — Invite to this domain only; for every domain of the team use `members team-invite`. Invite a person by email (sends the invitation mail). Owner/editor rules as on the Members screen. Confirm the address and role with the user first. _(external)_
+- `aeo members invite-link --email <email> --role editor|viewer` — Create an invite link addressed to one email, without sending mail. This domain only. _(write)_
 - `aeo members invite-cancel <invitationId>` — Cancel a pending invitation. _(write)_
-- `aeo members role <memberId> --role owner|editor|viewer` — Change a member's role (owners only; the last owner cannot be demoted). memberId is the row id from `members list`. _(write)_
-- `aeo members remove <memberId>` — In a domain group this removes the person from every domain of the group. Remove a member from this domain, or leave it yourself (your own member id). Irreversible for that member's access; confirm first. _(write)_
+- `aeo members role <memberId> --role owner|editor|viewer` — Change a member's role (owners only; the last owner cannot be demoted). memberId is the user_id from `members list`. _(write)_
+- `aeo members remove <memberId>` — A team member is removed with `members team-remove`. Remove a member from this domain, or leave it yourself (your own user_id; memberId is the user_id from `members list`). Irreversible for that member's access; confirm first. _(write)_
 
 ## invitations — Invitations addressed to you
 
