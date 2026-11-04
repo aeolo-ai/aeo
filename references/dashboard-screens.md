@@ -706,7 +706,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - Settings › Developer API tokens (list/create/revoke): Credential minting stays with the person: an agent that can mint tokens can hand out standing access.
 - Settings › Account delete, Settings › Domains delete: Irreversible account/brand deletion stays a person's click.
-- Settings › Billing checkout, top-up, customer portal, store billing sync: Purchases and payment-method changes are never made by the agent.
+- Settings › Billing checkout, credit packs, customer portal, store billing sync: Purchases and payment-method changes are never made by the agent.
 - Settings › Account dashboard language: Client-only preference of the viewer's browser.
 - Article professional legal approval (legal-publication-review approvals): Approval by a qualified reviewer must be that person's own act; content approve states it does not grant it.
 - Gallery file upload: Needs the file bytes from the viewer's device; the agent imports images by URL through image tools instead.
