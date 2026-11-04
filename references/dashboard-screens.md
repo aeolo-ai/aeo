@@ -292,11 +292,6 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo brand competitors` — Brand setup's competitor discovery status and the competitors it found.
 - `aeo brand competitors discover` — Start or continue brand setup's competitor discovery; save the picks with brand update --competitors-json. _(execute)_
 
-## integrations drive — Google Drive folder connect/disconnect
-
-- `aeo integrations drive disconnect` — Disconnect Google Drive from this brand (Brand › Sources). _(write)_
-- `aeo integrations drive connect --folder-id <id>` — Check a shared Drive folder and save it as the brand's folder. _(write)_
-
 ## channels preview — Destination previews
 
 - `aeo channels preview <channelId>` — A destination's captured preview status.
