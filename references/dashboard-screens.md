@@ -389,7 +389,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 ## prompts research — Prompt research context
 
-- `aeo prompts research <promptId>` — A prompt's topic and market-map context for its region and language.
+- `aeo prompts research <promptId>` — A prompt's topic and market context for its region and language.
 
 ## prompts coverage — Tracked-prompt quota
 
@@ -680,10 +680,6 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo brand products catalog [--query fresh=1]` — The full product catalog with sync status.
 - `aeo brand products bulk --pdp-urls a,b` — Add up to 50 products by PDP URL at once. _(external)_
-
-## market-map — Dashboard screen
-
-- `aeo market-map state [--query market=…&jobId=…]` — The market map with job progress and dialable markets.
 
 ## report snapshot-full — Dashboard screen
 

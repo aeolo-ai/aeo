@@ -172,9 +172,6 @@ and poll with `aeo topics demand poll <jobId>`. See [topics.md](topics.md) for
 batch limits, credit budgets, and the distinction between Topic demand and exact
 conversational Prompt volume.
 
-The deeper lane is the market map (`aeo market-map run` → `populate`), which is
-grounded in market terrain rather than the brand snapshot. See
-[market-map.md](market-map.md).
 
 ### 4. Prompts
 
