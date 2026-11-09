@@ -429,10 +429,16 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo channels social-profile <channelId>` — The connected social account's profile.
 
-## channels custom-site — Custom site verification tag and check
+## channels custom-site — Custom site verification tag, verify and check
 
 - `aeo channels custom-site tag <channelId>` — The verification meta tag to paste into a custom site's <head>.
 - `aeo channels custom-site check <channelId>` — Check whether a custom site serves our newest article.
+- `aeo channels custom-site verify <channelId> --url <articleBaseUrl>` — Verify a custom site's meta tag and connect it (the Sites screen Verify button). The first verify returns the channel-bound feed key once; set it as a server-only AEOLO_KEY. _(write)_
+
+## channels feed-key — Custom site feed key read and rotate
+
+- `aeo channels feed-key <channelId>` — A verified custom site's feed key state (prefix, created) and its feed URL.
+- `aeo channels feed-key rotate <channelId>` — Issue a new channel-bound feed key and revoke the old one. The site stops reading the feed until AEOLO_KEY is replaced. _(write)_
 
 ## channels wordpress — WordPress site info
 
