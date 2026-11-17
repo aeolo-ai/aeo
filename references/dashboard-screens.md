@@ -12,6 +12,7 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo members teams` — What the signed-in person belongs to: the team they own (members, pending invitations), teams they joined, and domains they were invited to alone. Each owner has one team, and its members reach all the owner's domains.
 - `aeo members team-name --name <name>` — Rename the team you own. The default name is "{Owner}'s Team". _(write)_
 - `aeo members team-invite --email <email> --role editor|viewer` — Invite a person to the team you own (sends the invitation mail). They reach ALL your domains, including future ones; to share one domain use `members invite`. Confirm first; the response lists them in team_domains. _(external)_
+- `aeo members team-invite-link --role editor|viewer` — Create a one-time team invite link with no email and no mail. Whoever opens it first joins the team you own and reaches ALL your domains, including future ones; it expires in 7 days. Anyone holding the link can use it, so confirm the role first. Cancel with `members team-invite-cancel`. _(write)_
 - `aeo members team-invite-cancel <invitationId>` — Cancel a pending invitation to your team. _(write)_
 - `aeo members team-role <userId> --role editor|viewer` — Change a team member's role on all your domains. _(write)_
 - `aeo members team-remove <userId>` — Remove a person from your team and all your domains. Confirm first. _(write)_
