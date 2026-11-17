@@ -175,6 +175,13 @@ conversational Prompt volume.
 
 ### 4. Prompts
 
+The dashboard's onboarding has its own question step: the user reviews 30
+questions on screen, and confirming them runs the brand's one free first
+visibility check. That step is web-only. If the user wants the free check or
+wants to review questions one by one, send them to the dashboard
+(https://www.aeolo.io) to finish onboarding there, and do not run the commands
+below first: they would save a different, unreviewed set.
+
 ```bash
 aeo topics prompts                       # then:
 aeo topics prompts poll <jobId>

@@ -530,6 +530,16 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo traffic ga-events --query propertyId=…&startDate=…&endDate=…[&siteHost=…]` — The GA4 event catalog (every event name and count) the event picker shows.
 
+## traffic conversion-events — Dashboard screen
+
+- `aeo traffic conversion-events --query propertyId=…` — Which GA4 events count as conversions on the traffic flow. Empty = the property's own key events.
+- `aeo traffic conversion-events set --input-json '{"propertyId":"123","eventNames":["consult_submit"]}'` — Replace the conversion events for one GA4 property (up to 10; [] = back to GA4 key events). Read `traffic ga-events` for valid names first. _(write)_
+
+## traffic follow-up-events — Dashboard screen
+
+- `aeo traffic follow-up-events --query propertyId=…` — Which GA4 events the traffic flow shows after each landing page. Empty = scroll and user_engagement.
+- `aeo traffic follow-up-events set --input-json '{"propertyId":"123","eventNames":["form_submit","scroll"]}'` — Replace the follow-up column events for one GA4 property (up to 10; [] = scroll and user_engagement). _(write)_
+
 ## traffic ga-event — Dashboard screen
 
 - `aeo traffic ga-event --query propertyId=…&startDate=…&endDate=…&eventName=…&scope=all|aeolo_campaign|article_context` — One GA4 event's report with the screen's scope.
@@ -711,4 +721,5 @@ Each command below reads or changes one dashboard screen through the same route 
 - Settings › Billing checkout, credit packs, customer portal, store billing sync: Purchases and payment-method changes are never made by the agent.
 - Settings › Account dashboard language: Client-only preference of the viewer's browser.
 - Article professional legal approval (legal-publication-review approvals): Approval by a qualified reviewer must be that person's own act; content approve states it does not grant it.
+- Onboarding › 30-question review and confirm (topics/onboarding-questions draft, revise, confirm): A person reviews the 30 questions on screen, and confirming spends the brand's one free first visibility check, which cannot be retried. The CLI runs the topics/prompts path instead (docs/decisions/onboarding-questions-stay-on-web.md).
 - Gallery file upload: Needs the file bytes from the viewer's device; the agent pins an image by URL with media set-thumbnail instead.
