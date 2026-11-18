@@ -282,6 +282,10 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo pages revision restore <pageId> <revision> [--channel-id <id>] --input-json '{"expectedRevision":N}'` — Restore a page to a stored revision. _(write)_
 
+## pages unpublish — Dashboard screen
+
+- `aeo pages unpublish <pageId> --channel-id <id>` — Take a published page off its destination and reset it to approved (managed sites only; the live URL starts returning the origin's response). _(external)_
+
 ## traffic home — Home traffic card
 
 - `aeo traffic home [--growth true]` — The Home traffic card: AI-referral sessions and, with --growth, the growth comparison the card shows.
