@@ -445,6 +445,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo channels custom-site tag <channelId>` — The verification meta tag to paste into a custom site's <head>.
 - `aeo channels custom-site check <channelId>` — Check whether a custom site serves our newest article.
+- `aeo channels custom-site provision <channelId> --url <articleBaseUrl>` — Issue a custom site's feed URL and channel-bound key before Verify, so the meta tag and the server-only AEOLO_KEY ship in one deploy. Mint-once: a repeat call returns the prefix with no key. _(write)_
 - `aeo channels custom-site verify <channelId> --url <articleBaseUrl>` — Verify a custom site's meta tag and connect it (the Sites screen Verify button). The first verify returns the channel-bound feed key once; set it as a server-only AEOLO_KEY. _(write)_
 
 ## channels feed-key — Custom site feed key read and rotate

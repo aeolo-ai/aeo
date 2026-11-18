@@ -1067,7 +1067,6 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   source              One cited source domain drilled down: the exact pages AI answers cited, which engines and prompts, whether those answers also named us, and which other brands they named (Sources / SoV side panel)
   own-citations       Which of OUR pages AI answers cited, per prompt × engine — "named" (named us and cited us) vs "cited" (cited our page without naming us), and which are Aeolo-published articles
   compare             Change between two checks counted only on cells both measured (the engine score card delta): overall and per-engine score/mention-rate change, brand rank moves; --format json adds engine/market/topic matrices
-  sentiment           How AI describes us when it names us (the Sentiment lens, ?tab=visibility-sentiment): per prompt × engine × market tone over the last 20 checks with "m of n" counts, mixed slots and contradictions
   fanout              Query fan-out — the web searches AI engines ran while answering tracked prompts, one row per query with count, engines, brands named (ours vs competitors), site: filters, and the prompts that produced it
   atlas               The Atlas tab (staff and Atlas pilot brands only): latest market snapshots with catalog, readiness, market states and the running job
   atlas-opportunity   The Atlas tab's article-opportunity and revenue-scenario cards for one market (staff and Atlas pilot brands only)
@@ -1180,12 +1179,16 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   # from the command registry — generated, do not edit by hand
   editions              Write one locale edition of an article (--language en|ko|ja|zh-Hans|zh-Hant|es|id|vi|th|de|fr|hi|ar|it|nl|pl|ru required; uses production credits)
   slug                  Change an article's URL slug
-  unpublish             Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo, auto-detected; --target to force) and reset it to draft
+  unpublish             Remove a deployed article from its platform (shopify/blog/wordpress/cafe24/pangolingo/lawtalk, auto-detected; --target to force) and reset it to draft
   delete                Soft-delete an article (drops out of lists; restorable)
   job cancel            Delete a finished writing job and its events (only when not pending/running — active jobs must finish or fail first)
   history               An article's revision history (who/when/what changed).
   revision              One stored revision of an article.
   revision restore      Restore an article to a stored revision (the current text is kept as a new revision).
+  refresh               Refresh state of a published article: the live text, the latest refresh job, its draft (compare before applying), applied refreshes and when the next one is allowed (28 days apart).
+  refresh start         Start a refresh of a published article: writes an improved draft of the same article (same URL, same reader question) for review
+  refresh apply         Replace the live article with its reviewed refresh draft and push it to the site
+  refresh verify        Check that the live page now shows the applied refresh (fetches the public URL; the result is kept on the refresh)
   comments              Comment threads on an article (anchors, messages, status).
   comments create       Start a comment thread on a quoted passage.
   comments reply        Reply in a comment thread.
@@ -1231,7 +1234,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   results           One prompt's measured answers per engine/market (latest check by default): whether we were named and where, other brands named, searches the engine ran, cited URLs, and the AI answer text (trimmed unless --full)
   deleted           Deleted and untracked prompts (the restore list).
   restore           Restore a deleted or untracked prompt.
-  research          A prompt's topic and market-map context for its region and language.
+  research          A prompt's topic and market context for its region and language.
   coverage          Tracked-prompt quota (used/limit) and which prompts count toward measurement.
   experiments       Prompt experiment runs and their results (when experiments are on for this brand).
   add-full          Add prompts with topic and regions, as the screen.
