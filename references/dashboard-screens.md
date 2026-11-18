@@ -107,6 +107,13 @@ Each command below reads or changes one dashboard screen through the same route 
 - `aeo content revision <id> <revision>` — One stored revision of an article.
 - `aeo content revision restore <id> <revision> [--expected-updated-at ISO]` — Restore an article to a stored revision (the current text is kept as a new revision). _(write)_
 
+## content refresh — Dashboard screen
+
+- `aeo content refresh <id>` — Refresh state of a published article: the live text, the latest refresh job, its draft (compare before applying), applied refreshes and when the next one is allowed (28 days apart).
+- `aeo content refresh start <id> [--mode fast|default|deep]` — Start a refresh of a published article: writes an improved draft of the same article (same URL, same reader question) for review. Costs writing credits. Nothing on the live page changes until apply. _(execute)_
+- `aeo content refresh apply <id> --job <writingJobId> --expected-updated-at ISO` — Replace the live article with its reviewed refresh draft and push it to the site. Keeps URL, publish date and cover. Show the user the draft and get their approval first; refused if the live article or the site post changed since. _(external)_
+- `aeo content refresh verify <id>` — Check that the live page now shows the applied refresh (fetches the public URL; the result is kept on the refresh). Run after apply; the managed site can take a few minutes. _(write)_
+
 ## content comments — Article comment threads
 
 - `aeo content comments <id>` — Comment threads on an article (anchors, messages, status).
