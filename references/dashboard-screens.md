@@ -54,17 +54,6 @@ Each command below reads or changes one dashboard screen through the same route 
 
 - `aeo automation schedules save --input-json '{"schedules":[...]}'` — Save Automation schedules with every field the screen edits (per-destination target_channel_id, engines, articleLength, locales, reference, hero_sweep, research/locale task rows). Read `automation schedules --format json` first and send back the edited rows. _(write)_
 
-## automation slack — Slack review alerts and channel
-
-- `aeo automation slack` — Slack review alert settings, including the chosen channel.
-- `aeo automation slack channels` — Slack channels the connected workspace offers for review alerts.
-- `aeo automation slack set --input-json '{"enabled":true,"slack_channel_id":"C…"}'` — Save Slack review alert settings (on/off, channel). Read `automation slack` first. _(write)_
-- `aeo automation slack test [--channel-id C…]` — Send a test review alert to Slack. _(external)_
-
-## automation email — Email review alert test
-
-- `aeo automation email test [--recipients a@x.com] [--locale ko|en]` — Send a test review alert email. _(external)_
-
 ## research — Research plans and briefs
 
 - `aeo research list` — Research plans and their briefs (status, briefs written, sources).

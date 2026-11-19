@@ -349,19 +349,9 @@ Tune the Daily Content cron to the brand's desired publishing rhythm:
 
 Adjust cadence in the automation schedules / dispatcher; `strategy update` no longer carries scheduling fields.
 
-### Review notifications
+### Review
 
-When a draft lands in review, the customer is asked to read and approve it on two independent rails: Slack (Max, the shared Slack Connect channel Aeolo staff connect in the dashboard) and email (Pro+, reviewer addresses on the domain). Only the canonical article notifies; its locale editions follow the approval.
-
-```bash
-aeo automation notify                                    # both rails, current state
-aeo automation notify set --email kim@brand.com,lee@brand.com --email-enabled true
-aeo automation notify set --email-locale ko              # mail in Korean (auto = the brand's content language)
-aeo automation notify set --email none                   # clear the reviewers (rail off)
-aeo automation notify set --slack-enabled false          # the channel stays connected
-```
-
-Omitted flags keep their stored value. The Slack channel itself is never set from here.
+Drafts in review wait in the dashboard for approval. There are no per-article Slack or email review notifications (removed 2026-11-20).
 
 ---
 
