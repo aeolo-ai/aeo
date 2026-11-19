@@ -984,7 +984,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   show              Retired; same output as "visibility insights"
   history           Score over time, one row per check (--limit, default 10)
   check run         Trigger a credit-metered visibility check
-                    Flags: --engines (comma-separated, default: chatgpt;
+                    Flags: --engines (comma-separated, default: chatgpt,google-aio,gemini;
                            all plans: google-ai-mode, google-aio; Max+: naver;
                            Custom: amazon, deepseek, claude),
                            --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
@@ -1027,7 +1027,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 
   visibility        Retired; same output as "visibility insights"
   visibility run    Trigger a credit-metered visibility check
-                    Flags: --engines (comma-separated, default: chatgpt;
+                    Flags: --engines (comma-separated, default: chatgpt,google-aio,gemini;
                            all plans: google-ai-mode, google-aio; Max+: naver;
                            Custom: amazon, deepseek, claude),
                            --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
