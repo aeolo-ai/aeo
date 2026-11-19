@@ -35,18 +35,18 @@ citation links.
 
 | Policy | Body renders evidence as | Import validator |
 |--------|--------------------------|------------------|
-| `standard` (default) | inline `[Source](URL)` markdown links | requires >= 3 external source URLs |
-| `first_party` | prose attribution ("according to the CDC") with no link | source minimum waived; external links stripped to plain text |
+| `standard` (default) | inline `[Source](URL)` markdown links | no source-count floor; sources are derived from the inline links |
+| `first_party` | prose attribution ("according to the CDC") with no link | external links stripped to plain text |
 
 **Grounding is identical under both.** You still research, still trace every
 quote and number to a real source, still cut what you cannot source. Only the
 rendered hyperlink differs. Links to the brand's own domain always survive.
 
-`standard` does not merely allow links — it **requires** them, and an import
-with fewer than 3 will be rejected. So a brand that should not link out (a
-clinic, a law firm, anyone publishing as the sole authority) must be moved to
-`first_party` explicitly; leaving it on the default produces the opposite of
-what they want.
+Neither policy enforces a minimum number of sources (the old ">= 3 external
+URLs" import gate was removed 2026-10-19); grounding is checked by review, not
+by a link count. `standard` keeps outbound links, so a brand that should not
+link out (a clinic, a law firm, anyone publishing as the sole authority) must be
+moved to `first_party` explicitly; leaving it on the default keeps the links.
 
 After explicit approval (CUD Rule), apply with
 `aeo config reference-policy update --policy first_party`.

@@ -13,7 +13,7 @@ Trigger returns a `jobId`; you must poll a status command to get results.
 | Site audit | `aeo audit run` | 3–8 min |
 | Content generation | `aeo content generate` | 2–8 min |
 | Reference analysis | `aeo reference analyze` | 2–6 min |
-| ~~Video generation~~ | **RETIRED 2026-07-27** — `aeo video generate` is sunset (HTTP 410). `aeo video poll <jobId>` stays live for polling queued video analysis jobs. | — |
+| ~~Video generation~~ | **RETIRED 2026-07-27** — `aeo video generate` is sunset (HTTP 410). `aeo video poll <jobId>` stays live: it reads visual generation jobs by ID (the same endpoint as `aeo image poll`). `aeo video analyze` is synchronous and returns no job. | — |
 
 ---
 
@@ -43,7 +43,8 @@ You can keep working — I'll report back when it's done.
 
 `aeo audit run` uses the same default 10-page budget as the dashboard. Use
 `--max-pages N` for an integer from 1 to 50 and `--channel-id <uuid>` to target
-a channel. The run spends credits; a report read and polling do not launch a new run.
+a channel. The run costs 3 credits per started 10 pages (10 pages = 3, 11–20 = 6, 50 = 15);
+a report read and polling do not launch a new run.
 Poll the returned job ID with `aeo audit poll <jobId>` until terminal status, then
 read `aeo domain audit`. That report selects the domain's latest saved run: compare
 its run ID, channel, measurement URLs and timestamps with the job you requested.

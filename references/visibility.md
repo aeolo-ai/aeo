@@ -4,7 +4,7 @@
 
 ## /aeo visibility check — Trigger a credit-metered visibility check
 
-Run a fresh check against tracked prompts using real-time NER. This reserves production credits before work starts: 1 credit × prompt × target market × engine. Scheduled subscription-funded checks have no additional credit charge.
+Run a fresh check against tracked prompts using real-time NER. This reserves production credits before work starts: 1 credit × prompt × target market × engine × the visibility schedule's repeat count (`--repeat`, default 1); `--location` collapses it to one market. Scheduled subscription-funded checks have no additional credit charge.
 
 ### Step 1 — Trigger
 

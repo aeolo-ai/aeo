@@ -18,7 +18,7 @@ index → citation closes inside the product.
 > **Only output generation is retired — reference input is fully live.** Analyzing
 > someone else's Reel, TikTok, or post as *reference* to brief a blog article is
 > unaffected: `diagnose references analyze`, `diagnose video analyze`,
-> `video poll` (polls queued video analysis jobs), `reference style`,
+> `video poll` (reads visual generation jobs by ID; video analysis itself is synchronous), `reference style`,
 > `channel voice`, and `post analyze` all stay. So do reads and
 > cleanup on rows that already exist (`carousel list`/`get`/`delete`,
 > `post list`/`get`/`delete`).
@@ -71,7 +71,7 @@ every command that *reads* an external Reel/TikTok to brief an article stays liv
 | Command | What it does |
 |---------|-------------|
 | `/aeo video generate --prompt <text>` | **RETIRED 2026-07-27** — brief a blog article instead |
-| `/aeo video poll <jobId...>` | **LIVE** (input): polls queued video analysis jobs; creates nothing |
+| `/aeo video poll <jobId...>` | **LIVE**: reads visual generation jobs by ID (same endpoint as `image poll`); creates nothing |
 
 ## Folded reads (2026-11-03)
 

@@ -227,9 +227,6 @@ func callConnectorOnce(path, method string, body []byte, domainOverride string) 
 		}
 	} else if strings.HasPrefix(path, "/account/") {
 		reqURL = creds.APIBase + "/v2/connector" + path
-	} else if path == "/image/search" || strings.HasPrefix(path, "/image/search?") {
-		// Pexels search is account-scoped, not domain-scoped.
-		reqURL = creds.APIBase + "/v2/connector" + path
 	} else {
 		if did == "" {
 			return "", fmt.Errorf("domain ID required. Set AEOLO_DOMAIN_ID or use --domain")
@@ -591,76 +588,6 @@ func withPromptText(args []string, prompt string) []string {
 	return append(out, "--prompt", prompt)
 }
 
-// videoGenerateWait kicks off a video generation sweep, then polls the
-// visual-generation status endpoint until every job reaches a terminal state
-// (or a 15-minute deadline), printing result URLs as they land.
-func videoGenerateWait(body []byte, domainID string) {
-	resp, err := callConnector("/video-generate", "POST", body, domainID)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-	var created struct {
-		Jobs []struct {
-			ID string `json:"id"`
-		} `json:"jobs"`
-	}
-	if e := json.Unmarshal([]byte(resp), &created); e != nil || len(created.Jobs) == 0 {
-		fmt.Println(resp)
-		return
-	}
-	ids := make([]string, 0, len(created.Jobs))
-	for _, j := range created.Jobs {
-		ids = append(ids, j.ID)
-	}
-	fmt.Printf("Started %d job(s). Waiting for completion…\n", len(ids))
-	statusBody, _ := json.Marshal(map[string]any{"ids": ids})
-	deadline := time.Now().Add(15 * time.Minute)
-	for {
-		time.Sleep(10 * time.Second)
-		sresp, serr := callConnector("/video-generation/status", "POST", statusBody, domainID)
-		if serr != nil {
-			fmt.Fprintln(os.Stderr, "Poll error:", serr)
-			os.Exit(1)
-		}
-		var status struct {
-			Jobs []struct {
-				ID         string   `json:"id"`
-				Status     string   `json:"status"`
-				ResultURLs []string `json:"result_urls"`
-				Error      string   `json:"error"`
-			} `json:"jobs"`
-		}
-		if e := json.Unmarshal([]byte(sresp), &status); e != nil {
-			fmt.Println(sresp)
-			return
-		}
-		done := 0
-		for _, j := range status.Jobs {
-			if j.Status == "completed" || j.Status == "failed" {
-				done++
-			}
-		}
-		fmt.Printf("  %d/%d finished…\n", done, len(status.Jobs))
-		if done >= len(status.Jobs) || time.Now().After(deadline) {
-			for _, j := range status.Jobs {
-				switch j.Status {
-				case "completed":
-					fmt.Printf("✓ %s\n", j.ID)
-					for _, u := range j.ResultURLs {
-						fmt.Printf("   %s\n", u)
-					}
-				case "failed":
-					fmt.Printf("✗ %s — %s\n", j.ID, j.Error)
-				default:
-					fmt.Printf("… %s — %s (still processing; poll later: aeo video poll %s)\n", j.ID, j.Status, j.ID)
-				}
-			}
-			return
-		}
-	}
-}
-
 func wantsHelp(args []string) bool {
 	for _, a := range args {
 		if a == "--help" || a == "-h" {
@@ -953,11 +880,11 @@ COMMANDS:
   publish       preview <id> | deploy <id> | redeploy <id>
   post          analyze --url <url> | list | get <id> | import | approve <id> | publish <id>
   reference     analyze --url <url> --media <type> | style --url <url>
-  video         analyze --url <url> [--media instagram_reels|tiktok_reels]
+  video         analyze --url <url> [--media instagram_reels|tiktok_reels] | poll <jobId...>
   drive         list [--folder <id>] | read <file_id> | download <file_id> [-o path]
   products      List products in the catalog
   product       list | add (--pdp <url>)
-  image         search <query> | swap (...) | generate (--prompt <text>) | poll <jobId...> | upload
+  image         swap (...) | generate (--prompt <text>) | poll <jobId...> | upload
   billing       subscription | credits | ledger
   auth          login | status | logout
   whoami        Show current user (email, tier, trial days)
@@ -1057,13 +984,14 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   show              Retired; same output as "visibility insights"
   history           Score over time, one row per check (--limit, default 10)
   check run         Trigger a credit-metered visibility check
-                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
-                           also available: google-ai-mode, google-aio, amazon, naver, deepseek),
+                    Flags: --engines (comma-separated, default: chatgpt;
+                           all plans: google-ai-mode, google-aio; Max+: naver;
+                           Custom: amazon, deepseek, claude),
                            --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
                            --limit, --prompt-ids
   check poll <id>   Poll check status
   # from the command registry — generated, do not edit by hand
-  insights            The AI search tab as the customer sees it (latest check): score + per-engine rates and change, score trend, prompts won/contested, Share of Voice ranking (mentions incl
+  insights            The AI search tab as the customer sees it (latest check): score + per-engine rates and change, score trend, prompts won/contested, Share of Voice ranking (mentions including citations) with rank moves, cited-source domains (paged), and brand × engine/market/topic matrices
   source              One cited source domain drilled down: the exact pages AI answers cited, which engines and prompts, whether those answers also named us, and which other brands they named (Sources / SoV side panel)
   own-citations       Which of OUR pages AI answers cited, per prompt × engine — "named" (named us and cited us) vs "cited" (cited our page without naming us), and which are Aeolo-published articles
   compare             Change between two checks counted only on cells both measured (the engine score card delta): overall and per-engine score/mention-rate change, brand rank moves; --format json adds engine/market/topic matrices
@@ -1087,7 +1015,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 	"audit": `aeo audit <verb>
 
   run               Start a site foundation audit
-                    Flags: --max-pages (default 10, range 1–50; credits scale with pages), --channel-id
+                    Flags: --max-pages (default 10, range 1–50; 3 credits per started 10 pages), --channel-id
   poll <jobId>      Poll a background audit job
   # from the command registry — generated, do not edit by hand
   history           Past site-audit runs, optionally for one site (the audit tab's history).
@@ -1099,15 +1027,16 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
 
   visibility        Retired; same output as "visibility insights"
   visibility run    Trigger a credit-metered visibility check
-                    Flags: --engines (comma-separated, default: chatgpt,gemini,perplexity;
-                           also available: google-ai-mode, google-aio, amazon, naver, deepseek),
+                    Flags: --engines (comma-separated, default: chatgpt;
+                           all plans: google-ai-mode, google-aio; Max+: naver;
+                           Custom: amazon, deepseek, claude),
                            --location KR|US|JP|TW|HK|CN|GB|ES|MX|ID|VN|TH|DE|FR|IN|SA|AE|CA|AU|IT|NL|PL|RU (this run only),
                            --limit, --prompt-ids
   visibility poll <jobId>
                     Poll check status
   audit             Show Lighthouse scores, technical SEO evidence, and separate legacy readiness
   audit run         Start a site foundation audit
-                    Flags: --max-pages (default 10, range 1–50; credits scale with pages), --channel-id
+                    Flags: --max-pages (default 10, range 1–50; 3 credits per started 10 pages), --channel-id
   audit poll <jobId>
                     Poll a background audit job
   # from the command registry — generated, do not edit by hand
@@ -1151,10 +1080,13 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Optional: --type, --keywords (comma-separated), --language, --rationale,
                               --meta-description, --sources (JSON array),
                               --edition-of <canonical id> (this draft is that article's
-                              locale edition in --language; editors only)
-  generate          Explicit-only Aeolo server-side generation job (costs 15 credits)
+                              locale edition in --language; editors only),
+                              --target-channel <id>, --folder /path or --folder-id <id>
+                    Defaults: --type blog, --language en
+  generate          Explicit-only Aeolo server-side generation job
+                    (credits by --mode: fast 5, default 15, deep 25)
                     Required: --prompt (or --prompt-file)
-                    Optional: --media, --language,
+                    Optional: --mode fast|default|deep (default: default), --media, --language,
                               --target-channel <id> (destination; required when the domain
                               has several publish channels — ids from 'aeo channel list'.
                               Omitted: the sole publish surface is adopted; none = refused)
@@ -1209,7 +1141,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
   schema                The structured data (JSON-LD) the article ships with.
   images                Images linked to an article (the thumbnail picker).
   pull-wordpress        Copy the live WordPress post back into the article (the fix when a redeploy refuses with REMOTE_MODIFIED).
-  unpublish-pangolingo  Withdraw an article and its editions from a Pango Lingo newsroom (content unpublish does not reach Pango Lingo).
+  unpublish-pangolingo  Withdraw an article and its editions from a Pango Lingo newsroom (the dashboard route; content unpublish now also reaches Pango Lingo through it).
   search                The Articles list with every filter, sort and page the screen uses
   detail                The whole article row as the editor loads it, with its source documents.
   performance           An article's performance panel: citations, traffic, Search Console, reading.
@@ -1228,7 +1160,8 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                     Optional: --count, --languages en,ko, --instruction "..."
   add               Add one prompt (--prompt, --stage, --language, --segment foo,bar)
                     or many at once (--prompts-json='[{"prompt":"...","stage":"comparison"}]', max 30)
-  update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked)
+  update <id>       Update a prompt (--prompt, --stage, --query-form, --segment foo,bar, --status tracked|untracked,
+                    --regions US,GB = standing target markets, replaces the list)
   delete <id>       Delete a prompt
   # from the command registry — generated, do not edit by hand
   results           One prompt's measured answers per engine/market (latest check by default): whether we were named and where, other brands named, searches the engine ran, cited URLs, and the AI answer text (trimmed unless --full)
@@ -1314,13 +1247,13 @@ Notes:
 `,
 	"reference": `aeo reference <verb>
 
-  analyze           Start a reference analysis job (uses production credits)
+  analyze           Start a reference analysis job (10 credits; 15 for instagram_reels/tiktok_reels)
                     Required: --url, --media
                     Media: linkedin_post, threads_post, visual_asset, instagram_reels, tiktok_reels
                     Optional: --language
   style             Read selected reference style evidence
-                    Required: --url
-                    Optional: --provider blog|threads|linkedin|instagram|tiktok
+                    Optional: --url (omitted: the domain's own channel voice),
+                              --provider blog|threads|instagram|tiktok (LinkedIn posts count as blog)
   poll <jobId>      Poll a reference analysis job
   # from the command registry — generated, do not edit by hand
   delete            Delete a reference analysis job (or a reference-style/channel-voice job — auto-detected)
@@ -1328,18 +1261,14 @@ Notes:
 `,
 	"video": `aeo video <verb>
 
-  analyze           Analyze a short-form video URL synchronously (uses production credits)
+  analyze           Analyze a short-form video URL synchronously (15 credits)
                     Required: --url
                     Optional: --media instagram_reels|tiktok_reels, --mime-type
 
-  generate          Generate short-form video(s) for Reels/TikTok from a prompt
-                    (uses production credits; async — returns job IDs)
-                    Required: --prompt
-                    Optional: --model seedance-2-fast|seedance-2|kling-3|grok-video,
-                              --sweep N (1-8 candidate variations), --aspect (default 9:16),
-                              --duration, --ref url1,url2, --audio, --wait (poll until done)
+  generate          RETIRED 2026-07-27 — the server answers 410 (no credits charged)
 
-  poll              Check status + result URLs of video generation jobs
+  poll              Check status + result URLs of visual generation jobs
+                    (same endpoint as 'aeo image poll')
                     Usage: aeo video poll <jobId> [jobId...]
 `,
 	"products": `aeo products
@@ -1357,19 +1286,17 @@ Notes:
 `,
 	"image": `aeo image <verb>
 
-  search <query>    Search Pexels for reference scenes
-                    Flags: --per-page (default 12), --page (default 1)
-  swap              Composite ONE catalog product into a Pexels reference scene
+  swap              Composite ONE catalog product into a reference scene (5 credits)
                     Renders the product's og_image verbatim — a retail-box packshot
                     makes a box ad. No clean standalone cut? Use 'generate --product'.
                     Required: --content <id>, --product <id>, --reference <url>
                     Optional: --no-persist (don't save to content_history)
                     Async — returns a job ID; poll with 'aeo image poll'
-  upload            Upload a local image to the thumbnail bucket
+  upload            Upload a local image to the thumbnail bucket (no credits)
                     Required: --file <path>
                     Optional: --content <id> (pin as thumbnail), --mime-type (auto from extension)
                     Limits: image must be ≤25 megapixels (Shopify article cap)
-  generate          Generate cover/gallery image(s) (uses production credits)
+  generate          Generate cover/gallery image(s) (5 credits per candidate)
                     Required: --prompt <text>, or --recommend <contentId> to compose
                               the scene from that article's own visual brief
                     Conditioning: --product <id,id> (catalog product IS the subject —
@@ -1394,7 +1321,7 @@ Notes:
 
   list              List channel posts
                     Flags: --platform, --status, --limit, --offset
-  analyze           Crawl a channel/reference URL and queue reference analysis
+  analyze           Crawl a channel/reference URL and queue reference style analysis (5 credits)
                     Required: --url
                     Optional: --provider blog|threads|tiktok|instagram, --mode owned|reference, --limit
   get <id>          Get a channel post by ID
@@ -1414,7 +1341,7 @@ Notes:
   data-sources         Show Source Guide
   data-sources update  Update Source Guide (--data-sources; warnings: --force --review-token)
   # from the command registry — generated, do not edit by hand
-  glossary                 Show the brand's approved per-locale term renderings (e.g
+  glossary                 Show the brand's approved per-locale term renderings, for example 써마지 → 热玛吉 in Simplified and 鳳凰電波 in Traditional
   glossary update          Replace the terminology glossary (--glossary '<json>')
   reference-policy         Show how published articles render external evidence (standard = inline source links required; first_party = prose attribution, no outbound links)
   reference-policy update  Set the reference policy (--policy standard|first_party)
@@ -1557,15 +1484,16 @@ func runVisibilityCheck(args []string, domainID string) {
 		proxyCommand(os.Args[1:], domainID)
 		return
 	}
-	engines := findFlag(args, "--engines")
-	if engines == "" {
-		engines = "chatgpt,gemini,perplexity"
+	// No --engines: omit the field so the server applies its canonical default
+	// (DEFAULT_VISIBILITY_ENGINES), same as the proxied router path.
+	body := map[string]any{}
+	if engines := findFlag(args, "--engines"); engines != "" {
+		engineParts := strings.Split(engines, ",")
+		for i, p := range engineParts {
+			engineParts[i] = strings.TrimSpace(p)
+		}
+		body["engines"] = engineParts
 	}
-	engineParts := strings.Split(engines, ",")
-	for i, p := range engineParts {
-		engineParts[i] = strings.TrimSpace(p)
-	}
-	body := map[string]any{"engines": engineParts}
 	if v := findFlag(args, "--limit"); v != "" {
 		var limit int
 		fmt.Sscanf(v, "%d", &limit)
@@ -2625,51 +2553,9 @@ func main() {
 			b, _ := json.Marshal(body)
 			run("/video-analysis", "POST", b, domainID)
 		case "generate":
-			prompt := findFlag(args, "--prompt", "-p")
-			if prompt == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo video generate --prompt <text> [--model seedance-2-fast|seedance-2|kling-3|grok-video] [--sweep N] [--aspect 9:16] [--duration 15] [--ref url1,url2] [--audio] [--wait]")
-				os.Exit(1)
-			}
-			body := map[string]any{"prompt": prompt}
-			if v := findFlag(args, "--model"); v != "" {
-				body["model"] = v
-			} else {
-				body["model"] = "seedance-2-fast"
-			}
-			if v := findFlag(args, "--sweep", "--count"); v != "" {
-				var n int
-				fmt.Sscanf(v, "%d", &n)
-				if n > 0 {
-					body["count"] = n
-				}
-			}
-			if v := findFlag(args, "--aspect", "--aspect-ratio"); v != "" {
-				body["aspectRatio"] = v
-			}
-			if v := findFlag(args, "--duration"); v != "" {
-				body["duration"] = v
-			}
-			if v := findFlag(args, "--resolution"); v != "" {
-				body["resolution"] = v
-			}
-			if hasFlag(args, "--audio", "--generate-audio") {
-				body["generateAudio"] = true
-			}
-			if v := findFlag(args, "--ref", "--references"); v != "" {
-				refs := []string{}
-				for _, r := range strings.Split(v, ",") {
-					if r = strings.TrimSpace(r); r != "" {
-						refs = append(refs, r)
-					}
-				}
-				body["referenceUrls"] = refs
-			}
-			b, _ := json.Marshal(body)
-			if hasFlag(args, "--wait") {
-				videoGenerateWait(b, domainID)
-			} else {
-				run("/video-generate", "POST", b, domainID)
-			}
+			// POST /video-generate answers 410 Gone: video generation is retired.
+			fmt.Fprintln(os.Stderr, "Error: `aeo video generate` has been retired. Video generation is no longer available.")
+			os.Exit(1)
 		case "poll":
 			ids := []string{}
 			for _, a := range args[2:] {
@@ -3050,30 +2936,9 @@ func main() {
 		}
 		switch args[1] {
 		case "search":
-			// Collect positional query terms up to the first flag.
-			var qParts []string
-			for i := 2; i < len(args); i++ {
-				if strings.HasPrefix(args[i], "--") {
-					break
-				}
-				qParts = append(qParts, args[i])
-			}
-			query := strings.Join(qParts, " ")
-			if query == "" {
-				query = findFlag(args, "--q", "--query")
-			}
-			if query == "" {
-				fmt.Fprintln(os.Stderr, "Usage: aeo image search <query> [--per-page N] [--page N]")
-				os.Exit(1)
-			}
-			qs := "q=" + url.QueryEscape(query)
-			if v := findFlag(args, "--per-page"); v != "" {
-				qs += "&perPage=" + v
-			}
-			if v := findFlag(args, "--page"); v != "" {
-				qs += "&page=" + v
-			}
-			run("/image/search?"+qs, "GET", nil, "")
+			// GET /image/search was removed server-side; fail loudly instead of 404ing.
+			fmt.Fprintln(os.Stderr, "Error: `aeo image search` has been removed. Stock-photo search is no longer available.")
+			os.Exit(1)
 		case "swap":
 			contentID := findFlag(args, "--content", "--content-id")
 			productID := findFlag(args, "--product", "--product-id")

@@ -191,7 +191,7 @@ Accepted flags (binary `aeo prompts add`):
 | `--prompt` | string | ✅ unless `--prompts-json` | — | `"best project management tools"` |
 | `--prompts-json` | JSON array of objects or strings, max 30 | ✅ unless `--prompt` | — | `'[{"prompt":"...","stage":"comparison"}]'` |
 | `--stage` | `foundational` \| `comparison` \| `use-case` \| `implementation` | — | `foundational` | `comparison` |
-| `--language` | offered content locale: `en` `ko` `ja` `zh-Hans` `zh-Hant` `es` `id` `vi` `th` `de` `fr` `hi` `ar` `it` `nl` `pl` `ru` | | `en` | `zh-Hans` |
+| `--language` | offered content locale: `en` `ko` `ja` `zh-Hans` `zh-Hant` `es` `id` `vi` `th` `de` `fr` `hi` `ar` `it` `nl` `pl` `ru` | — | inferred from the prompt text, falling back to the brand's primary language | `zh-Hans` |
 | `--query-form` | `short-tail` \| `long-tail` \| `conversational` | — | `conversational` | `long-tail` |
 | `--segment` | comma-separated tags | — | — | `foo,bar` |
 

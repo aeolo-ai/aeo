@@ -176,7 +176,7 @@ Before writing, read:
 - Task-specific reference analysis or sample copy only when the user explicitly selected/provided it
 
 Default external-agent path: write locally, then import with `aeo content import`. Use `aeo content generate` only when the user explicitly wants Aeolo to run a server-side paid generation job. Key requirements:
-- Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
+- Under the `standard` reference policy, cite sources as inline links; import has no source-count floor (see [data-access.md](data-access.md))
 - Answer the question early; FAQ only for supported adjacent questions
 - Article type matches the reader's decision
 
@@ -190,7 +190,7 @@ aeo content import --title "..." --body "..." --type blog --keywords "k1,k2,k3"
 Check the article against this list. If any item fails, fix it before deploying.
 
 - [ ] Answer delivered early?
-- [ ] Every claim traces to a source you read (≥3 external URLs under the `standard` reference policy)?
+- [ ] Every claim traces to a source you read (inline links under the `standard` reference policy)?
 - [ ] Brand mentioned in context (not forced)?
 - [ ] No factual claims without source?
 - [ ] Length follows supported depth or an explicit request (no fixed word count)?

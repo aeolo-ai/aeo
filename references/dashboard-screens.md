@@ -361,7 +361,7 @@ Each command below reads or changes one dashboard screen through the same route 
 
 ## content unpublish-pangolingo — Unpublish from Pango Lingo
 
-- `aeo content unpublish-pangolingo <id>` — Withdraw an article and its editions from a Pango Lingo newsroom (content unpublish does not reach Pango Lingo). _(external)_
+- `aeo content unpublish-pangolingo <id>` — Withdraw an article and its editions from a Pango Lingo newsroom (the dashboard route; content unpublish now also reaches Pango Lingo through it). _(external)_
 
 ## audit history — Site audit history
 

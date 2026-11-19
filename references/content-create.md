@@ -14,6 +14,9 @@ Aeolo to generate the article server-side; confirm topic, keywords, language,
 article type, and any task-specific reference/tone inputs first. Track progress
 with `/aeo content jobs`.
 
+`--prompt "<brief>"` is required. `--mode fast|default|deep` picks the writing
+tier and its price: 5 / 15 / 25 credits (omitted = `default`, 15).
+
 **Writing requires a destination (AEO-531).** The destination decides wording,
 locale set, and reference policy, so it cannot be picked after the text exists:
 
@@ -303,7 +306,7 @@ Collect `{ name, url, description }` for each source — these become inline cit
 #### 3.5 — Research validation gate
 
 Before proceeding to Step 4:
-- [ ] Every claim traces to a source you actually read. Under the `standard` reference policy, import needs ≥3 external source URLs (see [data-access.md](data-access.md))
+- [ ] Every claim traces to a source you actually read. Under the `standard` reference policy, cite them as inline links; import has no source-count floor (see [data-access.md](data-access.md))
 - [ ] 1st-party material ≥ 1 (if available for this topic)
 - [ ] Every claim has a prepared citation
 - [ ] Competitor facts verified (for comparison/ranked_list types)
