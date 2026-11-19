@@ -1152,7 +1152,7 @@ read API key + authed feed URL (with ?base) to render Aeolo articles on your dom
                               --meta-description, --sources (JSON array),
                               --edition-of <canonical id> (this draft is that article's
                               locale edition in --language; editors only)
-  generate          Explicit-only Aeolo server-side generation job (costs 5 credits)
+  generate          Explicit-only Aeolo server-side generation job (costs 15 credits)
                     Required: --prompt (or --prompt-file)
                     Optional: --media, --language,
                               --target-channel <id> (destination; required when the domain
